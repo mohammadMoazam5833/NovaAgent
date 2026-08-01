@@ -8,6 +8,7 @@ import {
   Settings,
 } from "lucide-react";
 import { OpenHandsLogoButton } from "#/components/shared/buttons/openhands-logo-button";
+import { AppearanceToggle } from "#/components/features/settings/app-settings/appearance-toggle";
 import { NavigationLink } from "#/components/shared/navigation-link";
 import { SidebarCollapsedIconSlot } from "./sidebar-collapsed-icon-slot";
 import { SidebarNavLink } from "./sidebar-nav-link";
@@ -122,20 +123,27 @@ export function SidebarRailBody({
           ) : null}
         </div>
         {!collapsed && showCollapseToggle ? (
-          <button
-            type="button"
-            data-testid="sidebar-collapse-toggle"
-            aria-pressed={collapsed}
-            aria-label={collapseToggleLabel}
-            onClick={onCollapse}
-            className={cn(
-              "hidden md:inline-flex ml-auto",
-              SIDEBAR_ICON_BUTTON_CLASS,
-              "text-[var(--oh-muted)] hover:text-white hover:bg-[var(--oh-surface-raised)]",
-            )}
-          >
-            <ChevronLeft width={14} height={14} />
-          </button>
+          <div className="ml-auto hidden md:flex items-center gap-1">
+            <AppearanceToggle
+              className={cn(
+                SIDEBAR_ICON_BUTTON_CLASS,
+                "text-[var(--oh-muted)] hover:text-foreground hover:bg-[var(--oh-surface-raised)]",
+              )}
+            />
+            <button
+              type="button"
+              data-testid="sidebar-collapse-toggle"
+              aria-pressed={collapsed}
+              aria-label={collapseToggleLabel}
+              onClick={onCollapse}
+              className={cn(
+                SIDEBAR_ICON_BUTTON_CLASS,
+                "text-[var(--oh-muted)] hover:text-foreground hover:bg-[var(--oh-surface-raised)]",
+              )}
+            >
+              <ChevronLeft width={14} height={14} />
+            </button>
+          </div>
         ) : null}
         {!collapsed && showMobileCloseButton ? (
           <button

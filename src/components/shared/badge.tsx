@@ -8,7 +8,11 @@ export function BrandBadge({
   return (
     <span
       className={cn(
-        "text-sm leading-4 text-black font-semibold tracking-tighter bg-primary p-1 rounded-full",
+        // Use accent-foreground so light mode (dark primary) stays readable —
+        // hard-coded text-black vanished on the near-black light-theme primary.
+        "text-sm leading-4 font-semibold tracking-tighter rounded-full",
+        "bg-primary text-[var(--oh-accent-foreground)]",
+        "px-1 py-1",
         className,
       )}
       {...rest}

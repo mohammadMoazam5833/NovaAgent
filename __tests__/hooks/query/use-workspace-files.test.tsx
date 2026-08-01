@@ -4,7 +4,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import AgentServerRuntimeService from "#/api/runtime-service/agent-server-runtime-service";
-import { useWorkspaceFiles } from "#/hooks/query/use-workspace-files";
+import {
+  buildListCommand,
+  useWorkspaceFiles,
+} from "#/hooks/query/use-workspace-files";
 import type { GitChange } from "#/api/open-hands.types";
 
 const useActiveBackendMock = vi.fn();
@@ -109,6 +112,17 @@ describe("useWorkspaceFiles — local backend", () => {
       expect(result.current.data).toEqual(["hello.txt", "src/index.ts"]),
     );
     expect(executeCommandSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("prunes default heavy dirs and auto-detects fat directories without user config", () => {
+    const command = buildListCommand();
+    expect(command).toContain("-name '.git'");
+    expect(command).toContain("-name 'node_modules'");
+    expect(command).toContain("-name '.venv'");
+    expect(command).toContain("-name 'models'");
+    expect(command).toContain("path_prunes");
+    expect(command).toContain("timeout");
+    expect(command).toContain("! -size +32M");
   });
 });
 

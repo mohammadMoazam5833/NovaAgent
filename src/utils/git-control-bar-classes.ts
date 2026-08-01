@@ -7,13 +7,13 @@ export function gitControlBarActionButtonClassName(isEnabled: boolean) {
   return cn(
     gitControlBarActionButtonBaseClassName,
     isEnabled
-      ? "bg-[var(--oh-surface)] hover:bg-tertiary cursor-pointer text-white"
+      ? "bg-[var(--oh-surface)] hover:bg-tertiary cursor-pointer text-foreground"
       : "bg-[var(--oh-surface)] cursor-not-allowed opacity-50 text-[var(--oh-muted)]",
   );
 }
 
 export function gitControlBarActionIconColor(isEnabled: boolean) {
-  return isEnabled ? "white" : "var(--oh-muted)";
+  return isEnabled ? "var(--oh-foreground)" : "var(--oh-muted)";
 }
 
 export const gitControlBarActionLabelClassName =

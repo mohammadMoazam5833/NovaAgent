@@ -1,17 +1,24 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { AgentServerUIRoot } from "#/components/providers/agent-server-ui-root";
 import {
   AVAILABLE_COLOR_THEMES,
   COLOR_THEMES,
   applyColorTheme,
 } from "#/themes/color-themes";
+import { persistAppearance } from "#/themes/appearance";
 
 describe("color themes", () => {
-  it("includes OpenHands-Neo as a neutral-based theme with white button tokens", () => {
+  beforeEach(() => {
+    // Palette assertions expect dark appearance (no light button-token overlay).
+    persistAppearance("dark");
+    document.getElementById("oh-appearance-override")?.remove();
+  });
+
+  it("includes Neo as a neutral-based theme with white button tokens", () => {
     const neo = COLOR_THEMES["openhands-neo"];
 
-    expect(neo.label).toBe("OpenHands-Neo");
+    expect(neo.label).toBe("Neo");
     expect(neo.scale).toEqual(COLOR_THEMES["openhands-neutral"].scale);
     expect(neo.heroui).toEqual(COLOR_THEMES["openhands-neutral"].heroui);
     expect(neo.tokens?.["--oh-color-primary"]).toBe("#ffffff");
@@ -25,10 +32,10 @@ describe("color themes", () => {
     expect(
       AVAILABLE_COLOR_THEMES.find((theme) => theme.key === "openhands-neo")
         ?.label,
-    ).toBe("OpenHands-Neo");
+    ).toBe("Neo");
   });
 
-  it("injects white primary tokens when applying OpenHands-Neo", () => {
+  it("injects white primary tokens when applying Neo", () => {
     document.body.setAttribute("data-agent-server-ui", "");
 
     applyColorTheme("openhands-neo");
@@ -56,6 +63,9 @@ describe("color themes", () => {
       "[data-agent-server-ui][data-agent-server-ui] {",
     );
     expect(styleEl?.textContent).toContain("[data-theme=dark][data-theme=dark] {");
+    expect(styleEl?.textContent).toContain(
+      "[data-theme=light][data-theme=light] {",
+    );
 
     styleEl?.remove();
   });

@@ -50,8 +50,9 @@ import {
   applyColorTheme,
   readPersistedColorTheme,
 } from "#/themes/color-themes";
+import { readPersistedAppearance } from "#/themes/appearance";
 
-/** Applies the persisted color-theme palette to document.body on mount. */
+/** Applies the persisted color palette + light/dark appearance on mount. */
 function ColorThemeApplier() {
   React.useEffect(() => {
     applyColorTheme(readPersistedColorTheme());
@@ -98,7 +99,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body data-agent-server-ui="" className="m-0">
-        <AgentServerUIRoot contentClassName="min-h-screen">
+        <AgentServerUIRoot
+          theme={readPersistedAppearance()}
+          contentClassName="min-h-screen"
+        >
           <ColorThemeApplier />
           {children}
           <Toaster toastOptions={TOAST_OPTIONS} />
@@ -221,7 +225,7 @@ export const links: LinksFunction = () => [
 ];
 
 export const meta: MetaFunction = () => [
-  { title: "OpenHands" },
+  { title: "Agent Canvas" },
   { name: "description", content: "Let's Start Building!" },
 ];
 

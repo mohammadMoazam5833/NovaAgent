@@ -136,6 +136,20 @@ The Agent Server is often paired with an [Automation Server](https://github.com/
 
 <img width="1456" height="1258" alt="image" src="https://github.com/user-attachments/assets/cb6de6f5-ac30-4d04-a76a-b5c259f0c163" />
 
+## Performance on large workspaces
+
+Agent Canvas periodically scans the active workspace (Files tab listing, git probes for the Changes panel). On very large trees these scans used to hang the app. Hang prevention is **automatic** — you do not need to add any ignore file:
+
+1. **Built-in defaults** — dependency/build/cache/ML dump directories (`node_modules`, `.venv`, `venv`, `__pycache__`, `dist`, `build`, `models`, `checkpoints`, `weights`, `datasets`, …) are always skipped (see `src/utils/workspace-excluded-dirs.ts`).
+2. **Automatic fat-directory detection** — any directory with ≥ 400 immediate children is pruned at scan time, even if its name is unfamiliar. This is the main protection against hang on custom dump folders.
+3. **Hard timeouts** — every scan is wall-clock capped (`timeout`), so a miss still cannot freeze the UI.
+4. **Large-file skip** — Files-tab listing ignores files larger than 32 MiB (weights, blobs).
+5. **Optional reuse** — if a workspace already has `.gitignore` (or an optional `.agentcanvasignore`), simple directory lines are also honored. Neither file is required.
+6. **Host git tuning** — `scripts/setup-agent-canvas-perf.sh` can still speed up the agent-server's own `git status` with a global excludes file + `core.untrackedCache` / `core.fsmonitor`.
+7. **Event-log retention** — set `OH_BASH_EVENTS_RETENTION_SECONDS` (e.g. `7200`) in `.env` to prune terminal event logs over long sessions.
+
+Prefer opening a specific project folder as the workspace rather than a huge root such as your home directory.
+
 ## More documentation
 
 - [Documentation index](./docs/README.md)

@@ -91,6 +91,7 @@ const NEUTRAL_HEROUI = {
 };
 
 import { AGENT_SERVER_UI_THEMEABLE_BRAND_VARIABLES } from "#/styles/agent-server-ui-style-scope";
+import { applyAppearance, readPersistedAppearance } from "#/themes/appearance";
 
 /** CSS custom properties overridden by color themes (see applyColorTheme). */
 export const COLOR_THEME_TOKEN_KEYS = AGENT_SERVER_UI_THEMEABLE_BRAND_VARIABLES;
@@ -107,7 +108,7 @@ const NEO_WHITE_BUTTON_TOKENS: Record<
 
 export const COLOR_THEMES: Record<ColorThemeKey, ColorThemeDefinition> = {
   "openhands-deepsea": {
-    label: "OpenHands-DeepSea",
+    label: "DeepSea",
     // Matches the values already set by index.css; included so switching back
     // from another theme restores the original palette explicitly.
     scale: {
@@ -165,7 +166,7 @@ export const COLOR_THEMES: Record<ColorThemeKey, ColorThemeDefinition> = {
   },
 
   "openhands-neutral": {
-    label: "OpenHands-Neutral",
+    label: "Neutral",
     scale: NEUTRAL_SCALE,
     // Each stop follows the same positional mapping as hero.ts:
     //   heroui-default-100 ← cool-grey-950 position ← neutral-950 (#181818)
@@ -175,7 +176,7 @@ export const COLOR_THEMES: Record<ColorThemeKey, ColorThemeDefinition> = {
   },
 
   "openhands-neo": {
-    label: "OpenHands-Neo",
+    label: "Neo",
     scale: NEUTRAL_SCALE,
     heroui: NEUTRAL_HEROUI,
     tokens: NEO_WHITE_BUTTON_TOKENS,
@@ -256,13 +257,14 @@ export function applyColorTheme(key: ColorThemeKey): void {
   // Target both selectors for heroui vars:
   //   [data-agent-server-ui] — covers document.body (portal destination) so
   //     portalled popover/listbox content inherits the overridden values.
-  //   [data-theme=dark]      — covers the inner AgentServerUIRoot wrapper so
-  //     components scoped inside the dark theme wrapper also pick them up.
+  //   [data-theme=dark|light] — covers the inner AgentServerUIRoot wrapper so
+  //     components scoped inside the theme wrapper also pick them up.
   // Both are doubled to out-specify the base sheet regardless of stylesheet
   // order (see the doc comment above).
   const css = [
     `[data-agent-server-ui][data-agent-server-ui] {\n${scaleDecls}\n${herouiDecls}\n${tokenDecls}\n}`,
     `[data-theme=dark][data-theme=dark] {\n${herouiDecls}\n}`,
+    `[data-theme=light][data-theme=light] {\n${herouiDecls}\n}`,
   ].join("\n");
 
   let styleEl = document.getElementById(
@@ -278,6 +280,8 @@ export function applyColorTheme(key: ColorThemeKey): void {
   document.head.appendChild(styleEl);
 
   syncColorThemeTokensOnScopeRoots(tokens);
+  // Re-apply appearance last so light-mode overrides stay above palette tokens.
+  applyAppearance(readPersistedAppearance());
 }
 
 function syncColorThemeTokensOnScopeRoots(

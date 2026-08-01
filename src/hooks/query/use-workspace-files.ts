@@ -6,6 +6,12 @@ import { useActiveBackend } from "#/contexts/active-backend-context";
 import { useActiveConversation } from "#/hooks/query/use-active-conversation";
 import { useRuntimeIsReady } from "#/hooks/use-runtime-is-ready";
 import { useUnifiedGetGitChanges } from "#/hooks/query/use-unified-get-git-changes";
+import {
+  WORKSPACE_LIST_TIMEOUT_SECONDS,
+  buildAutoFatDirDetectionScript,
+  buildIgnoreAwarePruneScript,
+  findWithTimeout,
+} from "#/utils/workspace-excluded-dirs";
 
 // Cap the number of files we render so a giant repo doesn't freeze the UI.
 const MAX_FILES = 2000;
@@ -15,30 +21,23 @@ export interface WorkspaceFilesResult {
   isLoading: boolean;
 }
 
-// Directory names that we never want to descend into when listing files.
-const EXCLUDED_DIRS = [
-  ".git",
-  "node_modules",
-  ".venv",
-  "venv",
-  "__pycache__",
-  "dist",
-  "build",
-  ".next",
-  ".cache",
-  ".pytest_cache",
-  ".mypy_cache",
-  ".turbo",
-  ".parcel-cache",
-  "target",
-];
-
-// Build a `find` invocation that lists files relative to the workspace root.
-function buildListCommand(): string {
-  const pruneExpr = EXCLUDED_DIRS.map((dir) => `-name '${dir}' -prune`).join(
-    " -o ",
-  );
-  return `find . \\( ${pruneExpr} \\) -o -type f -print 2>/dev/null | sort | head -n ${MAX_FILES}`;
+/**
+ * Build a bash script that lists files relative to the workspace root.
+ * Automatically skips known heavy dirs, fat directories (too many children),
+ * optional ignore-file names, and files larger than 32 MiB — no user
+ * configuration required. Hard-capped by a wall-clock timeout.
+ */
+export function buildListCommand(): string {
+  const findArgs = `. \\( "\${prunes[@]}" \${path_prunes[@]} \\) -prune -o -type f ! -size +32M -print`;
+  return [
+    buildIgnoreAwarePruneScript("prunes"),
+    buildAutoFatDirDetectionScript("prunes", "path_prunes"),
+    findWithTimeout(
+      findArgs,
+      WORKSPACE_LIST_TIMEOUT_SECONDS,
+      ` | sort | head -n ${MAX_FILES}`,
+    ),
+  ].join("\n");
 }
 
 function normalizePath(path: string): string {
@@ -79,7 +78,7 @@ function useLocalWorkspaceFiles(enabled: boolean): WorkspaceFilesResult {
         sessionApiKey,
         buildListCommand(),
         workingDir,
-        30,
+        WORKSPACE_LIST_TIMEOUT_SECONDS + 2,
       );
 
       if (result.exit_code !== 0) {

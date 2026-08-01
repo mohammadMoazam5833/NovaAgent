@@ -76,7 +76,9 @@ export function ChatAddFileButton({
           disabled
             ? "cursor-not-allowed text-[var(--oh-text-subtle)]"
             : undefined,
-          menuOpen && !disabled && "text-white bg-white/10",
+          menuOpen &&
+            !disabled &&
+            "text-foreground bg-[color-mix(in_srgb,var(--oh-foreground)_10%,transparent)]",
         )}
         aria-label={t(I18nKey.CHAT_INTERFACE$PLUS_MENU)}
         aria-expanded={menuOpen}

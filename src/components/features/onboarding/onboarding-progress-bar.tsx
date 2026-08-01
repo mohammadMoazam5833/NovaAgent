@@ -39,7 +39,11 @@ export function OnboardingProgressBar({
             }
             className={cn(
               "h-1.5 flex-1 rounded-full transition-colors duration-300",
-              isCompleted || isCurrent ? "bg-white" : "bg-white/15",
+              // Foreground tokens stay visible in both light and dark chrome
+              // (hard-coded bg-white vanished on the light-theme modal).
+              isCompleted || isCurrent
+                ? "bg-foreground"
+                : "bg-[color-mix(in_srgb,var(--oh-foreground)_18%,transparent)]",
             )}
           />
         );

@@ -8,6 +8,13 @@ import { useRuntimeIsReady } from "#/hooks/use-runtime-is-ready";
 import { useBashCommandRunner } from "#/hooks/use-bash-command-runner";
 import { Provider } from "#/types/settings";
 import { parseGitRemoteUrl } from "#/utils/parse-git-remote-url";
+import {
+  WORKSPACE_GIT_PROBE_TIMEOUT_SECONDS,
+  WORKSPACE_HEAVY_DIRS,
+  buildAutoFatDirDetectionScript,
+  buildIgnoreAwarePruneScript,
+  captureFindWithTimeout,
+} from "#/utils/workspace-excluded-dirs";
 
 export interface LocalGitInfo {
   repository: string | null;
@@ -16,12 +23,20 @@ export interface LocalGitInfo {
   remoteUrl: string | null;
 }
 
-const EMPTY_LOCAL_GIT_INFO: LocalGitInfo = {
+export const EMPTY_LOCAL_GIT_INFO: LocalGitInfo = {
   repository: null,
   branch: null,
   provider: null,
   remoteUrl: null,
 };
+
+/** Poll interval while a workspace still looks like it may gain git metadata. */
+export const LOCAL_GIT_INFO_POLL_MS = 10_000;
+/**
+ * Back off when consecutive probes return empty — avoids hammering `find`
+ * on huge non-git workspaces (node_modules, model dumps, etc.).
+ */
+export const LOCAL_GIT_INFO_EMPTY_POLL_MS = 60_000;
 
 type RunCommand = (
   command: string,
@@ -29,31 +44,76 @@ type RunCommand = (
   timeout: number,
 ) => Promise<CommandResult>;
 
-// Single shell script that replaces the former probeGitInfoAtDir +
-// probeNestedRepoInDir pair.  It runs as one bash WebSocket round-trip:
-//   1. Read the origin remote URL and current branch at the workspace root.
-//   2. If neither is set, search for exactly one nested git repo up to 4
-//      levels deep and repeat the probe there.
-// Output: two lines — <remote-url>\n<branch> — either may be empty.
-const GIT_INFO_COMMAND = [
-  "r=$(git remote get-url origin 2>/dev/null)",
-  "b=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)",
-  'if [ -z "$r$b" ]; then',
-  "n=$(find . -mindepth 2 -maxdepth 4 -name .git 2>/dev/null | cut -c3- | sed 's|/.git$||' | sort -u)",
-  "c=$(printf '%s\\n' \"$n\" | grep -c '[^[:space:]]')",
-  'if [ "$c" = "1" ] && [ -n "$n" ]; then',
-  'r=$(git -C "$n" remote get-url origin 2>/dev/null)',
-  'b=$(git -C "$n" rev-parse --abbrev-ref HEAD 2>/dev/null)',
-  "fi",
-  "fi",
-  'printf \'%s\\n%s\' "$r" "$b"',
-].join("\n");
+/**
+ * Build the consolidated bash probe used by {@link useLocalGitInfo}.
+ * Nested `.git` search automatically skips known heavy dirs and fat
+ * directories (no user ignore file required) and is hard-capped by timeout.
+ */
+export function buildGitInfoCommand(): string {
+  // Prune known heavy names + auto-detected fat dirs. Use -maxdepth only
+  // (never -mindepth before prune — GNU find would skip the prune test on
+  // shallow paths). Exclude workspace-root .git via -path.
+  const pruneSetup = buildIgnoreAwarePruneScript(
+    "prunes",
+    WORKSPACE_HEAVY_DIRS,
+  );
+  const fatSetup = buildAutoFatDirDetectionScript("prunes", "path_prunes");
+  const nestedFindArgs =
+    `. -maxdepth 4 \\( "\${prunes[@]}" \${path_prunes[@]} \\) -prune` +
+    ` -o -path '*/.git' ! -path './.git' -print`;
+  // Single shell script:
+  //   1. Read the origin remote URL and current branch at the workspace root.
+  //   2. If neither is set, search for exactly one nested git repo up to 4
+  //      levels deep (skipping heavy + fat dirs) and repeat the probe there.
+  // Output: two lines — <remote-url>\n<branch> — either may be empty.
+  return [
+    "r=$(git remote get-url origin 2>/dev/null)",
+    "b=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)",
+    'if [ -z "$r$b" ]; then',
+    pruneSetup,
+    fatSetup,
+    captureFindWithTimeout(
+      "n",
+      nestedFindArgs,
+      WORKSPACE_GIT_PROBE_TIMEOUT_SECONDS,
+      ` | cut -c3- | sed 's|/.git$||' | sort -u`,
+    ),
+    "c=$(printf '%s\\n' \"$n\" | grep -c '[^[:space:]]')",
+    'if [ "$c" = "1" ] && [ -n "$n" ]; then',
+    'r=$(git -C "$n" remote get-url origin 2>/dev/null)',
+    'b=$(git -C "$n" rev-parse --abbrev-ref HEAD 2>/dev/null)',
+    "fi",
+    "fi",
+    'printf \'%s\\n%s\' "$r" "$b"',
+  ].join("\n");
+}
+
+export function isEmptyLocalGitInfo(
+  info: LocalGitInfo | undefined,
+): info is LocalGitInfo {
+  return (
+    !!info &&
+    info.repository === null &&
+    info.branch === null &&
+    info.provider === null &&
+    info.remoteUrl === null
+  );
+}
+
+/** Resolve the poll interval from the last probe result. */
+export function resolveLocalGitInfoPollMs(
+  info: LocalGitInfo | undefined,
+): number {
+  return isEmptyLocalGitInfo(info)
+    ? LOCAL_GIT_INFO_EMPTY_POLL_MS
+    : LOCAL_GIT_INFO_POLL_MS;
+}
 
 async function probeGitInfo(
   run: RunCommand,
   directory: string,
 ): Promise<LocalGitInfo> {
-  const result = await run(GIT_INFO_COMMAND, directory, 10);
+  const result = await run(buildGitInfoCommand(), directory, 10);
   if (result.exit_code !== 0) return EMPTY_LOCAL_GIT_INFO;
 
   const nl = result.stdout.indexOf("\n");
@@ -77,7 +137,7 @@ async function probeGitInfo(
 /**
  * Probe git metadata for a **local** backend's workspace checkout by
  * shelling out via the agent server using a single consolidated bash
- * script (see `GIT_INFO_COMMAND`).
+ * script (see `buildGitInfoCommand`).
  *
  * Local-only by design. On cloud backends the conversation metadata
  * (`selected_repository`, `git_provider`, `selected_branch`) is the
@@ -91,7 +151,8 @@ async function probeGitInfo(
  * partial metadata hydration after connect/clone flows.
  *
  * Returns `null` fields when the working dir is not a git checkout —
- * callers should treat that the same as "no repo detected".
+ * callers should treat that the same as "no repo detected". Empty
+ * results back off the poll interval to avoid repeated full-tree scans.
  */
 export const useLocalGitInfo = () => {
   const { data: conversation } = useActiveConversation();
@@ -150,13 +211,12 @@ export const useLocalGitInfo = () => {
     },
     enabled: queryEnabled,
     retry: false,
-    // Re-probe the workspace every 10s so the UI reflects branch/repo
-    // changes (e.g. `git checkout`, adding a remote) without requiring a
-    // manual refresh when there is no `selected_repository` recorded on
-    // the conversation. Commands now run over the persistent WebSocket
-    // connection rather than individual REST calls.
-    staleTime: 10_000,
-    refetchInterval: 10_000,
+    // Re-probe the workspace periodically so the UI reflects branch/repo
+    // changes without a manual refresh when conversation metadata is
+    // incomplete. Empty (non-git) workspaces back off to avoid hammering
+    // `find` on huge trees.
+    staleTime: LOCAL_GIT_INFO_POLL_MS,
+    refetchInterval: (query) => resolveLocalGitInfoPollMs(query.state.data),
     gcTime: 1000 * 60 * 5,
     meta: { disableToast: true },
   });

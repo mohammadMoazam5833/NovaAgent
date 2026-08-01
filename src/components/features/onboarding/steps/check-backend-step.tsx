@@ -55,15 +55,16 @@ function ConnectionBanner({
         role="status"
         data-testid="onboarding-backend-connected"
         className={cn(
-          "flex items-start gap-3 rounded-xl border border-green-500/40 bg-green-500/10 px-4 py-3",
+          "flex items-start gap-3 rounded-xl border px-4 py-3",
+          "border-green-600/40 bg-green-500/10",
         )}
       >
-        <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-green-400" />
+        <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-green-600 dark:text-green-400" />
         <div className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-green-200">
+          <span className="text-sm font-medium text-green-800 dark:text-green-200">
             {t(I18nKey.ONBOARDING$BACKEND_CONNECTED_TITLE)}
           </span>
-          <span className="text-xs text-green-200/80">
+          <span className="text-xs text-green-700 dark:text-green-200/80">
             {t(I18nKey.ONBOARDING$BACKEND_CONNECTED_BODY)}
           </span>
         </div>
@@ -80,14 +81,14 @@ function ConnectionBanner({
       <div
         role="alert"
         data-testid="onboarding-backend-disconnected"
-        className="flex items-start gap-3 rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3"
+        className="flex items-start gap-3 rounded-xl border border-red-600/45 bg-red-500/10 px-4 py-3"
       >
-        <AlertCircle className="mt-0.5 size-5 shrink-0 text-red-400" />
+        <AlertCircle className="mt-0.5 size-5 shrink-0 text-red-600 dark:text-red-400" />
         <div className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-red-200">
+          <span className="text-sm font-semibold text-red-800 dark:text-red-200">
             {statusLabel}
           </span>
-          <span className="text-xs text-red-200/80">
+          <span className="text-xs text-red-700 dark:text-red-200/90">
             {t(I18nKey.ONBOARDING$BACKEND_DISCONNECTED_BODY)}
           </span>
         </div>
@@ -99,10 +100,10 @@ function ConnectionBanner({
     <div
       role="status"
       data-testid="onboarding-backend-checking"
-      className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3"
+      className="flex items-start gap-3 rounded-xl border border-[var(--oh-border)] bg-[var(--oh-surface-raised)] px-4 py-3"
     >
-      <Loader2 className="mt-0.5 size-5 shrink-0 animate-spin text-[var(--oh-text-tertiary)]" />
-      <span className="text-sm text-[var(--oh-text-tertiary)]">
+      <Loader2 className="mt-0.5 size-5 shrink-0 animate-spin text-[var(--oh-muted)]" />
+      <span className="text-sm text-[var(--oh-muted)]">
         {t(I18nKey.ONBOARDING$BACKEND_CHECKING)}
       </span>
     </div>

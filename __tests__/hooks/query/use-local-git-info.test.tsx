@@ -3,7 +3,15 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { useLocalGitInfo } from "#/hooks/query/use-local-git-info";
+import {
+  EMPTY_LOCAL_GIT_INFO,
+  LOCAL_GIT_INFO_EMPTY_POLL_MS,
+  LOCAL_GIT_INFO_POLL_MS,
+  buildGitInfoCommand,
+  isEmptyLocalGitInfo,
+  resolveLocalGitInfoPollMs,
+  useLocalGitInfo,
+} from "#/hooks/query/use-local-git-info";
 
 const useActiveBackendMock = vi.fn();
 vi.mock("#/contexts/active-backend-context", () => ({
@@ -101,6 +109,26 @@ describe("useLocalGitInfo", () => {
     vi.clearAllMocks();
   });
 
+  describe("resolveLocalGitInfoPollMs", () => {
+    it("uses the fast interval until a probe has returned empty", () => {
+      expect(resolveLocalGitInfoPollMs(undefined)).toBe(LOCAL_GIT_INFO_POLL_MS);
+      expect(
+        resolveLocalGitInfoPollMs({
+          repository: "acme/widgets",
+          branch: "main",
+          provider: "github",
+          remoteUrl: "git@github.com:acme/widgets.git",
+        }),
+      ).toBe(LOCAL_GIT_INFO_POLL_MS);
+    });
+
+    it("backs off to 60s for empty non-git workspaces", () => {
+      expect(resolveLocalGitInfoPollMs(EMPTY_LOCAL_GIT_INFO)).toBe(
+        LOCAL_GIT_INFO_EMPTY_POLL_MS,
+      );
+    });
+  });
+
   it("does not call the bash runner on a cloud backend even when conversation metadata is incomplete", async () => {
     // Arrange
     useActiveBackendMock.mockReturnValue(makeBackend("cloud"));
@@ -178,9 +206,79 @@ describe("useLocalGitInfo", () => {
       "/workspace/project",
       10,
     );
+    expect(runCommandMock.mock.calls[0][0]).toContain("-name 'node_modules'");
+    expect(runCommandMock.mock.calls[0][0]).toContain(
+      "-prune -o -path '*/.git'",
+    );
     expect(result.current.data).toMatchObject({
       repository: "acme/widgets",
       branch: "main",
     });
+  });
+
+  it("prunes heavy directories in the nested .git find so node_modules is never walked", () => {
+    const command = buildGitInfoCommand();
+    expect(command).toContain("-name 'node_modules'");
+    expect(command).toContain("-name '.venv'");
+    expect(command).toContain("-name 'models'");
+    expect(command).toContain("-o -path '*/.git' ! -path './.git' -print");
+    expect(command).toContain("-maxdepth 4");
+    expect(command).not.toMatch(/-name '\.git'/);
+    // Probe find must not use -mindepth before prune (GNU find would then
+    // skip pruning depth-1 heavy dirs). Fat-dir detection may still use
+    // -mindepth on its own shallow walk.
+    expect(command).toMatch(
+      /timeout \d+s find \. -maxdepth 4 \\\( "\$\{prunes\[@\]\}"/,
+    );
+    expect(command).not.toMatch(/timeout \d+s find \. -mindepth/);
+  });
+
+  it("auto-detects fat directories and hard-caps the probe with a timeout", () => {
+    const command = buildGitInfoCommand();
+    expect(command).toContain("path_prunes");
+    expect(command).toContain("timeout");
+    expect(command).toContain("'.agentcanvasignore'");
+  });
+
+  it("backs off the poll interval after an empty (non-git) probe", async () => {
+    // Arrange
+    useActiveBackendMock.mockReturnValue(makeBackend("local"));
+    runCommandMock.mockResolvedValue({
+      exit_code: 0,
+      stdout: "\n",
+      stderr: "",
+    });
+
+    // Act
+    const { result } = renderHook(() => useLocalGitInfo(), {
+      wrapper: makeWrapper(),
+    });
+
+    // Assert
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toEqual(EMPTY_LOCAL_GIT_INFO);
+    expect(isEmptyLocalGitInfo(result.current.data)).toBe(true);
+    expect(resolveLocalGitInfoPollMs(result.current.data)).toBe(
+      LOCAL_GIT_INFO_EMPTY_POLL_MS,
+    );
+  });
+
+  it("keeps the fast poll interval when git metadata is found", async () => {
+    useActiveBackendMock.mockReturnValue(makeBackend("local"));
+    runCommandMock.mockResolvedValue({
+      exit_code: 0,
+      stdout: "git@github.com:acme/widgets.git\nmain",
+      stderr: "",
+    });
+
+    const { result } = renderHook(() => useLocalGitInfo(), {
+      wrapper: makeWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(isEmptyLocalGitInfo(result.current.data)).toBe(false);
+    expect(resolveLocalGitInfoPollMs(result.current.data)).toBe(
+      LOCAL_GIT_INFO_POLL_MS,
+    );
   });
 });

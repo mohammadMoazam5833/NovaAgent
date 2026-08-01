@@ -43,7 +43,7 @@ export const formControlTransformTransitionClassName = cn(
 
 /** Muted icon/pill controls: instant foreground, fading shell on hover. */
 export const formControlMutedHoverClassName =
-  "hover:text-white hover:bg-white/10";
+  "hover:text-foreground hover:bg-[color-mix(in_srgb,var(--oh-foreground)_8%,transparent)]";
 
 /** Text/icon pill triggers in the chat input actions row. */
 export const chatInputPillButtonClassName = cn(
@@ -61,10 +61,10 @@ export const chatInputIconButtonClassName = cn(
 );
 
 export const formControlFocusClassName =
-  "focus:border-white/40 focus:ring-1 focus:ring-white/20 focus:outline-none";
+  "focus:border-[color-mix(in_srgb,var(--oh-foreground)_40%,transparent)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--oh-foreground)_20%,transparent)] focus:outline-none";
 
 export const formControlFocusWithinClassName =
-  "focus-within:border-white/40 focus-within:ring-1 focus-within:ring-white/20";
+  "focus-within:border-[color-mix(in_srgb,var(--oh-foreground)_40%,transparent)] focus-within:ring-1 focus-within:ring-[color-mix(in_srgb,var(--oh-foreground)_20%,transparent)]";
 
 export const formControlDisabledClassName =
   "disabled:cursor-not-allowed disabled:opacity-60";
@@ -78,7 +78,7 @@ export const formControlFieldClassName = cn(
   formControlTransitionClassName,
   formControlFocusClassName,
   formControlDisabledClassName,
-  "w-full min-w-0 px-3 text-sm text-white placeholder:text-tertiary-alt",
+  "w-full min-w-0 px-3 text-sm text-foreground placeholder:text-tertiary-alt",
 );
 
 /** Settings screens keep italic placeholders on form controls. */
@@ -96,7 +96,7 @@ export const formControlMultilineFieldClassName = cn(
   formControlTransitionClassName,
   formControlFocusClassName,
   formControlDisabledClassName,
-  "w-full min-w-0 px-3 py-2 text-sm text-white placeholder:text-tertiary-alt",
+  "w-full min-w-0 px-3 py-2 text-sm text-foreground placeholder:text-tertiary-alt",
 );
 
 /** Combobox / search shell (icon + input), e.g. skills toolbar. */
@@ -112,7 +112,7 @@ export const formControlShellClassName = cn(
 
 /** Borderless input nested inside {@link formControlShellClassName}. */
 export const formControlInlineInputClassName = cn(
-  "min-w-0 flex-1 border-0 bg-transparent px-3 text-sm outline-none",
+  "min-w-0 flex-1 border-0 bg-transparent px-3 text-sm text-foreground outline-none",
   "placeholder:text-tertiary-alt",
   "[&::-webkit-search-cancel-button]:hidden",
 );
@@ -134,7 +134,7 @@ export const formControlFilterTriggerClassName = cn(
   formControlButtonClassName,
   formControlBorderClassName,
   formControlSurfaceClassName,
-  "shrink-0 text-white",
+  "shrink-0 text-foreground",
 );
 
 /** Muted back navigation control with tertiary hover fill (settings sub-pages, detail views). */
@@ -142,5 +142,5 @@ export const formControlBackNavButtonClassName = cn(
   "inline-flex items-center gap-2 self-start rounded-lg p-2",
   "text-sm font-normal leading-5 text-[var(--oh-muted)] cursor-pointer",
   formControlTransitionClassName,
-  "hover:bg-tertiary hover:text-white",
+  "hover:bg-tertiary hover:text-foreground",
 );
