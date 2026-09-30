@@ -70,6 +70,9 @@ fi
 
 TOKEN=$(openssl rand -hex 24)
 OH_SECRET=$(openssl rand -hex 32)
+# Tenant must share the default cipher or seeded secrets will not
+# decrypt in its instance.
+DEF_SECRET=$(grep -m1 '^OH_SECRET_KEY=' /home/moazemi-gc/.nova-env | cut -d= -f2-)
 
 # 1. register in the customer registry (ingress reads this per-request)
 python3 - "$CUSTOMERS_FILE" "$NAME" "$TOKEN" "$PORT" "${ROOTS[@]}" <<'EOF'
@@ -100,9 +103,25 @@ NOVAAGENT_LOCAL_TOOLS_URL=http://127.0.0.1:18766/c/$NAME
 NOVAAGENT_LOCAL_TOOLS_TOKEN=$TOKEN
 SESSION_API_KEY=$TOKEN
 NOVAAGENT_TENANT=$NAME
-OH_SECRET_KEY=$OH_SECRET
+OH_SECRET_KEY=${DEF_SECRET:-$OH_SECRET}
 EOF
 chmod 600 "$ENVF"
+
+# 2b. seed LLM settings/profiles so the tenant starts with the company
+#      LLM active. NOTE the two store locations:
+#      - settings.json lives in <tenant>/workspace/.openhands (the
+#        conversations_path parent, per persistence/store.py)
+#      - profiles/ + agent-profiles/ live in <tenant>/.openhands (HOME)
+DEF_STORE=/home/moazemi-gc/workspace/.openhands
+DEF_HOME_OH=/home/moazemi-gc/.openhands
+mkdir -p "$TENANTS_DIR/$NAME/workspace/.openhands" "$TENANTS_DIR/$NAME/.openhands"
+[ -f "$DEF_STORE/settings.json" ] && cp "$DEF_STORE/settings.json" "$TENANTS_DIR/$NAME/workspace/.openhands/"
+[ -d "$DEF_HOME_OH/profiles" ] && cp -r "$DEF_HOME_OH/profiles" "$TENANTS_DIR/$NAME/.openhands/"
+[ -d "$DEF_HOME_OH/agent-profiles" ] && cp -r "$DEF_HOME_OH/agent-profiles" "$TENANTS_DIR/$NAME/.openhands/"
+find "$TENANTS_DIR/$NAME" -name '.*.lock' -delete 2>/dev/null || true
+chmod 600 "$TENANTS_DIR/$NAME/workspace/.openhands/settings.json" \
+          "$TENANTS_DIR/$NAME/.openhands/profiles/"*.json \
+          "$TENANTS_DIR/$NAME/.openhands/agent-profiles/"*.json 2>/dev/null || true
 
 # 3. start the per-tenant agent-server and refresh gateway customer list
 sudorun systemctl enable --now "$UNIT$NAME"
