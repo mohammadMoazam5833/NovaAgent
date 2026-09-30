@@ -383,6 +383,11 @@ def try_install_file_router_proxy(client: SidecarClient) -> bool:
         try:
             listing = client.list_dir(path)
         except SidecarClientError as exc:
+            if exc.code == "path_denied":
+                # Above/below the customer's allowlisted roots: the folder
+                # browser must dead-end gracefully (empty page) instead of
+                # surfacing a 403 - the sidebar locations stay inside roots.
+                return SubdirectoryPage(items=[], next_page_id=None)
             if exc.code == "not_found":
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
