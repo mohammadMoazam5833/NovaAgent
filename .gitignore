@@ -45,3 +45,8 @@ build-fresh/
 /resources/python/
 /resources/python-env/
 /resources/python-runtime.json
+
+# Local operational backups and temp dirs (not for the repo)
+.tmp/
+build.bak-inject/
+*.bak-*
