@@ -140,6 +140,9 @@ export function ConversationTabs({
   // agent isn't supported locally.
   const visibleTabs = tabs.filter((tab) => {
     if (tab.tabValue === "planner" && backend.kind !== "cloud") return false;
+    // Browser tab is the design-studio live preview — always keep it visible
+    // so customers never lose one-click access to their local preview.
+    if (tab.tabValue === "browser") return true;
     if (!persistedState.unpinnedTabs.includes(tab.tabValue)) return true;
     return selectedTab === tab.tabValue;
   });
