@@ -118,6 +118,7 @@ mkdir -p "$TENANTS_DIR/$NAME/workspace/.openhands" "$TENANTS_DIR/$NAME/.openhand
 [ -f "$DEF_STORE/settings.json" ] && cp "$DEF_STORE/settings.json" "$TENANTS_DIR/$NAME/workspace/.openhands/"
 [ -d "$DEF_HOME_OH/profiles" ] && cp -r "$DEF_HOME_OH/profiles" "$TENANTS_DIR/$NAME/.openhands/"
 [ -d "$DEF_HOME_OH/agent-profiles" ] && cp -r "$DEF_HOME_OH/agent-profiles" "$TENANTS_DIR/$NAME/.openhands/"
+[ -f "$DEF_HOME_OH/SOUL.md" ] && cp "$DEF_HOME_OH/SOUL.md" "$TENANTS_DIR/$NAME/.openhands/"
 find "$TENANTS_DIR/$NAME" -name '.*.lock' -delete 2>/dev/null || true
 chmod 600 "$TENANTS_DIR/$NAME/workspace/.openhands/settings.json" \
           "$TENANTS_DIR/$NAME/.openhands/profiles/"*.json \
