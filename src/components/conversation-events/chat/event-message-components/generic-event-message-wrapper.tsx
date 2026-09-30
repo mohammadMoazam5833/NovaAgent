@@ -22,7 +22,6 @@ import {
   isSkillReadyEvent,
 } from "../event-content-helpers/create-skill-ready-event";
 import { getInvokeSkillItems } from "../event-content-helpers/get-invoke-skill-items";
-import { ConversationConfirmationButtons } from "#/components/shared/buttons/conversation-confirmation-buttons";
 import { SkillReadyContentList } from "./skill-ready-content-list";
 import SkillsIcon from "#/icons/skills.svg?react";
 
@@ -66,7 +65,7 @@ function getSkillKnowledge(
 
 export function GenericEventMessageWrapper({
   event,
-  isLastMessage,
+  isLastMessage: _isLastMessage,
   correspondingAction,
 }: GenericEventMessageWrapperProps) {
   const { title, details } = getEventContent(event, correspondingAction);
@@ -116,7 +115,6 @@ export function GenericEventMessageWrapper({
           ) : undefined
         }
       />
-      {isLastMessage && <ConversationConfirmationButtons />}
     </div>
   );
 }

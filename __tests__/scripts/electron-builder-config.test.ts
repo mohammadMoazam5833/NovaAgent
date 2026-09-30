@@ -12,10 +12,24 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import config from "../../electron-builder.config.mjs";
+import thinConfig from "../../electron-builder.thin.config.mjs";
 
 const afterPack = config.afterPack as (ctx: unknown) => Promise<void>;
 
-const PRODUCT_FILENAME = "Agent Canvas";
+/** Scripts main.mjs top-level-imports from Resources/app/scripts/. */
+function thinScriptsFilter(): string[] {
+  const entry = (thinConfig.files ?? []).find(
+    (f): f is { from: string; to: string; filter: string[] } =>
+      typeof f === "object" &&
+      f !== null &&
+      "from" in f &&
+      f.from === "../scripts" &&
+      Array.isArray((f as { filter?: unknown }).filter),
+  );
+  return entry?.filter ?? [];
+}
+
+const PRODUCT_FILENAME = "NovaAgent";
 
 function makeContext(platform: string, appOutDir: string) {
   return {
@@ -94,5 +108,48 @@ describe("electron-builder afterPack hook", () => {
     expect(existsSync(junkPkg)).toBe(false);
     expect(existsSync(join(appDir, "node_modules", "sirv", "package.json"))).toBe(true);
     expect(existsSync(join(appDir, "node_modules", "httpxy", "package.json"))).toBe(true);
+  });
+
+  it("removes chrome-sandbox and wraps the Linux Electron binary with --no-sandbox", async () => {
+    tmp = mkdtempSync(join(tmpdir(), "eb-afterpack-linux-sandbox-"));
+    const appDir = appDirFor("linux", tmp);
+    mkdirSync(appDir, { recursive: true });
+    // Fake Electron layout at appOutDir (sibling of resources/)
+    writeFileSync(join(tmp, "chrome-sandbox"), "fake-suid-helper");
+    writeFileSync(join(tmp, "novaagent"), "#!/bin/true\n");
+
+    await afterPack(makeContext("linux", tmp));
+
+    expect(existsSync(join(tmp, "chrome-sandbox"))).toBe(false);
+    expect(existsSync(join(tmp, "novaagent.bin"))).toBe(true);
+    const wrapper = await import("node:fs").then((fs) =>
+      fs.readFileSync(join(tmp ?? "", "novaagent"), "utf8"),
+    );
+    expect(wrapper).toContain("--no-sandbox");
+    expect(wrapper).toContain('$(basename "$0").bin');
+    expect(wrapper).toContain("ELECTRON_DISABLE_SANDBOX=1");
+  });
+});
+
+describe("electron-builder thin client files", () => {
+  it("packs both desktop URL resolvers main.mjs imports at startup", () => {
+    // Regression: omitting desktop-company-llm-url.mjs caused Windows
+    // win-unpacked ERR_MODULE_NOT_FOUND from resources/app/main.mjs.
+    const filter = thinScriptsFilter();
+    expect(filter).toContain("desktop-remote-url.mjs");
+    expect(filter).toContain("desktop-company-llm-url.mjs");
+  });
+
+  it("includes customer workspace reverse-client scripts used by thin main.mjs", () => {
+    const filter = thinScriptsFilter();
+    expect(filter).toContain("customer-workspace-client.mjs");
+    expect(filter).toContain("customer-workspace/client.mjs");
+    expect(filter).toContain("customer-workspace/urls.mjs");
+    expect(filter).toContain("local-tools-sidecar.mjs");
+    expect(filter).toContain("local-tools-sidecar/**/*.mjs");
+  });
+
+  it("includes company-llm.json bake when present next to main.mjs", () => {
+    expect(thinConfig.files ?? []).toContain("company-llm.json");
   });
 });

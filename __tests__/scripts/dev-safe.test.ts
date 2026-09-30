@@ -398,9 +398,61 @@ describe("buildAgentServerCommand", () => {
       "openhands-workspace==1.38.0",
       "--with",
       "agent-client-protocol<0.11",
+      "--with",
+      "fastmcp>=3,<4",
       "agent-server",
     ]);
     expect(cmd.source).toBe("PyPI (1.38.0, default)");
+  });
+
+  it("uses bundled CPython offline runtime when OH_BUNDLED_PYTHON* is set", () => {
+    const dir = mkdtempSync(path.join(tmpdir(), "bundled-py-"));
+    const python = path.join(dir, "python");
+    const site = path.join(dir, "site");
+    writeFileSync(python, "");
+    mkdirSync(site);
+    try {
+      const cmd = buildAgentServerCommand({
+        OH_BUNDLED_PYTHON: python,
+        OH_BUNDLED_PYTHON_ENV: site,
+      });
+      expect(cmd.command).toBe(python);
+      expect(cmd.args).toEqual(["-m", "openhands.agent_server"]);
+      expect(cmd.source).toContain("bundled");
+      expect(cmd.bundledPythonEnv?.PYTHONPATH).toContain(site);
+      expect(cmd.bundledPythonEnv?.UV_OFFLINE).toBe("1");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("prefers OH_AGENT_SERVER_LOCAL_PATH over bundled runtime", () => {
+    const dir = mkdtempSync(path.join(tmpdir(), "bundled-local-"));
+    const python = path.join(dir, "python");
+    const site = path.join(dir, "site");
+    const sdk = path.join(dir, "sdk");
+    writeFileSync(python, "");
+    mkdirSync(site);
+    mkdirSync(sdk);
+    for (const sub of [
+      "openhands-agent-server",
+      "openhands-sdk",
+      "openhands-tools",
+      "openhands-workspace",
+    ]) {
+      mkdirSync(path.join(sdk, sub));
+    }
+    try {
+      const cmd = buildAgentServerCommand({
+        OH_BUNDLED_PYTHON: python,
+        OH_BUNDLED_PYTHON_ENV: site,
+        OH_AGENT_SERVER_LOCAL_PATH: sdk,
+      });
+      expect(cmd.command).toBe("uvx");
+      expect(cmd.source).toContain("local");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 
   it("uses specific PyPI version when OH_AGENT_SERVER_VERSION is set with all packages pinned", () => {
@@ -420,6 +472,8 @@ describe("buildAgentServerCommand", () => {
       "openhands-workspace==1.18.0",
       "--with",
       "agent-client-protocol<0.11",
+      "--with",
+      "fastmcp>=3,<4",
       "agent-server",
     ]);
     expect(cmd.source).toBe("PyPI (1.18.0)");
@@ -441,6 +495,10 @@ describe("buildAgentServerCommand", () => {
       "git+https://github.com/OpenHands/software-agent-sdk@feature-branch#subdirectory=openhands-tools",
       "--with",
       "git+https://github.com/OpenHands/software-agent-sdk@feature-branch#subdirectory=openhands-workspace",
+      "--with",
+      "agent-client-protocol<0.11",
+      "--with",
+      "fastmcp>=3,<4",
       "agent-server",
     ]);
     expect(cmd.source).toBe("git (feature-branch)");
@@ -460,6 +518,10 @@ describe("buildAgentServerCommand", () => {
       "git+https://github.com/OpenHands/software-agent-sdk@abc1234#subdirectory=openhands-tools",
       "--with",
       "git+https://github.com/OpenHands/software-agent-sdk@abc1234#subdirectory=openhands-workspace",
+      "--with",
+      "agent-client-protocol<0.11",
+      "--with",
+      "fastmcp>=3,<4",
       "agent-server",
     ]);
     expect(cmd.source).toBe("git (abc1234)");
@@ -494,6 +556,10 @@ describe("buildAgentServerCommand", () => {
       path.join(sdk, "openhands-tools"),
       "--with-editable",
       path.join(sdk, "openhands-workspace"),
+      "--with",
+      "agent-client-protocol<0.11",
+      "--with",
+      "fastmcp>=3,<4",
       "agent-server",
     ]);
     expect(cmd.source).toBe(`local (${sdk})`);

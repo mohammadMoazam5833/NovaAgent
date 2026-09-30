@@ -202,10 +202,10 @@ export function buildRuntimeServicesSystemSuffix(): string | undefined {
   lines.push("<RUNTIME_SERVICES>");
   if (info.mode) {
     lines.push(
-      `You are running inside an agent-canvas dev stack started in '${info.mode}' mode.`,
+      `You are running inside a NovaAgent stack started in '${info.mode}' mode.`,
     );
   } else {
-    lines.push("You are running inside an agent-canvas dev stack.");
+    lines.push("You are running inside a NovaAgent stack.");
   }
   lines.push(
     "The following services are reachable from your sandbox. URLs are written",
@@ -508,7 +508,9 @@ function getConversationConfirmationPolicy(
   }
 
   if (conversationSettings.security_analyzer === "llm") {
-    return { kind: "ConfirmRisky", threshold: "HIGH", confirm_unknown: true };
+    // Only HIGH-risk tools pause. Unknown ratings auto-run so smaller models
+    // that omit/under-specify risk do not turn every tool call into HITL.
+    return { kind: "ConfirmRisky", threshold: "HIGH", confirm_unknown: false };
   }
 
   return { kind: "AlwaysConfirm" };
@@ -525,6 +527,51 @@ function getConversationSecurityAnalyzer(conversationSettings: SettingsRecord) {
     default:
       return undefined;
   }
+}
+
+const STUCK_THRESHOLD_KEYS = [
+  "action_observation",
+  "action_error",
+  "monologue",
+  "alternating_pattern",
+] as const;
+
+type StuckThresholdKey = (typeof STUCK_THRESHOLD_KEYS)[number];
+
+function readStuckThresholdsRecord(
+  conversationSettings: SettingsRecord,
+): SettingsRecord | null {
+  const nested = conversationSettings.stuck_detection_thresholds;
+  if (nested && typeof nested === "object" && !Array.isArray(nested)) {
+    return nested as SettingsRecord;
+  }
+  return null;
+}
+
+function hasStuckDetectionThresholds(
+  conversationSettings: SettingsRecord,
+): boolean {
+  const nested = readStuckThresholdsRecord(conversationSettings);
+  if (!nested) {
+    return false;
+  }
+  return STUCK_THRESHOLD_KEYS.some(
+    (key) => typeof nested[key] === "number" && Number.isFinite(nested[key]),
+  );
+}
+
+function pickStuckDetectionThresholds(
+  conversationSettings: SettingsRecord,
+): Partial<Record<StuckThresholdKey, number>> {
+  const nested = readStuckThresholdsRecord(conversationSettings) ?? {};
+  const out: Partial<Record<StuckThresholdKey, number>> = {};
+  for (const key of STUCK_THRESHOLD_KEYS) {
+    const value = nested[key];
+    if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+      out[key] = value;
+    }
+  }
+  return out;
 }
 
 function isToolRecord(
@@ -656,7 +703,37 @@ function buildBundledSkills(): BundledSkill[] {
   });
 }
 
-function buildAgentContext(agentSettings: SettingsRecord): SettingsRecord {
+function normalizeDisabledSkills(value: unknown): string[] | undefined {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+  const names = value
+    .filter((item): item is string => typeof item === "string")
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0);
+  return names.length > 0 ? names : undefined;
+}
+
+/**
+ * Merge a profile/user system_message_suffix with the launcher
+ * RUNTIME_SERVICES block. Previously RUNTIME_SERVICES replaced any existing
+ * suffix, which dropped custom agent-context instructions.
+ */
+export function mergeSystemMessageSuffix(
+  existingSuffix: unknown,
+  runtimeServicesSuffix: string | undefined,
+): string | undefined {
+  const existing =
+    typeof existingSuffix === "string" ? existingSuffix.trim() : "";
+  const runtime = runtimeServicesSuffix?.trim() ?? "";
+  const parts = [existing, runtime].filter((part) => part.length > 0);
+  return parts.length > 0 ? parts.join("\n\n") : undefined;
+}
+
+function buildAgentContext(
+  agentSettings: SettingsRecord,
+  options?: { disabledSkills?: string[] | null },
+): SettingsRecord {
   const runtimeServicesSuffix = buildRuntimeServicesSystemSuffix();
   const existingContext = toRecord(agentSettings.agent_context);
 
@@ -665,7 +742,24 @@ function buildAgentContext(agentSettings: SettingsRecord): SettingsRecord {
   const existingSkills = Array.isArray(existingContext.skills)
     ? (existingContext.skills as SettingsRecord[])
     : [];
-  const mergedSkills = [...existingSkills, ...buildBundledSkills()];
+  // Prefer the app-preference deny-list (Settings → Skills) over any stale
+  // agent_context.disabled_skills so toggled-off public skills stay off on
+  // inline (non-profile) conversation starts.
+  const disabledSkills =
+    normalizeDisabledSkills(options?.disabledSkills) ??
+    normalizeDisabledSkills(existingContext.disabled_skills);
+  const disabledSet = new Set(disabledSkills ?? []);
+  const mergedSkills = [...existingSkills, ...buildBundledSkills()].filter(
+    (skill) => {
+      const name = skill.name;
+      return typeof name !== "string" || !disabledSet.has(name);
+    },
+  );
+
+  const systemMessageSuffix = mergeSystemMessageSuffix(
+    existingContext.system_message_suffix,
+    runtimeServicesSuffix,
+  );
 
   return {
     ...existingContext,
@@ -682,8 +776,9 @@ function buildAgentContext(agentSettings: SettingsRecord): SettingsRecord {
     load_public_skills: false,
     load_user_skills: true,
     load_project_skills: true,
-    ...(runtimeServicesSuffix
-      ? { system_message_suffix: runtimeServicesSuffix }
+    ...(disabledSkills ? { disabled_skills: disabledSkills } : {}),
+    ...(systemMessageSuffix
+      ? { system_message_suffix: systemMessageSuffix }
       : {}),
   };
 }
@@ -721,7 +816,9 @@ function buildConfiguredAcpAgentSettings(
   const agentSettings = toRecord(settings.agent_settings);
   const payload: AgentSettingsPayload = {
     agent_kind: "acp",
-    agent_context: buildAgentContext(agentSettings),
+    agent_context: buildAgentContext(agentSettings, {
+      disabledSkills: settings.disabled_skills,
+    }),
   };
 
   // TODO(#1019): set ``acp_isolate_data_dir: true`` here for a containerized
@@ -787,9 +884,15 @@ function buildConfiguredOpenHandsAgentSettings(
       ? llm.model
       : DEFAULT_SETTINGS.llm_model;
 
-  // Stream assistant tokens (parity with ACP agents). The agent-server only
-  // emits StreamingDeltaEvents for SDK LLM agents when an LLM has stream=True.
-  llm.stream = true;
+  // Stream assistant tokens when the LLM profile/settings allow it.
+  // Do not force stream=true: local OpenAI-compatible servers (e.g. vLLM +
+  // Qwen) can fail to round-trip native/non-native tool calls under forced
+  // streaming, leaving raw <function=...> text in the chat instead of actions.
+  // Profiles may still opt in with stream=true; default remains enabled for
+  // cloud/subscription parity when unset.
+  if (typeof llm.stream !== "boolean") {
+    llm.stream = true;
+  }
 
   const apiKey = normalizeSecretString(llm.api_key);
   if (apiKey) {
@@ -832,7 +935,9 @@ function buildConfiguredOpenHandsAgentSettings(
   return {
     ...agentSettings,
     llm,
-    agent_context: buildAgentContext(agentSettings),
+    agent_context: buildAgentContext(agentSettings, {
+      disabledSkills: settings.disabled_skills,
+    }),
     tools: getAgentTools(agentSettings),
   };
 }
@@ -900,6 +1005,12 @@ type StartConversationPayload = Record<string, unknown> & {
   initial_message?: InitialMessagePayload;
   max_iterations: number;
   stuck_detection: true;
+  stuck_detection_thresholds?: {
+    action_observation?: number;
+    action_error?: number;
+    monologue?: number;
+    alternating_pattern?: number;
+  };
   autotitle: true;
   title_llm_profile?: string;
   worktree: boolean;
@@ -997,6 +1108,12 @@ export function buildStartConversationRequest(
         ? conversationSettings.max_iterations
         : 500,
     stuck_detection: true,
+    ...(hasStuckDetectionThresholds(conversationSettings)
+      ? {
+          stuck_detection_thresholds:
+            pickStuckDetectionThresholds(conversationSettings),
+        }
+      : {}),
     autotitle: true,
     ...(options.titleLlmProfile
       ? { title_llm_profile: options.titleLlmProfile }

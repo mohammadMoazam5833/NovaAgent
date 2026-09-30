@@ -10,6 +10,10 @@
  *   node scripts/download-uv.mjs          # uses latest GitHub release
  *   UV_VERSION=0.7.0 node scripts/download-uv.mjs
  *
+ * Cross-compile (Linux host → Windows package):
+ *   ELECTRON_DOWNLOAD_PLATFORM=win32 ELECTRON_DOWNLOAD_ARCH=x64 \
+ *     node scripts/download-uv.mjs
+ *
  * Output (per platform):
  *   resources/bin/uv    + resources/bin/uvx     (macOS / Linux)
  *   resources/bin/uv.exe + resources/bin/uvx.exe (Windows)
@@ -34,9 +38,33 @@ const projectRoot = join(__dirname, "..");
 const outDir = join(projectRoot, "resources", "bin");
 
 // ── Platform detection ─────────────────────────────────────────────────────────
+//
+// Default to the build host. Override with ELECTRON_DOWNLOAD_PLATFORM /
+// ELECTRON_DOWNLOAD_ARCH when cross-packing (e.g. Linux CI producing a
+// Windows zip). Without the override, a Linux host ships ELF `uv`/`uvx`
+// into a Windows package, and the app looks for `uv.exe` and fails with
+// "Missing prerequisite: uv".
 
-const PLATFORM = process.platform; // 'darwin' | 'linux' | 'win32'
-const ARCH = process.arch;         // 'x64' | 'arm64'
+const ALLOWED_PLATFORMS = new Set(["darwin", "linux", "win32"]);
+const ALLOWED_ARCHES = new Set(["x64", "arm64"]);
+
+function resolveDownloadTarget() {
+  const platform = process.env.ELECTRON_DOWNLOAD_PLATFORM || process.platform;
+  const arch = process.env.ELECTRON_DOWNLOAD_ARCH || process.arch;
+  if (!ALLOWED_PLATFORMS.has(platform)) {
+    throw new Error(
+      `Unsupported ELECTRON_DOWNLOAD_PLATFORM / platform for uv download: ${platform}`,
+    );
+  }
+  if (!ALLOWED_ARCHES.has(arch)) {
+    throw new Error(
+      `Unsupported ELECTRON_DOWNLOAD_ARCH / arch for uv download: ${arch}`,
+    );
+  }
+  return { platform, arch };
+}
+
+const { platform: PLATFORM, arch: ARCH } = resolveDownloadTarget();
 
 function getPlatformSpec() {
   if (PLATFORM === "darwin") {
@@ -135,13 +163,27 @@ function downloadFile(url, dest) {
 // ── Extraction ────────────────────────────────────────────────────────────────
 
 function extract(archivePath, targetDir, ext) {
-  // Both tar.gz and zip are handled by the system 'tar' command:
-  //   macOS/Linux: GNU/BSD tar natively supports .tar.gz
-  //   Windows 10+: built-in bsdtar supports both .tar.gz and .zip
+  // tar.gz: GNU/BSD tar. zip: prefer unzip (GNU tar on Linux cannot read zip);
+  // fall back to `tar -xf` for bsdtar on Windows/macOS.
   // The tar.gz archives wrap uv/uvx in a top-level `uv-<target>/` directory,
   // which --strip-components=1 removes. uv's Windows .zip is flat (uv.exe /
   // uvx.exe at the archive root) — stripping there would skip every entry
   // and extract nothing.
+  if (ext === "zip") {
+    try {
+      execFileSync("unzip", ["-o", "-q", archivePath, "-d", targetDir], {
+        stdio: "inherit",
+      });
+      return;
+    } catch (err) {
+      // bsdtar (Windows 10+ / some macOS) can read zip via `tar -xf`.
+      if (err && (err.code === "ENOENT" || err.status != null)) {
+        // fall through to tar
+      } else {
+        throw err;
+      }
+    }
+  }
   const args = ["-xf", archivePath, "-C", targetDir];
   if (ext === "tar.gz") {
     args.push("--strip-components=1");
@@ -163,6 +205,9 @@ async function main() {
   const extractDir = join(tmpdir(), `uv-extract-${Date.now()}`);
 
   try {
+    // Wipe prior downloads so a Linux→Windows cross-pack does not leave
+    // ELF `uv`/`uvx` beside the new `uv.exe`/`uvx.exe` (or vice versa).
+    if (existsSync(outDir)) rmSync(outDir, { recursive: true, force: true });
     mkdirSync(outDir, { recursive: true });
     mkdirSync(extractDir, { recursive: true });
 
@@ -183,7 +228,8 @@ async function main() {
       // copyFileSync works across filesystems (unlike renameSync with EXDEV)
       copyFileSync(src, dest);
 
-      if (process.platform !== "win32") {
+      // chmod only for POSIX *target* binaries (not based on the build host).
+      if (PLATFORM !== "win32") {
         chmodSync(dest, 0o755);
       }
 

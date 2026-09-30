@@ -21,6 +21,8 @@
   <a href="#quickstart">Quickstart</a> |
   <a href="./docs/README.md">Docs</a> |
   <a href="./docs/SELF_HOSTING.md">Self-Hosting</a> |
+  <a href="./docs/REMOTE_THIN_CLIENT.md">Remote + thin client</a> |
+  <a href="./docs/HYBRID.md">Hybrid (local agent + company LLM)</a> |
   <a href="https://docs.openhands.dev/openhands/usage/agent-canvas/acp-agents">ACP Agents</a> |
   <a href="https://docs.openhands.dev/openhands/usage/agent-canvas/prebuilt-automations">Automations</a> |
   <a href="https://go.openhands.dev/slack">Slack</a>
@@ -59,6 +61,14 @@ like Slack, GitHub, and Datadog. See [SELF_HOSTING.md](docs/SELF_HOSTING.md) for
 Notably, you can run the backend in _multiple different environments_, and switch between
 them from the same Agent Canvas frontend. E.g. you can share an Agent Server with your team for agents doing
 code review and dependency updates, then have your personal agents running on your laptop.
+
+For a dedicated **server keeps agent-server / SDK; users only get a browser (or thin Electron)**
+guide — including conversation sharing, workspace limits, and `NOVAAGENT_REMOTE_URL` — see
+[docs/REMOTE_THIN_CLIENT.md](docs/REMOTE_THIN_CLIENT.md).
+
+For **Hybrid** (full desktop / local agent-server on the laptop; only LLM inference
+on a company vLLM or OpenAI-compatible `base_url` — not the thin Client pack), see
+[docs/HYBRID.md](docs/HYBRID.md).
 
 ### Option 1: Without a Sandbox
 
@@ -156,3 +166,6 @@ Prefer opening a specific project folder as the workspace rather than a huge roo
 - [Architecture overview](./docs/architecture.md)
 - [Development guide](./docs/DEVELOPMENT.md)
 - [Self-hosting guide](./docs/SELF_HOSTING.md)
+- [Remote + thin client](./docs/REMOTE_THIN_CLIENT.md)
+- [Hybrid (local agent + company LLM)](./docs/HYBRID.md)
+- [Human-in-the-loop (confirmation mode)](./docs/HITL.md)

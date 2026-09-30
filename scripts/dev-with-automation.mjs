@@ -55,11 +55,14 @@ import process from "node:process";
 import {
   assertPortsFree,
   buildAgentServerCommand,
+  buildBundledPythonEnv,
   buildSafeDevConfig,
   buildAgentServerEnv,
+  buildAgentServerCliExtraArgs,
   buildNpmScriptCommand,
   buildRuntimeServicesInfo,
   formatMissingUvxGuidance,
+  getBundledPythonRuntime,
   validateFrontendDependencies,
   validateLocalAgentServerPath,
 } from "./dev-safe.mjs";
@@ -71,6 +74,15 @@ import {
   signalProcessTree,
 } from "./dev-process-utils.mjs";
 import { fileLog, stripAnsi } from "./logger.mjs";
+import {
+  CUSTOMER_WORKSPACE_HTTP_PATH,
+} from "./local-tools-sidecar/constants.mjs";
+import {
+  buildCustomerWorkspaceGatewayHttpUrl,
+  isCustomerWorkspaceGatewayEnabled,
+  resolveCustomerWorkspaceGatewayListen,
+} from "./customer-workspace/urls.mjs";
+import { generateToken } from "./local-tools-sidecar/ws.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(__dirname, "..");
@@ -88,6 +100,16 @@ const DEFAULT_BACKEND_PORT = SHARED_DEFAULTS.ports.agentServer;
 const DEFAULT_AUTOMATION_PORT = SHARED_DEFAULTS.ports.automation;
 const DEFAULT_POSTHOG_API_KEY = SHARED_DEFAULTS.telemetry.posthogApiKey;
 const DEFAULT_POSTHOG_HOST = SHARED_DEFAULTS.telemetry.posthogHost;
+
+// Prefer IPv4 loopback for every process-local URL (ingress upstreams,
+// readiness probes, secret seeding, automation→agent-server). On Windows,
+// `localhost` often resolves to `::1` first and Node then fails with
+// `connect EACCES ::1:<port>` even when the peer is listening on 127.0.0.1.
+// Agent-server and automation already bind `--host 127.0.0.1`; keep clients
+// on the same family. Banner/help copy may still say "localhost" for humans.
+export const LOOPBACK_HOST = "127.0.0.1";
+const loopbackUrl = (port, path = "") =>
+  `http://${LOOPBACK_HOST}:${port}${path}`;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Terminal Styling
@@ -227,7 +249,7 @@ function parseArgs() {
 
 function showHelp() {
   console.log(`
-Agent Canvas + Automation Development Stack
+NovaAgent + Automation Development Stack
 
 Runs agent-canvas with the automation backend (via uvx, no clone needed).
 Uses a standalone ingress proxy to route traffic.
@@ -285,6 +307,21 @@ function buildAutomationCommand(env = process.env) {
   const gitRef = env.OH_AUTOMATION_GIT_REF;
   const version = env.OH_AUTOMATION_VERSION;
   const repoUrl = env.OH_AUTOMATION_REPO || DEFAULT_AUTOMATION_REPO;
+
+  // Prefer the packaged offline Python runtime over uvx when present
+  // (Electron sets OH_BUNDLED_PYTHON* after injectBundledPythonRuntime).
+  // Git-ref / version overrides still win for developers who opt in.
+  if (!gitRef && !version) {
+    const bundled = getBundledPythonRuntime(env);
+    if (bundled) {
+      return {
+        command: bundled.python,
+        args: ["-m", "uvicorn", "openhands.automation.app:app"],
+        source: `bundled (${bundled.sitePackages})`,
+        bundledPythonEnv: buildBundledPythonEnv(bundled, env),
+      };
+    }
+  }
 
   const uvxArgs = [];
   let source = "";
@@ -679,20 +716,28 @@ const AGENT_SERVER_ROUTE_PREFIXES = [
   "/openapi.json",
 ];
 
-function getLocalServiceRoutes(config) {
+function getLocalServiceRoutes(config, env = process.env) {
   const routes = [];
 
   if (config.launchAutomation) {
     routes.push([
       AUTOMATION_ROUTE_PREFIX,
-      `http://localhost:${config.autoBackendPort}`,
+      loopbackUrl(config.autoBackendPort),
     ]);
   }
 
   if (config.launchAgentServer) {
     for (const prefix of AGENT_SERVER_ROUTE_PREFIXES) {
-      routes.push([prefix, `http://localhost:${config.agentServerPort}`]);
+      routes.push([prefix, loopbackUrl(config.agentServerPort)]);
     }
+  }
+
+  if (isCustomerWorkspaceGatewayEnabled(env)) {
+    const listen = resolveCustomerWorkspaceGatewayListen(env);
+    routes.push([
+      CUSTOMER_WORKSPACE_HTTP_PATH,
+      buildCustomerWorkspaceGatewayHttpUrl(listen),
+    ]);
   }
 
   return routes;
@@ -725,7 +770,9 @@ function buildRejectPrefixArgs(prefixes) {
 }
 
 function getFrontendBackend(config) {
-  return config.launchFrontend ? `http://localhost:${config.vitePort}` : null;
+  // Static server (packaged/desktop) and Vite (dev) both listen on vitePort.
+  // Always target 127.0.0.1 so Windows never resolves this to ::1.
+  return config.launchFrontend ? loopbackUrl(config.vitePort) : null;
 }
 
 function buildViteBackendEnv(config, env = process.env) {
@@ -793,6 +840,7 @@ function startAgentServer(config) {
   const agentServerEnv = {
     ...buildAgentServerEnv(safeConfig),
     ...buildAgentServerAutomationEnv(config),
+    ...(agentServerCmd.bundledPythonEnv ?? {}),
     OPENHANDS_REMOTE_WS_READY_REQUIRED:
       process.env.OPENHANDS_REMOTE_WS_READY_REQUIRED || "false",
     // Ensure the agent-server uses the resolved key from config. This is
@@ -814,6 +862,7 @@ function startAgentServer(config) {
       "127.0.0.1",
       "--port",
       String(config.agentServerPort),
+      ...buildAgentServerCliExtraArgs(process.env),
     ],
     {
       cwd: safeConfig.workspacesPath,
@@ -847,6 +896,7 @@ function startAutomationBackend(config) {
     {
       cwd: config.stateDir,
       env: {
+        ...(automationCmd.bundledPythonEnv ?? {}),
         // Force UTF-8 for all Python file I/O (same reason as agent-server;
         // see buildAgentServerEnv in dev-safe.mjs).
         PYTHONUTF8: "1",
@@ -857,10 +907,10 @@ function startAutomationBackend(config) {
         //
         // Priority:
         //   1. AUTOMATION_AGENT_SERVER_URL explicitly set in the user's env
-        //   2. `localhost:<agentServerPort>`
+        //   2. `127.0.0.1:<agentServerPort>` (IPv4 — avoids Windows ::1 EACCES)
         AUTOMATION_AGENT_SERVER_URL:
           process.env.AUTOMATION_AGENT_SERVER_URL ||
-          `http://localhost:${config.agentServerPort}`,
+          loopbackUrl(config.agentServerPort),
         // The URL exported into the in-sandbox bash chain as
         // `AGENT_SERVER_URL` (read by main.py / setup.sh to call back into
         // the agent-server).
@@ -887,10 +937,10 @@ function startAutomationBackend(config) {
         // Priority:
         //   1. AUTOMATION_BASE_URL explicitly set in the user's env
         //   2. launcher-provided host
-        //   3. `localhost`
+        //   3. IPv4 loopback (host-side callbacks; sandbox uses agentHostAlias)
         AUTOMATION_BASE_URL:
           process.env.AUTOMATION_BASE_URL ||
-          `http://${config.automationApiHost ?? "localhost"}:${config.ingressPort}`,
+          `http://${config.automationApiHost ?? LOOPBACK_HOST}:${config.ingressPort}`,
         // The dispatcher resolves this path and embeds it into a
         // `mkdir -p ...` shell command executed by the agent-server.
         // Priority:
@@ -959,11 +1009,45 @@ function shutdown() {
 process.on("SIGINT", shutdown);
 process.on("SIGTERM", shutdown);
 
+function applyCustomerWorkspaceGatewayEnv(env = process.env) {
+  if (!isCustomerWorkspaceGatewayEnabled(env)) return;
+  const listen = resolveCustomerWorkspaceGatewayListen(env);
+  if (!env.NOVAAGENT_LOCAL_TOOLS_TOKEN && !env.NOVAAGENT_CUSTOMER_WORKSPACE_TOKEN) {
+    env.NOVAAGENT_LOCAL_TOOLS_TOKEN = generateToken();
+    logService(
+      "customer-workspace-gateway",
+      `generated token (pin with NOVAAGENT_LOCAL_TOOLS_TOKEN): ${env.NOVAAGENT_LOCAL_TOOLS_TOKEN}`,
+      c.cyan,
+    );
+  }
+  if (!env.NOVAAGENT_LOCAL_TOOLS_URL) {
+    env.NOVAAGENT_LOCAL_TOOLS_URL = buildCustomerWorkspaceGatewayHttpUrl(listen);
+  }
+}
+
+function startCustomerWorkspaceGateway() {
+  const listen = resolveCustomerWorkspaceGatewayListen();
+  const script = join(projectRoot, "scripts", "customer-workspace-gateway.mjs");
+  logService(
+    "customer-workspace-gateway",
+    `Starting on ${listen.host}:${listen.port}…`,
+    c.cyan,
+  );
+  spawnService("customer-workspace-gateway", "node", [script], {
+    cwd: projectRoot,
+    color: c.cyan,
+  });
+}
+
 function startIngress(config) {
   logService("ingress", `Starting on port ${config.ingressPort}...`, c.yellow);
 
   const ingressScript = join(projectRoot, "scripts", "ingress.mjs");
   const frontendBackend = getFrontendBackend(config);
+
+  // Default: all interfaces (LAN-reachable). Override with INGRESS_HOST=127.0.0.1
+  // to keep the UI local-only. Upstream agent-server/static stay on LOOPBACK_HOST.
+  const ingressHost = String(process.env.INGRESS_HOST ?? "").trim();
 
   spawnService(
     "ingress",
@@ -972,6 +1056,7 @@ function startIngress(config) {
       ingressScript,
       "--port",
       config.ingressPort.toString(),
+      ...(ingressHost ? ["--host", ingressHost] : []),
       ...buildRouteArgs(getLocalServiceRoutes(config)),
       ...(frontendBackend ? ["--default", frontendBackend] : []),
     ],
@@ -1039,6 +1124,16 @@ function startVite(config) {
     viteEnv.VITE_SESSION_API_KEY = config.sessionApiKey;
   }
 
+  // Hybrid company-managed LLM: mirror NOVAAGENT_COMPANY_LLM_URL into Vite.
+  const companyLlmUrl = String(
+    process.env.NOVAAGENT_COMPANY_LLM_URL ??
+      process.env.VITE_NOVAAGENT_COMPANY_LLM_URL ??
+      "",
+  ).trim();
+  if (companyLlmUrl) {
+    viteEnv.VITE_NOVAAGENT_COMPANY_LLM_URL = companyLlmUrl;
+  }
+
   spawnService("vite", frontendCommand.command, frontendCommand.args, {
     cwd: config.canvasPath,
     env: viteEnv,
@@ -1069,7 +1164,7 @@ async function seedAutomationSecret(config, options = {}) {
 
   logService("secrets", `Seeding ${secretName} into agent-server...`, c.dim);
 
-  const url = `http://localhost:${config.agentServerPort}/api/settings/secrets`;
+  const url = loopbackUrl(config.agentServerPort, "/api/settings/secrets");
   const body = JSON.stringify({
     name: secretName,
     value: config.sessionApiKey,
@@ -1145,10 +1240,10 @@ async function seedAutomationSecret(config, options = {}) {
 
 function printBanner(config) {
   const stackName = config.frontendOnly
-    ? "Agent Canvas Frontend Stack"
+    ? "NovaAgent Frontend Stack"
     : config.backendOnly
-      ? "Agent Canvas Backend Stack"
-      : "Agent Canvas + Automation Stack";
+      ? "NovaAgent Backend Stack"
+      : "NovaAgent + Automation Stack";
 
   // padEnd counts invisible ANSI escape bytes as visible characters, so we
   // compute the visible length separately and pad with spaces accordingly.
@@ -1230,7 +1325,7 @@ function printBanner(config) {
 
 async function main(options = {}) {
   const {
-    bannerTitle = "Agent Canvas + Automation Development Stack",
+    bannerTitle = "NovaAgent + Automation Development Stack",
     startAgentServer: startAgentServerOverride,
     extraPrereqs,
     viteWorkingDir,
@@ -1257,6 +1352,9 @@ async function main(options = {}) {
     // When true, enable public mode (require LOCAL_BACKEND_API_KEY,
     // don't bake session key into frontend).
     isPublic: isPublicOverride,
+    // Optional overrides for split stack modes (bin/agent-canvas.mjs).
+    frontendOnly: frontendOnlyOverride,
+    backendOnly: backendOnlyOverride,
     // When true, skip the npm prerequisite check. Used by the Electron desktop
     // launcher where npm is not needed at runtime in static mode.
     skipNpmCheck = false,
@@ -1285,6 +1383,12 @@ async function main(options = {}) {
   if (isPublicOverride != null) {
     args.public = isPublicOverride;
   }
+  if (frontendOnlyOverride != null) {
+    args.frontendOnly = Boolean(frontendOnlyOverride);
+  }
+  if (backendOnlyOverride != null) {
+    args.backendOnly = Boolean(backendOnlyOverride);
+  }
 
   // Allow options to override CLI args (for bin/agent-canvas.mjs)
   const useStaticMode =
@@ -1302,8 +1406,11 @@ async function main(options = {}) {
   fileLog("info", titleWithMode);
 
   // Setup phase
+  const hasBundledPython = Boolean(getBundledPythonRuntime(process.env));
   checkPrerequisites({
-    checkUvx: !args.frontendOnly,
+    // Packaged offline desktop ships a prefilled CPython + site-packages and
+    // never calls uvx for agent-server/automation — skip the uvx gate there.
+    checkUvx: !args.frontendOnly && !hasBundledPython,
     // Static-mode + backend-only has no frontend to build, so npm is not
     // required — unless the caller provides a custom buildStaticFrontend hook.
     // The Electron desktop launcher passes `skipNpmCheck: true` because the
@@ -1372,6 +1479,8 @@ async function main(options = {}) {
   // Start services phase
   logStep("2/2", "Starting services...");
 
+  applyCustomerWorkspaceGatewayEnv(process.env);
+
   let agentServerReady = false;
 
   // 1. Start agent-server first (automation depends on it).
@@ -1389,7 +1498,7 @@ async function main(options = {}) {
 
     agentServerReady = await waitForService(
       "agent-server",
-      `http://localhost:${config.agentServerPort}/server_info`,
+      loopbackUrl(config.agentServerPort, "/server_info"),
       agentServerReadyTimeoutMs,
     );
   }
@@ -1424,6 +1533,11 @@ async function main(options = {}) {
   // 5. Wait for services to be ready
   await delay(2000);
 
+  if (isCustomerWorkspaceGatewayEnabled()) {
+    startCustomerWorkspaceGateway();
+    await delay(400);
+  }
+
   // 6. Start ingress proxy (routes traffic only to running services)
   startIngress(config);
 
@@ -1457,6 +1571,12 @@ function startStaticFrontend(config, staticDir) {
       staticServerScript,
       "--dir",
       staticDir,
+      // Bind IPv4 loopback so ingress's 127.0.0.1 upstream always connects.
+      // Default static-server host is `::` (dual-stack) for Docker; desktop
+      // and local launchers share a machine with ingress and must not depend
+      // on Windows IPv6 localhost behavior.
+      "--host",
+      LOOPBACK_HOST,
       "--port",
       String(config.vitePort),
       ...(process.env.VITE_BASE_PATH
@@ -1475,6 +1595,15 @@ function startStaticFrontend(config, staticDir) {
       ...(runtimeServicesInfo
         ? ["--runtime-services-info", runtimeServicesInfo]
         : []),
+      // Hybrid company-managed LLM gateway URL (desktop / static packs).
+      ...(() => {
+        const companyLlmUrl = String(
+          process.env.NOVAAGENT_COMPANY_LLM_URL ??
+            process.env.VITE_NOVAAGENT_COMPANY_LLM_URL ??
+            "",
+        ).trim();
+        return companyLlmUrl ? ["--company-llm-url", companyLlmUrl] : [];
+      })(),
       // Proxy routes only to services that this launch mode started.
       ...buildRouteArgs(getLocalServiceRoutes(config)),
       // Reject known API prefixes that have no backend — returns 503
@@ -1501,6 +1630,8 @@ export {
   buildViteBackendEnv,
   getFrontendBackend,
   getLocalServiceRoutes,
+  applyCustomerWorkspaceGatewayEnv,
+  startCustomerWorkspaceGateway,
   main,
   registerShutdownHook,
   spawnService,

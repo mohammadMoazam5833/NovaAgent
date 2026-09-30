@@ -180,6 +180,7 @@ export function Sidebar() {
   const isExtensionsActive =
     currentPath === "/customize" ||
     currentPath.startsWith("/skills") ||
+    currentPath === "/rules" ||
     currentPath === "/plugins" ||
     currentPath === "/mcp";
 

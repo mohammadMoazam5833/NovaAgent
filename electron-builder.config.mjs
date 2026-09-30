@@ -1,5 +1,5 @@
 /**
- * electron-builder configuration for the Agent Canvas desktop app.
+ * electron-builder configuration for the NovaAgent desktop app.
  *
  * `directories.app: 'electron'` tells electron-builder to use electron/package.json
  * as the app manifest (with `"main": "main.mjs"`). This sidesteps the root
@@ -53,10 +53,12 @@
  * a minimal PATH (/usr/bin:/bin) that has none of those.
  */
 
-import { cp, rm } from "node:fs/promises";
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { cp, rm, rename, writeFile, chmod, mkdir } from "node:fs/promises";
+import { existsSync, readFileSync, readdirSync, statSync, mkdtempSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
+import { tmpdir } from "node:os";
+import { spawnSync } from "node:child_process";
 
 // npm packages the packaged app's child-process scripts import at runtime:
 //   scripts/static-server.mjs  → sirv
@@ -125,6 +127,154 @@ async function stripBundledNodeModules(context) {
   }
 
   await restoreRuntimeNodeModules(appDir);
+}
+
+/**
+ * Linux AppImage / VM Chromium sandbox fix.
+ *
+ * Ubuntu 24.04 + AppImage cannot set SUID on the embedded `chrome-sandbox`,
+ * so Chromium aborts with "SUID sandbox helper binary was found, but is not
+ * configured correctly" *before* Electron main-process JS can call
+ * `app.commandLine.appendSwitch("no-sandbox")`.
+ *
+ * Fix: delete `chrome-sandbox` and wrap the Electron binary so argv always
+ * includes `--no-sandbox` / `--disable-setuid-sandbox` / `--disable-gpu`.
+ */
+async function disableLinuxChromiumSandbox(context) {
+  if (context.electronPlatformName !== "linux") return;
+
+  const out = context.appOutDir;
+  const sandboxPath = join(out, "chrome-sandbox");
+  if (existsSync(sandboxPath)) {
+    await rm(sandboxPath, { force: true });
+    // eslint-disable-next-line no-console -- electron-builder build log
+    console.log(
+      "[electron-builder] removed chrome-sandbox (AppImage/VM sandbox workaround)",
+    );
+  }
+
+  const productFilename = context.packager.appInfo.productFilename;
+  const candidates = [
+    join(out, productFilename),
+    join(out, String(productFilename).toLowerCase()),
+    join(out, "novaagent"),
+  ];
+  const binaryPath = candidates.find(
+    (p) => existsSync(p) && !p.endsWith(".bin"),
+  );
+  if (!binaryPath) {
+    // eslint-disable-next-line no-console -- electron-builder build log
+    console.warn(
+      "[electron-builder] linux Electron binary not found; skip --no-sandbox wrapper",
+    );
+    return;
+  }
+
+  const wrappedPath = `${binaryPath}.bin`;
+  if (existsSync(wrappedPath)) {
+    // Idempotent if afterPack re-runs.
+    return;
+  }
+
+  await rename(binaryPath, wrappedPath);
+  const wrapper = `#!/bin/bash
+# NovaAgent Linux launcher — Chromium sandbox cannot use SUID inside AppImage.
+DIR="$(cd "$(dirname "$0")" && pwd)"
+export ELECTRON_DISABLE_SANDBOX=1
+export ELECTRON_NO_SANDBOX=1
+exec "$DIR/$(basename "$0").bin" \\
+  --no-sandbox \\
+  --disable-setuid-sandbox \\
+  --disable-gpu \\
+  --disable-software-rasterizer \\
+  "$@"
+`;
+  await writeFile(binaryPath, wrapper, { encoding: "utf8", mode: 0o755 });
+  await chmod(binaryPath, 0o755);
+  // eslint-disable-next-line no-console -- electron-builder build log
+  console.log(
+    `[electron-builder] wrapped ${relative(process.cwd(), binaryPath)} with --no-sandbox`,
+  );
+}
+
+async function afterPackHook(context) {
+  await stripBundledNodeModules(context);
+  await disableLinuxChromiumSandbox(context);
+}
+
+/**
+ * Ensure the .deb ships every hicolor size + a pixmaps fallback.
+ * GNOME Applications menus often ignore a lone 1024×1024 icon and show a
+ * generic gear instead — 16..512 must be present as novaagent.png.
+ */
+async function injectDebMenuIcons(buildResult) {
+  const iconsDir = join(repoRoot, "electron/build-resources/icons");
+  if (!existsSync(iconsDir)) {
+    // eslint-disable-next-line no-console -- electron-builder build log
+    console.warn("[electron-builder] icons dir missing; skip deb icon inject");
+    return [];
+  }
+
+  const sizeFiles = readdirSync(iconsDir).filter((f) =>
+    /^\d+x\d+\.png$/.test(f),
+  );
+
+  for (const artifactPath of buildResult.artifactPaths ?? []) {
+    if (!artifactPath.endsWith(".deb")) continue;
+
+    const work = mkdtempSync(join(tmpdir(), "novaagent-deb-icons-"));
+    try {
+      const extract = spawnSync("dpkg-deb", ["-R", artifactPath, work], {
+        encoding: "utf8",
+      });
+      if (extract.status !== 0) {
+        throw new Error(
+          `dpkg-deb -R failed: ${extract.stderr || extract.stdout}`,
+        );
+      }
+
+      for (const file of sizeFiles) {
+        const sizeName = file.replace(/\.png$/, "");
+        const destDir = join(
+          work,
+          "usr/share/icons/hicolor",
+          sizeName,
+          "apps",
+        );
+        await mkdir(destDir, { recursive: true });
+        await cp(join(iconsDir, file), join(destDir, "novaagent.png"));
+      }
+
+      // Older menus / some DEs still look under pixmaps.
+      const pixmapDir = join(work, "usr/share/pixmaps");
+      await mkdir(pixmapDir, { recursive: true });
+      const pixmapSrc = existsSync(join(iconsDir, "48x48.png"))
+        ? join(iconsDir, "48x48.png")
+        : join(iconsDir, "128x128.png");
+      await cp(pixmapSrc, join(pixmapDir, "novaagent.png"));
+
+      const rebuilt = `${artifactPath}.icons-fixed`;
+      const build = spawnSync("dpkg-deb", ["-b", work, rebuilt], {
+        encoding: "utf8",
+      });
+      if (build.status !== 0) {
+        throw new Error(
+          `dpkg-deb -b failed: ${build.stderr || build.stdout}`,
+        );
+      }
+      await rm(artifactPath, { force: true });
+      await rename(rebuilt, artifactPath);
+      // eslint-disable-next-line no-console -- electron-builder build log
+      console.log(
+        `[electron-builder] injected ${sizeFiles.length} hicolor icons + pixmaps into ${relative(process.cwd(), artifactPath)}`,
+      );
+    } finally {
+      await rm(work, { recursive: true, force: true });
+    }
+  }
+
+  // Icons were patched in-place; do not re-list artifacts.
+  return [];
 }
 
 /**
@@ -208,9 +358,9 @@ function getDirSizeBytes(dir) {
 
 /** @type {import('electron-builder').Configuration} */
 const config = {
-  appId: "dev.openhands.agent-canvas",
-  productName: "Agent Canvas",
-  copyright: "Copyright © 2025 All Hands AI",
+  appId: "dev.novaagent.app",
+  productName: "NovaAgent",
+  copyright: "Copyright © 2026 NovaAgent",
 
   // Stamp the packaged app with the released version (see rootPackageJson
   // note above).
@@ -219,7 +369,7 @@ const config = {
   // Treat electron/ as the app root. electron/package.json provides the
   // Electron entry point without touching the npm-published root package.json.
   // `buildResources` points at electron/build-resources so electron-builder
-  // can auto-discover icon.png (1024×1024 OpenHands raised-hands app icon)
+  // can auto-discover icon.png (1024×1024 NovaAgent app icon)
   // and generate the platform-specific icon.icns / icon.ico from it.
   directories: {
     app: "electron",
@@ -234,8 +384,12 @@ const config = {
   // Skip native-module rebuild — the app has no native deps.
   npmRebuild: false,
 
-  // Strip auto-bundled node_modules (see NODE_MODULES NOTE at top of file).
-  afterPack: stripBundledNodeModules,
+  // Strip auto-bundled node_modules + Linux AppImage sandbox workaround.
+  afterPack: afterPackHook,
+
+  // Inject multi-size hicolor + pixmaps icons into the finished .deb so the
+  // Applications menu shows the NovaAgent logo (not a generic gear).
+  afterAllArtifactBuild: injectDebMenuIcons,
 
   // Files included in the packaged app.
   // Paths with `from` are relative to directories.app (electron/).
@@ -264,16 +418,19 @@ const config = {
 
   // Bundled prerequisites — placed in <Resources>/ so Electron can put
   // them on PATH before starting the backend stack.
-  //   bin/   — uv + uvx (downloaded by `npm run download-uv`)
-  //   node/  — official Node.js distribution; provides `node` plus the
-  //            bundled `npm` / `npx` that stdio MCP servers (Slack, GitHub,
-  //            Figma, etc.) spawn via `npx -y <package>` (downloaded by
-  //            `npm run download-node`)
+  //   bin/              — uv + uvx (downloaded by `npm run download-uv`)
+  //   node/             — official Node.js distribution (`download-node`)
+  //   python/           — uv-managed CPython for the target OS
+  //   python-env/       — prefilled site-packages (agent-server + automation)
+  //   python-runtime.json — manifest with relative interpreter path
   // `from` is relative to the project root (not directories.app).
-  // build:desktop calls both download scripts before invoking electron-builder.
+  // build:desktop / build:desktop:win call the download scripts first.
   extraResources: [
     { from: "resources/bin/", to: "bin/", filter: ["**/*"] },
     { from: "resources/node/", to: "node/", filter: ["**/*"] },
+    { from: "resources/python/", to: "python/", filter: ["**/*"] },
+    { from: "resources/python-env/", to: "python-env/", filter: ["**/*"] },
+    { from: "resources/python-runtime.json", to: "python-runtime.json" },
   ],
 
   // ── macOS ──────────────────────────────────────────────────────────────────
@@ -287,11 +444,15 @@ const config = {
   // Or use the dedicated script:
   //   npm run build:desktop:universal
   //
-  // CAUTION: the bundled uv/node extraResources are downloaded for the
-  // BUILD HOST's architecture only (scripts/download-uv.mjs and
-  // download-node.mjs have no arch override), so a "universal" build still
-  // ships single-arch runtimes and breaks on the other architecture. Don't
-  // distribute universal DMGs until the download scripts support multi-arch.
+  // CAUTION: the bundled uv/node extraResources must match the *target*
+  // OS, not just the build host. Cross-packing (e.g. Linux → Windows zip)
+  // requires:
+  //   ELECTRON_DOWNLOAD_PLATFORM=win32 ELECTRON_DOWNLOAD_ARCH=x64 \
+  //     node scripts/download-uv.mjs && node scripts/download-node.mjs
+  // before electron-builder --win. Otherwise the package ships ELF
+  // `uv`/`bin/node` and Windows looks for `uv.exe`/`node.exe` and fails.
+  // A "universal" macOS build still ships single-arch runtimes until the
+  // download scripts support multi-arch fat binaries.
   //
   mac: {
     category: "public.app-category.developer-tools",
@@ -309,46 +470,111 @@ const config = {
   },
 
   dmg: {
-    title: "Agent Canvas",
+    title: "NovaAgent",
     contents: [
       { x: 130, y: 220 },
       { x: 410, y: 220, type: "link", path: "/Applications" },
     ],
     window: { width: 540, height: 380 },
-    // Default is "Agent Canvas-<version>-<arch>.dmg"; GitHub release assets
+    // Default is "NovaAgent-<version>-<arch>.dmg"; GitHub release assets
     // mangle spaces, so keep the asset name literal (matches the nsis
     // convention). ${version}/${arch}/${ext} are electron-builder macros.
-    artifactName: "Agent-Canvas-${version}-${arch}.${ext}",
+    artifactName: "NovaAgent-${version}-${arch}.${ext}",
   },
 
   // ── Windows ────────────────────────────────────────────────────────────────
   win: {
-    target: [{ target: "nsis", arch: ["x64"] }],
-    // Icon auto-discovered from directories.buildResources/icon.png
-    // (electron-builder generates icon.ico from the 1024×1024 PNG).
+    target: [
+      // Full installer when Wine is available on the build host.
+      { target: "nsis", arch: ["x64"] },
+      // Portable folder always buildable from Linux without Wine.
+      { target: "portable", arch: ["x64"] },
+    ],
+    icon: "icon.ico",
+    // Icon auto-discovered from directories.buildResources/icon.ico / icon.png
+    // (electron-builder generates icon.ico from the 1024×1024 PNG if needed).
   },
 
   nsis: {
-    oneClick: false,
+    oneClick: true,
     perMachine: false,
-    allowToChangeInstallationDirectory: true,
+    allowToChangeInstallationDirectory: false,
     createDesktopShortcut: true,
     createStartMenuShortcut: true,
-    // The default artifact name is "Agent Canvas Setup <version>.exe";
+    shortcutName: "NovaAgent",
+    installerIcon: "icon.ico",
+    uninstallerIcon: "icon.ico",
+    installerHeaderIcon: "icon.ico",
+    // The default artifact name is "NovaAgent Setup <version>.exe";
     // GitHub release assets mangle spaces, so ship a space-free name.
     // ${version}/${ext} are electron-builder macros, not JS interpolation.
-    artifactName: "Agent-Canvas-Setup-${version}.${ext}",
+    artifactName: "NovaAgent-Setup-${version}.${ext}",
+  },
+
+  portable: {
+    artifactName: "NovaAgent-Portable-${version}.${ext}",
   },
 
   // ── Linux ──────────────────────────────────────────────────────────────────
   linux: {
+    maintainer: "NovaAgent <novaagent@openhands.dev>",
     target: [
-      { target: "AppImage", arch: ["x64"] },
+      // Prefer .deb for one-click install (App Center / Software).
+      // AppImage remains available for portable runs.
       { target: "deb", arch: ["x64"] },
+      { target: "AppImage", arch: ["x64"] },
     ],
     category: "Development",
-    // Icon auto-discovered from directories.buildResources/icon.png.
+    synopsis: "NovaAgent local coding agent",
+    description:
+      "NovaAgent desktop app — local AI coding agent with chat, files, terminal, and browser tools.",
+    desktop: {
+      entry: {
+        Name: "NovaAgent",
+        Comment: "Local coding agent control center",
+        Categories: "Development;IDE;",
+        StartupWMClass: "NovaAgent",
+        Terminal: "false",
+        Icon: "novaagent",
+      },
+    },
+    // Multi-size PNGs in build-resources/icons (16..1024) so GNOME/KDE
+    // Applications menus show the NovaAgent logo, not a generic placeholder.
+    // Path is relative to directories.buildResources.
+    icon: "icons",
+    executableArgs: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-gpu",
+    ],
+    artifactName: "NovaAgent-${version}-${arch}.${ext}",
+  },
+
+  deb: {
+    depends: [
+      "libgtk-3-0",
+      "libnotify4",
+      "libnss3",
+      "libxss1",
+      "libxtst6",
+      "xdg-utils",
+      "libatspi2.0-0",
+      "libuuid1",
+    ],
+    // Custom script skips chmod of chrome-sandbox (removed in afterPack).
+    afterInstall: "electron/build-resources/after-install.tpl",
+  },
+
+  appImage: {
+    // Portable fallback; sandbox flags come from executableArgs + binary wrapper.
+    executableArgs: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-gpu",
+    ],
   },
 };
+
+export { afterPackHook, injectDebMenuIcons };
 
 export default config;

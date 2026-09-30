@@ -11,12 +11,17 @@
  *
  * Environment variables:
  *   INGRESS_PORT          - Port to listen on (default: 8000)
+ *   INGRESS_HOST          - Bind address (default: all interfaces / unset)
  *   INGRESS_ROUTES        - JSON object of path prefix -> backend URL
  *   INGRESS_DEFAULT       - Default backend for unmatched routes
  *
  * Route matching:
  *   - Routes are matched by longest prefix first
  *   - More specific routes take precedence (e.g., /api/automation before /api)
+ *
+ * LAN note: omitting INGRESS_HOST (or setting 0.0.0.0 / ::) lets other
+ * machines open http://<LAN_IP>:<port>/. Upstream agent-server/static can
+ * stay on 127.0.0.1 — only the ingress face needs to be LAN-reachable.
  */
 
 import { createServer } from "node:http";
@@ -37,6 +42,7 @@ function parseArgs() {
   const args = process.argv.slice(2);
   const config = {
     port: 8000,
+    host: null,
     routes: {},
     defaultBackend: null,
   };
@@ -46,6 +52,10 @@ function parseArgs() {
       case "-p":
       case "--port":
         config.port = parseInt(args[++i], 10);
+        break;
+      case "-H":
+      case "--host":
+        config.host = args[++i];
         break;
       case "-r":
       case "--route":
@@ -78,12 +88,14 @@ USAGE:
 
 OPTIONS:
   -p, --port <port>           Port to listen on (default: 8000)
+  -H, --host <host>           Bind address (default: all interfaces)
   -r, --route <path=url>      Add a route (can be repeated)
   -d, --default <url>         Default backend for unmatched routes
   -h, --help                  Show this help
 
 ENVIRONMENT VARIABLES:
   INGRESS_PORT                Port to listen on
+  INGRESS_HOST                Bind address (e.g. 0.0.0.0 for LAN)
   INGRESS_ROUTES              JSON object: {"path": "url", ...}
   INGRESS_DEFAULT             Default backend URL
 
@@ -121,8 +133,14 @@ function buildConfig(args, env = process.env) {
     }
   }
 
+  const hostRaw = args.host || env.INGRESS_HOST || null;
+  const host =
+    typeof hostRaw === "string" && hostRaw.trim() ? hostRaw.trim() : null;
+
   return {
     port: args.port || parseInt(env.INGRESS_PORT, 10) || 8000,
+    // null/undefined → Node listens on all interfaces (LAN-reachable).
+    host,
     routes,
     defaultBackend: args.defaultBackend || env.INGRESS_DEFAULT || null,
   };
@@ -175,7 +193,9 @@ export function startIngress(config) {
   });
   server.on("close", uninstallDiagnostics);
 
-  server.listen(config.port, () => {
+  const listenHost = config.host || undefined;
+  const displayHost = config.host || "0.0.0.0";
+  server.listen(config.port, listenHost, () => {
     console.log("");
     console.log(
       "╔═══════════════════════════════════════════════════════════════╗",
@@ -187,7 +207,8 @@ export function startIngress(config) {
       "╠═══════════════════════════════════════════════════════════════╣",
     );
     console.log(
-      `║  Listening on: http://localhost:${config.port}/`.padEnd(66) + "║",
+      `║  Listening on: http://${displayHost}:${config.port}/`.padEnd(66) +
+        "║",
     );
     console.log(
       "╠═══════════════════════════════════════════════════════════════╣",

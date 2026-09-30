@@ -9,8 +9,9 @@
     "minimumAgentServer": "1.28.0"
   },
   "constraints": {
-    "_comment": "Temporary upper bound on the agent-client-protocol (acp) transitive dependency. openhands-sdk 1.35.0 requires agent-client-protocol>=0.10.1 with no upper bound, but acp 0.11.0 reordered the ACP prompt() arguments and breaks the SDK's ACP client (a PromptRequest validation error surfaces as 'ACP error: 2 validation errors for PromptRequest'). Pin acp <0.11 until a fixed openhands-sdk ships. Consumed by scripts/dev-safe.mjs (agent-server uvx install) and .github/workflows/mock-llm-e2e.yml (mock ACP server venv).",
-    "agentClientProtocol": "agent-client-protocol<0.11"
+    "_comment": "Temporary transitive pins applied via uvx --with when launching agent-server (scripts/dev-safe.mjs). (1) agent-client-protocol: openhands-sdk leaves it unbounded (>=0.10.1), but acp 0.11.0 reordered ACP prompt() args and breaks the SDK client. Keep <0.11 until a fixed SDK ships; also used by mock-llm-e2e.yml. (2) fastmcp: openhands-sdk requires fastmcp>=3.0.0 with no upper bound. fastmcp 4.0.0b1 pulls mcp 2.0, which removed low-level Server.list_tools(); browser_use (openhands-tools BrowserToolSet) still uses @server.list_tools() and crashes POST /api/conversations with AttributeError. Pin fastmcp>=3,<4 until SDK/browser-use support mcp 2.",
+    "agentClientProtocol": "agent-client-protocol<0.11",
+    "fastmcp": "fastmcp>=3,<4"
   },
   "images": {
     "agentServer": "ghcr.io/openhands/agent-server",

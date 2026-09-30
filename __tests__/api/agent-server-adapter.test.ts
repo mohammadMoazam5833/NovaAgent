@@ -188,6 +188,32 @@ describe("buildStartConversationRequest", () => {
     expect(payload.initial_message.content[0]?.text).toBe("hello");
   });
 
+  it("respects an explicit llm.stream=false for local OpenAI-compatible backends", () => {
+    const payload = buildStartConversationRequest({
+      settings: {
+        ...DEFAULT_SETTINGS,
+        agent_settings: {
+          ...DEFAULT_SETTINGS.agent_settings,
+          llm: {
+            model: "openai/qwen3-coder-30b",
+            api_key: "local-key",
+            base_url: "http://127.0.0.1:8003/v1",
+            stream: false,
+            native_tool_calling: false,
+          },
+        },
+      },
+      query: "echo hello",
+    }) as { agent_settings: { llm: Record<string, unknown> } };
+
+    expect(payload.agent_settings.llm).toMatchObject({
+      model: "openai/qwen3-coder-30b",
+      base_url: "http://127.0.0.1:8003/v1",
+      stream: false,
+      native_tool_calling: false,
+    });
+  });
+
   it("uses subscription auth metadata without API credentials", () => {
     const payload = buildStartConversationRequest({
       settings: {
@@ -1308,6 +1334,60 @@ describe("agent_settings runtime services suffix", () => {
     expect(
       payload.agent_settings.agent_context.system_message_suffix as string,
     ).toContain("<RUNTIME_SERVICES>");
+  });
+
+  it("merges existing system_message_suffix with RUNTIME_SERVICES", () => {
+    vi.stubEnv(
+      "VITE_RUNTIME_SERVICES_INFO",
+      JSON.stringify({
+        mode: "dev:automation",
+        services: {
+          agent_server: { url_from_agent: "http://localhost:18000" },
+        },
+      }),
+    );
+    const payload = buildStartConversationRequest({
+      settings: {
+        ...DEFAULT_SETTINGS,
+        agent_settings: {
+          ...DEFAULT_SETTINGS.agent_settings,
+          agent_context: {
+            system_message_suffix: "CUSTOM_PROFILE_SUFFIX",
+          },
+        },
+      },
+      query: "hello",
+    }) as {
+      agent_settings: { agent_context: Record<string, unknown> };
+    };
+    const suffix = payload.agent_settings.agent_context
+      .system_message_suffix as string;
+    expect(suffix).toContain("CUSTOM_PROFILE_SUFFIX");
+    expect(suffix).toContain("<RUNTIME_SERVICES>");
+    expect(suffix.indexOf("CUSTOM_PROFILE_SUFFIX")).toBeLessThan(
+      suffix.indexOf("<RUNTIME_SERVICES>"),
+    );
+  });
+
+  it("forwards disabled_skills and filters bundled skills on start", () => {
+    const payload = buildStartConversationRequest({
+      settings: {
+        ...DEFAULT_SETTINGS,
+        disabled_skills: ["nonexistent-skill-for-deny-list-test"],
+      },
+      query: "hello",
+    }) as {
+      agent_settings: { agent_context: Record<string, unknown> };
+    };
+    expect(payload.agent_settings.agent_context.disabled_skills).toEqual([
+      "nonexistent-skill-for-deny-list-test",
+    ]);
+    const skills = payload.agent_settings.agent_context.skills as Array<{
+      name?: string;
+    }>;
+    expect(
+      skills.some((s) => s.name === "nonexistent-skill-for-deny-list-test"),
+    ).toBe(false);
   });
 });
 

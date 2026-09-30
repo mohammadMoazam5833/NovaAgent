@@ -47,6 +47,7 @@ import {
   buildAgentServerCommand,
   buildSafeDevConfig,
   buildAgentServerEnv,
+  buildAgentServerCliExtraArgs,
   formatMissingUvxGuidance,
   isPortBusy,
   releaseStaleConversationLeases,
@@ -144,7 +145,7 @@ export function parseArgs(argv = process.argv.slice(2)) {
 
 function showHelp() {
   console.log(`
-Agent Canvas Static-frontend Development Stack
+NovaAgent Static-frontend Development Stack
 
 Runs the automation stack, but serves a production build of the
 frontend via scripts/static-server.mjs. Use this when a remote or flaky network
@@ -315,6 +316,7 @@ function startAgentServer(config) {
       "0.0.0.0",
       "--port",
       String(config.agentServerPort),
+      ...buildAgentServerCliExtraArgs(process.env),
     ],
     {
       cwd: safeConfig.workspacesPath,
@@ -326,11 +328,13 @@ function startAgentServer(config) {
 
 function buildAutomationBackendEnv(config, env = process.env) {
   // Both backends share the same session API key value.
+  // Use 127.0.0.1 (not localhost) so Windows never resolves to ::1 / EACCES.
+  const loopback = "127.0.0.1";
   return {
-    AUTOMATION_AGENT_SERVER_URL: `http://localhost:${config.agentServerPort}`,
+    AUTOMATION_AGENT_SERVER_URL: `http://${loopback}:${config.agentServerPort}`,
     AUTOMATION_AGENT_SERVER_API_KEY: config.sessionApiKey,
     AUTOMATION_DB_URL: `sqlite+aiosqlite:///${join(config.stateDir, "automations.db")}`,
-    AUTOMATION_BASE_URL: `http://localhost:${config.ingressPort}`,
+    AUTOMATION_BASE_URL: `http://${loopback}:${config.ingressPort}`,
     AUTOMATION_WORKSPACE_BASE: join(config.stateDir, "workspaces"),
     AUTOMATION_LOCAL_API_KEY: config.sessionApiKey,
     ...buildAutomationTelemetryEnv(env),
@@ -379,6 +383,7 @@ function startStaticServer(config) {
   // is forwarded to the agent-server instead of falling back to the SPA
   // shell). Without this, /server_info on :3001 returns index.html.
   const staticServerScript = join(projectRoot, "scripts", "static-server.mjs");
+  const loopback = "127.0.0.1";
   spawnService(
     "static",
     "node",
@@ -386,6 +391,8 @@ function startStaticServer(config) {
       staticServerScript,
       "--dir",
       join(config.canvasPath, "build"),
+      "--host",
+      loopback,
       "--port",
       String(config.vitePort),
       ...(process.env.VITE_BASE_PATH
@@ -397,25 +404,25 @@ function startStaticServer(config) {
         ? ["--session-api-key", config.sessionApiKey]
         : []),
       "--route",
-      `/api/automation=http://localhost:${config.autoBackendPort}`,
+      `/api/automation=http://${loopback}:${config.autoBackendPort}`,
       "--route",
-      `/api=http://localhost:${config.agentServerPort}`,
+      `/api=http://${loopback}:${config.agentServerPort}`,
       "--route",
-      `/sockets=http://localhost:${config.agentServerPort}`,
+      `/sockets=http://${loopback}:${config.agentServerPort}`,
       "--route",
-      `/server_info=http://localhost:${config.agentServerPort}`,
+      `/server_info=http://${loopback}:${config.agentServerPort}`,
       "--route",
-      `/health=http://localhost:${config.agentServerPort}`,
+      `/health=http://${loopback}:${config.agentServerPort}`,
       "--route",
-      `/ready=http://localhost:${config.agentServerPort}`,
+      `/ready=http://${loopback}:${config.agentServerPort}`,
       "--route",
-      `/alive=http://localhost:${config.agentServerPort}`,
+      `/alive=http://${loopback}:${config.agentServerPort}`,
       "--route",
-      `/docs=http://localhost:${config.agentServerPort}`,
+      `/docs=http://${loopback}:${config.agentServerPort}`,
       "--route",
-      `/redoc=http://localhost:${config.agentServerPort}`,
+      `/redoc=http://${loopback}:${config.agentServerPort}`,
       "--route",
-      `/openapi.json=http://localhost:${config.agentServerPort}`,
+      `/openapi.json=http://${loopback}:${config.agentServerPort}`,
     ],
     {
       cwd: config.canvasPath,
@@ -428,6 +435,7 @@ function startIngress(config) {
   logService("ingress", `Starting on port ${config.ingressPort}...`, c.yellow);
 
   const ingressScript = join(projectRoot, "scripts", "ingress.mjs");
+  const loopback = "127.0.0.1";
 
   spawnService(
     "ingress",
@@ -437,27 +445,27 @@ function startIngress(config) {
       "--port",
       config.ingressPort.toString(),
       "--route",
-      `/api/automation=http://localhost:${config.autoBackendPort}`,
+      `/api/automation=http://${loopback}:${config.autoBackendPort}`,
       "--route",
-      `/api=http://localhost:${config.agentServerPort}`,
+      `/api=http://${loopback}:${config.agentServerPort}`,
       "--route",
-      `/sockets=http://localhost:${config.agentServerPort}`,
+      `/sockets=http://${loopback}:${config.agentServerPort}`,
       "--route",
-      `/server_info=http://localhost:${config.agentServerPort}`,
+      `/server_info=http://${loopback}:${config.agentServerPort}`,
       "--route",
-      `/health=http://localhost:${config.agentServerPort}`,
+      `/health=http://${loopback}:${config.agentServerPort}`,
       "--route",
-      `/ready=http://localhost:${config.agentServerPort}`,
+      `/ready=http://${loopback}:${config.agentServerPort}`,
       "--route",
-      `/alive=http://localhost:${config.agentServerPort}`,
+      `/alive=http://${loopback}:${config.agentServerPort}`,
       "--route",
-      `/docs=http://localhost:${config.agentServerPort}`,
+      `/docs=http://${loopback}:${config.agentServerPort}`,
       "--route",
-      `/redoc=http://localhost:${config.agentServerPort}`,
+      `/redoc=http://${loopback}:${config.agentServerPort}`,
       "--route",
-      `/openapi.json=http://localhost:${config.agentServerPort}`,
+      `/openapi.json=http://${loopback}:${config.agentServerPort}`,
       "--default",
-      `http://localhost:${config.vitePort}`,
+      `http://${loopback}:${config.vitePort}`,
     ],
     {
       cwd: projectRoot,
@@ -502,7 +510,7 @@ function printBanner(config) {
     `${c.green}${c.bold}╔══════════════════════════════════════════════════════════════╗${c.reset}`,
   );
   console.log(
-    `${c.green}${c.bold}║${c.reset}  ${c.bold}Agent Canvas Static-frontend Stack${c.reset}                          ${c.green}${c.bold}║${c.reset}`,
+    `${c.green}${c.bold}║${c.reset}  ${c.bold}NovaAgent Static-frontend Stack${c.reset}                          ${c.green}${c.bold}║${c.reset}`,
   );
   console.log(
     `${c.green}${c.bold}╠══════════════════════════════════════════════════════════════╣${c.reset}`,
@@ -548,7 +556,7 @@ async function main() {
 
   console.log("");
   console.log(
-    `${c.cyan}${c.bold}Agent Canvas Static-frontend Development Stack${c.reset}`,
+    `${c.cyan}${c.bold}NovaAgent Static-frontend Development Stack${c.reset}`,
   );
   console.log("");
 
@@ -604,7 +612,7 @@ async function main() {
   startAgentServer(config);
   await waitForService(
     "agent-server",
-    `http://localhost:${config.agentServerPort}/server_info`,
+    `http://127.0.0.1:${config.agentServerPort}/server_info`,
   );
 
   startAutomationBackend(config);

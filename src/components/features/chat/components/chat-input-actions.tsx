@@ -9,6 +9,10 @@ import {
   ChatInputLlmProfilePicker,
   ChatInputLlmProfileMenuContent,
 } from "./chat-input-llm-profile-picker";
+import {
+  ChatInputCompanyModelPicker,
+  ChatInputCompanyModelMenuContent,
+} from "./chat-input-company-model-picker";
 import { resolvePickerKind } from "./resolve-picker-kind";
 import { ChatAddFileButton } from "../chat-add-file-button";
 import { ChatSendButton } from "../chat-send-button";
@@ -23,6 +27,7 @@ import { useResumeConversation } from "#/hooks/mutation/use-resume-conversation"
 import { useActiveBackend } from "#/contexts/active-backend-context";
 import { useAgentProfiles } from "#/hooks/query/use-agent-profiles";
 import { useChatInputModelState } from "#/hooks/use-chat-input-model-state";
+import { isCompanyLlmManagedMode } from "#/api/company-llm/company-llm-config";
 import { useConversationStore } from "#/stores/conversation-store";
 import { useAgentState } from "#/hooks/use-agent-state";
 import { AgentState } from "#/types/agent-state";
@@ -243,9 +248,12 @@ export function ChatInputActions({
     setIsOverflowOpen(false);
   };
 
-  // Which chat-input LLM picker to show — the constrained ACP model picker or
-  // the LLM-profile picker (unit-tested in `resolve-picker-kind.test.ts`).
-  const pickerKind = resolvePickerKind({ isAcp: modelState.isAcpContext });
+  // Which chat-input LLM picker to show — ACP models, company gateway models,
+  // or LLM profiles (unit-tested in `resolve-picker-kind.test.ts`).
+  const pickerKind = resolvePickerKind({
+    isAcp: modelState.isAcpContext,
+    isCompanyManaged: isCompanyLlmManagedMode(),
+  });
 
   // Shared styling for the settings link inside the overflow submenu content.
   const overflowSettingsLinkClassName = cn(
@@ -408,6 +416,10 @@ export function ChatInputActions({
                   settingsLinkClassName={overflowSettingsLinkClassName}
                   settingsIconClassName={overflowSettingsIconClassName}
                 />
+              ) : pickerKind === "company-model" ? (
+                <ChatInputCompanyModelMenuContent
+                  onClose={closeOverflowMenus}
+                />
               ) : (
                 <ChatInputLlmProfileMenuContent
                   onClose={closeOverflowMenus}
@@ -447,11 +459,12 @@ export function ChatInputActions({
                 cases above. */}
             {pickerKind === "model" ? (
               <ChatInputModel />
+            ) : pickerKind === "company-model" ? (
+              <ChatInputCompanyModelPicker />
             ) : (
               <ChatInputLlmProfilePicker />
             )}
           </div>
-
           {hasOverflowItems && (
             <div className="relative shrink-0">
               <button

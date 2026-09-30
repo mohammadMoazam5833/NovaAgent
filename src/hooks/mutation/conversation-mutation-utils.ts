@@ -9,6 +9,12 @@ import { AppConversation } from "#/api/conversation-service/agent-server-convers
 
 type ExecutionStatusValue = AppConversation["execution_status"];
 
+export type PauseConversationMeta = {
+  conversationUrl?: string | null;
+  sessionApiKey?: string | null;
+  sandboxId?: string | null;
+};
+
 const fetchConversationData = async (
   conversationId: string,
 ): Promise<{
@@ -34,15 +40,67 @@ const fetchConversationData = async (
 };
 
 /**
+ * Resolve pause metadata from an optional caller-provided snapshot, then from
+ * React Query caches, and only then from a network batch-get. Mid-run pause
+ * should not wait on an extra round-trip when the active conversation is
+ * already cached.
+ */
+export const resolvePauseConversationMeta = (
+  conversationId: string,
+  queryClient?: QueryClient | null,
+  provided?: PauseConversationMeta | null,
+): PauseConversationMeta | null => {
+  if (
+    provided &&
+    (provided.sandboxId || provided.conversationUrl || provided.sessionApiKey)
+  ) {
+    return provided;
+  }
+
+  if (!queryClient) {
+    return provided ?? null;
+  }
+
+  const cachedList = queryClient.getQueriesData<AppConversation | null>({
+    queryKey: ["user", "conversation", conversationId],
+  });
+  for (const [, value] of cachedList) {
+    if (value?.id === conversationId) {
+      return {
+        conversationUrl: value.conversation_url,
+        sessionApiKey: value.session_api_key,
+        sandboxId: value.sandbox_id,
+      };
+    }
+  }
+
+  return provided ?? null;
+};
+
+/**
  * Stop a running conversation.
  * - Cloud mode: Pauses the sandbox (waits for current LLM call to finish).
  * - Local mode: Interrupts immediately (cancels in-flight requests).
+ *
+ * Pass `meta` / `queryClient` so local mid-run pause can skip the prefetch.
  */
-export const pauseConversation = async (conversationId: string) => {
-  const { conversationUrl, sessionApiKey, sandboxId } =
-    await fetchConversationData(conversationId);
+export const pauseConversation = async (
+  conversationId: string,
+  options?: {
+    meta?: PauseConversationMeta | null;
+    queryClient?: QueryClient | null;
+  },
+) => {
+  const cachedMeta = resolvePauseConversationMeta(
+    conversationId,
+    options?.queryClient,
+    options?.meta,
+  );
 
   if (getActiveBackend().backend.kind === "cloud") {
+    const sandboxId =
+      cachedMeta?.sandboxId ??
+      (await fetchConversationData(conversationId)).sandboxId;
     if (!sandboxId) {
       throw new Error(
         `Cannot stop runtime: cloud conversation ${conversationId} has no sandbox_id.`,
@@ -52,9 +110,11 @@ export const pauseConversation = async (conversationId: string) => {
     return { success: true };
   }
 
-  // In local mode, use /interrupt instead of /pause so in-flight LLM
-  // requests are cancelled immediately rather than waiting for the
-  // current call to finish.
+  // Local: interrupt without a mandatory prefetch. Client options fall back
+  // to the active backend host/key when conversation URL/session are absent.
+  const conversationUrl = cachedMeta?.conversationUrl ?? null;
+  const sessionApiKey = cachedMeta?.sessionApiKey ?? null;
+
   return new ConversationClient(
     getAgentServerClientOptions({ conversationUrl, sessionApiKey }),
   ).interruptConversation(conversationId);

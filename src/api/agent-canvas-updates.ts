@@ -1,5 +1,5 @@
 /**
- * Source of truth for "is a newer Agent Canvas published?".
+ * Source of truth for "is a newer NovaAgent published?".
  *
  * The npm registry `latest` dist-tag endpoint is CORS-open and returns the
  * abbreviated packument for that version as JSON. Isolated here so the

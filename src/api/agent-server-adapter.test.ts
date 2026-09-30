@@ -18,6 +18,73 @@ function makeSettings(agentSettings: Settings["agent_settings"]): Settings {
   };
 }
 
+describe("buildStartConversationRequest — confirmation policy", () => {
+  it("uses NeverConfirm when confirmation_mode is off", () => {
+    const settings = makeSettings({
+      agent_kind: "openhands",
+      llm: { model: "openhands/minimax-m2.7" },
+    });
+    settings.conversation_settings = {
+      confirmation_mode: false,
+      security_analyzer: "llm",
+      max_iterations: 20,
+    };
+
+    const payload = buildStartConversationRequest({
+      settings,
+      encryptedAgentSettings: settings.agent_settings!,
+      encryptedConversationSettings: settings.conversation_settings!,
+    });
+
+    expect(payload.confirmation_policy).toEqual({ kind: "NeverConfirm" });
+  });
+
+  it("uses ConfirmRisky for confirmation_mode + llm analyzer", () => {
+    const settings = makeSettings({
+      agent_kind: "openhands",
+      llm: { model: "openhands/minimax-m2.7" },
+    });
+    settings.conversation_settings = {
+      confirmation_mode: true,
+      security_analyzer: "llm",
+      max_iterations: 20,
+    };
+
+    const payload = buildStartConversationRequest({
+      settings,
+      encryptedAgentSettings: settings.agent_settings!,
+      encryptedConversationSettings: settings.conversation_settings!,
+    });
+
+    expect(payload.confirmation_policy).toEqual({
+      kind: "ConfirmRisky",
+      threshold: "HIGH",
+      confirm_unknown: false,
+    });
+    expect(payload.security_analyzer).toEqual({ kind: "LLMSecurityAnalyzer" });
+  });
+
+  it("uses AlwaysConfirm when confirmation_mode is on without llm analyzer", () => {
+    const settings = makeSettings({
+      agent_kind: "openhands",
+      llm: { model: "openhands/minimax-m2.7" },
+    });
+    settings.conversation_settings = {
+      confirmation_mode: true,
+      security_analyzer: "none",
+      max_iterations: 20,
+    };
+
+    const payload = buildStartConversationRequest({
+      settings,
+      encryptedAgentSettings: settings.agent_settings!,
+      encryptedConversationSettings: settings.conversation_settings!,
+    });
+
+    expect(payload.confirmation_policy).toEqual({ kind: "AlwaysConfirm" });
+  });
+});
+
 describe("buildStartConversationRequest", () => {
   it("marks OpenHands start requests as encrypted when MCP headers are encrypted", () => {
     const agentSettings = {

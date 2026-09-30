@@ -2,7 +2,7 @@
 /**
  * CLI entry point for @openhands/agent-canvas
  *
- * Runs the full Agent Canvas stack locally by default:
+ * Runs the full NovaAgent stack locally by default:
  * - Agent-server via uvx
  * - Automation backend via uvx
  * - Pre-built static frontend
@@ -57,7 +57,7 @@ const isBackendOnly = args.includes("--backend-only");
 
 if (args.includes("-h") || args.includes("--help")) {
   console.log(`
-@openhands/agent-canvas - Run the Agent Canvas UI with agent-server
+@openhands/agent-canvas - Run the NovaAgent UI with agent-server
 
 Runs the full stack with agent-server and automation backend via uvx,
 and serves pre-built static frontend assets.
@@ -113,11 +113,16 @@ EXAMPLES:
   # Start only the agent-server and automation backend behind ingress
   npx @openhands/agent-canvas --backend-only
 
+  # Team server: backends + public key entry (users open the URL in a browser)
+  LOCAL_BACKEND_API_KEY=my-secret npx @openhands/agent-canvas --public
+
   # Show default stack versions and ports
   npx @openhands/agent-canvas --info
 
   # Use local SDK checkout for development
   OH_AGENT_SERVER_LOCAL_PATH=/path/to/sdk npx @openhands/agent-canvas
+
+See docs/REMOTE_THIN_CLIENT.md for remote server + thin-client topology.
 `);
   process.exit(0);
 }
@@ -159,11 +164,15 @@ try {
 }
 
 main({
-  bannerTitle: "Agent Canvas",
+  bannerTitle: "NovaAgent",
   staticMode: true,
   staticDir: BUILD_DIR,
   mode: "agent-canvas",
   isPublic,
+  // parseArgs() also reads argv; pass explicitly so programmatic callers
+  // and the CLI stay aligned when flags are filtered upstream.
+  frontendOnly: isFrontendOnly,
+  backendOnly: isBackendOnly,
 }).catch((err) => {
   console.error(`Fatal error: ${err.message}`);
   if (err.stack) {

@@ -1,6 +1,8 @@
 import { AxiosError } from "axios";
 import {
+  isAxiosErrorWithDetailField,
   isAxiosErrorWithErrorField,
+  isAxiosErrorWithExceptionField,
   isAxiosErrorWithMessageField,
 } from "./type-guards";
 import { getUserFacingConnectionErrorMessage } from "./user-facing-error";
@@ -31,6 +33,17 @@ export const retrieveAxiosErrorMessage = (error: unknown): string => {
       error.response?.data.message
     ) {
       errorMessage = error.response?.data.message;
+    } else if (
+      isAxiosErrorWithExceptionField(error) &&
+      error.response?.data.exception
+    ) {
+      // Prefer the concrete exception string over generic "Internal Server Error".
+      errorMessage = error.response.data.exception;
+    } else if (
+      isAxiosErrorWithDetailField(error) &&
+      error.response?.data.detail
+    ) {
+      errorMessage = error.response.data.detail;
     } else {
       errorMessage = error.message;
     }

@@ -52,12 +52,14 @@ export function AgentStatus({
       conversation?.id || null,
     );
 
-  const statusCode = getStatusCode(
-    webSocketStatus,
-    executionStatus ?? null,
-    taskStatus,
-    subConversationTaskStatus,
-  );
+  const statusCode = isPausing
+    ? I18nKey.COMMON$STOPPING
+    : getStatusCode(
+        webSocketStatus,
+        executionStatus ?? null,
+        taskStatus,
+        subConversationTaskStatus,
+      );
 
   const shouldShownAgentLoading =
     curAgentState === AgentState.INIT ||

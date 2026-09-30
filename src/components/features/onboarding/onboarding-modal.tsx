@@ -22,6 +22,8 @@ import { CheckBackendStep } from "./steps/check-backend-step";
 import { SetupLlmStep } from "./steps/setup-llm-step";
 import { SetupAcpSecretsStep } from "./steps/setup-acp-secrets-step";
 import { SayHelloStep } from "./steps/say-hello-step";
+import { isCompanyLlmManagedMode } from "#/api/company-llm/company-llm-config";
+import { hasCompanyLlmSession } from "#/api/company-llm";
 
 /**
  * Logical onboarding phases.
@@ -44,6 +46,16 @@ const PHASE_ORDER_WITH_BACKEND: readonly OnboardingPhase[] = [
 const PHASE_ORDER_WITHOUT_BACKEND: readonly OnboardingPhase[] = [
   "agent",
   "setup",
+  "hello",
+];
+/** Company-managed Hybrid: LLM credentials come from gateway login. */
+const PHASE_ORDER_COMPANY_MANAGED: readonly OnboardingPhase[] = [
+  "agent",
+  "hello",
+];
+const PHASE_ORDER_COMPANY_MANAGED_WITH_BACKEND: readonly OnboardingPhase[] = [
+  "backend",
+  "agent",
   "hello",
 ];
 
@@ -165,9 +177,17 @@ export function OnboardingModal({
     healthByBackendId[backend.id]?.isConnected === true &&
     (lockedCloudHost === null || isActiveLockedCloudBackend);
 
-  const slideOrder = skipBackendStep
-    ? PHASE_ORDER_WITHOUT_BACKEND
-    : PHASE_ORDER_WITH_BACKEND;
+  const slideOrder = (() => {
+    const skipLlmSetup = isCompanyLlmManagedMode() && hasCompanyLlmSession();
+    if (skipLlmSetup) {
+      return skipBackendStep
+        ? PHASE_ORDER_COMPANY_MANAGED
+        : PHASE_ORDER_COMPANY_MANAGED_WITH_BACKEND;
+    }
+    return skipBackendStep
+      ? PHASE_ORDER_WITHOUT_BACKEND
+      : PHASE_ORDER_WITH_BACKEND;
+  })();
 
   const [phase, setPhase] = React.useState<OnboardingPhase>(
     () =>
@@ -339,21 +359,23 @@ export function OnboardingModal({
                   onNext={goNext}
                 />
               </Slide>
-              <Slide
-                index={slideOrder.indexOf("setup")}
-                currentStep={currentStep}
-              >
-                {isOpenHands ? (
-                  <SetupLlmStep onBack={goBack} onNext={goNext} />
-                ) : (
-                  <SetupAcpSecretsStep
-                    providerKey={selectedAgentId}
-                    isActive={currentPhase === "setup"}
-                    onBack={goBack}
-                    onNext={goNext}
-                  />
-                )}
-              </Slide>
+              {slideOrder.includes("setup") ? (
+                <Slide
+                  index={slideOrder.indexOf("setup")}
+                  currentStep={currentStep}
+                >
+                  {isOpenHands ? (
+                    <SetupLlmStep onBack={goBack} onNext={goNext} />
+                  ) : (
+                    <SetupAcpSecretsStep
+                      providerKey={selectedAgentId}
+                      isActive={currentPhase === "setup"}
+                      onBack={goBack}
+                      onNext={goNext}
+                    />
+                  )}
+                </Slide>
+              ) : null}
               <Slide
                 index={slideOrder.indexOf("hello")}
                 currentStep={currentStep}

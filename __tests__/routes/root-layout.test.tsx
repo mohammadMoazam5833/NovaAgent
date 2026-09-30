@@ -24,7 +24,7 @@ vi.mock("#/hooks/use-telemetry-identity", () => ({
 }));
 
 vi.mock("#/hooks/use-app-title", () => ({
-  useAppTitle: () => "OpenHands",
+  useAppTitle: () => "NovaAgent",
 }));
 
 vi.mock("#/components/features/sidebar/sidebar", () => ({

@@ -41,6 +41,10 @@ import { useUnifiedUploadFiles } from "#/hooks/mutation/use-unified-upload-files
 import { validateFiles } from "#/utils/file-validation";
 import { useConversationStore } from "#/stores/conversation-store";
 import ConfirmationModeEnabled from "./confirmation-mode-enabled";
+import { ConversationConfirmationButtons } from "#/components/shared/buttons/conversation-confirmation-buttons";
+import { useAutoContinueWatchdog } from "#/hooks/use-auto-continue-watchdog";
+import { MemorySuggestBanner } from "./memory-suggest-banner";
+import { PlanProgressBanner } from "./plan-progress-banner";
 import { useTaskPolling } from "#/hooks/query/use-task-polling";
 import { matchesPendingConversationId } from "#/utils/pending-task-message-link";
 import { useConversationWebSocket } from "#/contexts/conversation-websocket-context";
@@ -106,6 +110,7 @@ export function ChatInterface() {
 
   const { curAgentState } = useAgentState();
   const { handleBuildPlanClick } = useHandleBuildPlanClick();
+  const { banner: autoContinueBanner } = useAutoContinueWatchdog();
 
   // Cloud conversations whose sandbox is MISSING or ERROR are read-only:
   // the sandbox is gone and cannot be resumed, so we hide the chat input
@@ -561,11 +566,22 @@ export function ChatInterface() {
           {/* Goal-loop status sits at the end of the message flow — above the
               composer and its typing indicator — so progress stays in view. */}
           <GoalStatusBanner conversationId={conversationId} />
+          <PlanProgressBanner />
         </div>
 
         <div className="flex shrink-0 flex-col gap-[6px] pb-4">
           <SkillInstallRestartBanner conversationId={conversationId} />
           <BtwMessages conversationId={conversationId} />
+          {autoContinueBanner && (
+            <div
+              data-testid="auto-continue-banner"
+              className="mx-1 rounded-lg border border-[var(--oh-border-subtle)] bg-[var(--oh-surface)] px-4 py-2 text-xs text-foreground"
+            >
+              {autoContinueBanner}
+            </div>
+          )}
+          <MemorySuggestBanner />
+          <ConversationConfirmationButtons />
           {errorMessage && (
             <ErrorMessageBanner
               message={errorMessage}

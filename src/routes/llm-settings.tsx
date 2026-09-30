@@ -32,6 +32,7 @@ import {
   resolveLlmAuthType,
 } from "#/constants/llm-subscription";
 import { useOpenAISubscriptionModels } from "#/hooks/query/use-llm-subscription-models";
+import { isCompanyLlmManagedMode } from "#/api/company-llm/company-llm-config";
 
 const LLM_EXCLUDED_KEYS = new Set([
   "llm.model",
@@ -223,18 +224,20 @@ export function LlmSettingsScreen({
             // eslint-disable-next-line i18next/no-literal-string -- masked-key sentinel, not translatable
             placeholder={apiKeyIsSet ? "<hidden>" : ""}
             onChange={(value) => onChange("llm.api_key", value)}
-            isDisabled={isDisabled}
+            isDisabled={isDisabled || isCompanyLlmManagedMode()}
             startContent={
               apiKeyIsSet ? <KeyStatusIcon isSet={apiKeyIsSet} /> : undefined
             }
           />
 
-          <HelpLink
-            testId={helpTestId}
-            text={t(I18nKey.SETTINGS$DONT_KNOW_API_KEY)}
-            linkText={t(I18nKey.SETTINGS$CLICK_FOR_INSTRUCTIONS)}
-            href="https://docs.openhands.dev/usage/local-setup#getting-an-api-key"
-          />
+          {!isCompanyLlmManagedMode() ? (
+            <HelpLink
+              testId={helpTestId}
+              text={t(I18nKey.SETTINGS$DONT_KNOW_API_KEY)}
+              linkText={t(I18nKey.SETTINGS$CLICK_FOR_INSTRUCTIONS)}
+              href="https://docs.openhands.dev/usage/local-setup#getting-an-api-key"
+            />
+          ) : null}
         </>
       );
 
@@ -356,12 +359,14 @@ export function LlmSettingsScreen({
                     <OpenHandsApiKeyHelp testId="openhands-api-key-help" />
                   ) : null}
 
-                  {renderApiKeyInput(
-                    // eslint-disable-next-line i18next/no-literal-string -- DOM id, not user-facing
-                    "llm-api-key-input",
-                    // eslint-disable-next-line i18next/no-literal-string -- DOM id, not user-facing
-                    "llm-api-key-help-anchor",
-                  )}
+                  {!isCompanyLlmManagedMode()
+                    ? renderApiKeyInput(
+                        // eslint-disable-next-line i18next/no-literal-string -- DOM id, not user-facing
+                        "llm-api-key-input",
+                        // eslint-disable-next-line i18next/no-literal-string -- DOM id, not user-facing
+                        "llm-api-key-help-anchor",
+                      )
+                    : null}
                 </>
               )}
             </div>
@@ -391,24 +396,28 @@ export function LlmSettingsScreen({
                     <OpenHandsApiKeyHelp testId="openhands-api-key-help-2" />
                   ) : null}
 
-                  <SettingsInput
-                    testId="base-url-input"
-                    label={t(I18nKey.SETTINGS$BASE_URL)}
-                    type="text"
-                    className="w-full"
-                    value={baseUrlValue}
-                    // eslint-disable-next-line i18next/no-literal-string -- example value, not translatable
-                    placeholder="https://api.openai.com"
-                    onChange={(value) => onChange("llm.base_url", value)}
-                    isDisabled={isDisabled}
-                  />
+                  {!isCompanyLlmManagedMode() ? (
+                    <SettingsInput
+                      testId="base-url-input"
+                      label={t(I18nKey.SETTINGS$BASE_URL)}
+                      type="text"
+                      className="w-full"
+                      value={baseUrlValue}
+                      // eslint-disable-next-line i18next/no-literal-string -- example value, not translatable
+                      placeholder="https://api.openai.com"
+                      onChange={(value) => onChange("llm.base_url", value)}
+                      isDisabled={isDisabled}
+                    />
+                  ) : null}
 
-                  {renderApiKeyInput(
-                    // eslint-disable-next-line i18next/no-literal-string -- DOM id, not user-facing
-                    "llm-api-key-input",
-                    // eslint-disable-next-line i18next/no-literal-string -- DOM id, not user-facing
-                    "llm-api-key-help-anchor-advanced",
-                  )}
+                  {!isCompanyLlmManagedMode()
+                    ? renderApiKeyInput(
+                        // eslint-disable-next-line i18next/no-literal-string -- DOM id, not user-facing
+                        "llm-api-key-input",
+                        // eslint-disable-next-line i18next/no-literal-string -- DOM id, not user-facing
+                        "llm-api-key-help-anchor-advanced",
+                      )
+                    : null}
                 </>
               )}
             </div>

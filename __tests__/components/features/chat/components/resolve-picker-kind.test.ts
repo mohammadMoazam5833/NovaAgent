@@ -16,6 +16,18 @@ describe("resolvePickerKind", () => {
   it("shows the LLM-profile picker for an OpenHands context", () => {
     expect(resolvePickerKind({ isAcp: false })).toBe("llm-profile");
   });
+
+  it("shows the company model picker when Hybrid managed mode is on", () => {
+    expect(
+      resolvePickerKind({ isAcp: false, isCompanyManaged: true }),
+    ).toBe("company-model");
+  });
+
+  it("prefers ACP model picker over company managed mode", () => {
+    expect(
+      resolvePickerKind({ isAcp: true, isCompanyManaged: true }),
+    ).toBe("model");
+  });
 });
 
 describe("hasConversationStarted", () => {

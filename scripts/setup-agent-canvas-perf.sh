@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# One-shot host setup for Agent Canvas performance on large workspaces.
+# One-shot host setup for NovaAgent performance on large workspaces.
 # Applies a global git excludesfile and speeds up git status on named repos.
 set -euo pipefail
 
@@ -9,7 +9,7 @@ IGNORE_FILE="${OH_GLOBAL_GITIGNORE:-$IGNORE_DIR/ignore}"
 mkdir -p "$(dirname "$IGNORE_FILE")"
 
 cat > "$IGNORE_FILE" << 'EOF'
-# Global gitignore for Agent Canvas / local dev
+# Global gitignore for NovaAgent / local dev
 # Keeps git status / Changes panel fast on large workspaces
 node_modules/
 dist/

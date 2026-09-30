@@ -81,7 +81,7 @@ const MOCK_AGENT_SETTINGS_SCHEMA: NonNullable<
           section: "general",
           section_label: "General",
           value_type: "boolean",
-          default: false,
+          default: true,
           choices: [],
           depends_on: [],
           prominence: "major",
@@ -408,7 +408,7 @@ const MOCK_CONVERSATION_SETTINGS_SCHEMA: NonNullable<
           key: "confirmation_mode",
           label: "Confirmation mode",
           description:
-            "Pause for confirmation before the agent performs high-risk actions.",
+            "Human-in-the-loop: pause before high-risk actions so you can Approve, Reject, or Skip (like Cursor). New conversations use ConfirmRisky when the LLM security analyzer is selected.",
 
           section: "verification",
           section_label: "Verification",

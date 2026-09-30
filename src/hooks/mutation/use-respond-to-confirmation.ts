@@ -7,6 +7,7 @@ interface UseRespondToConfirmationVariables {
   conversationUrl: string;
   sessionApiKey?: string | null;
   accept: boolean;
+  reason?: string;
 }
 
 export const useRespondToConfirmation = () =>
@@ -17,9 +18,11 @@ export const useRespondToConfirmation = () =>
       conversationUrl,
       sessionApiKey,
       accept,
+      reason,
     }: UseRespondToConfirmationVariables) => {
       const request: ConfirmationResponseRequest = {
         accept,
+        ...(reason ? { reason } : {}),
       };
 
       return EventService.respondToConfirmation(

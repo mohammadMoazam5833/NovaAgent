@@ -43,6 +43,8 @@ describe("agent-canvas CLI", () => {
     expect(stdout).toContain("USAGE:");
     expect(stdout).toContain("--frontend-only");
     expect(stdout).toContain("--backend-only");
+    expect(stdout).toContain("--public");
+    expect(stdout).toContain("REMOTE_THIN_CLIENT");
     expect(stdout).toContain("--help");
   });
 

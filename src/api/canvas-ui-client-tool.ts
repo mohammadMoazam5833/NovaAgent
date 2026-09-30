@@ -19,7 +19,7 @@ export interface ClientToolSpec {
   };
 }
 
-const CANVAS_UI_DESCRIPTION = `The user is interacting with you inside Agent Canvas — a web UI with a chat panel on the left and a tabbed right-side panel (files, terminal, browser, vscode, planner, tasklist). This tool lets you drive that right-side panel so the user sees what you just produced.
+const CANVAS_UI_DESCRIPTION = `The user is interacting with you inside NovaAgent — a web UI with a chat panel on the left and a tabbed right-side panel (files, terminal, browser, vscode, planner, tasklist). This tool lets you drive that right-side panel so the user sees what you just produced.
 
 They will NOT see the files you wrote, the terminal output, or the browser
 unless you call this tool to switch the right-side panel to the relevant
@@ -47,7 +47,7 @@ When to call (pick the most specific option that matches your last action):
 
 * You browsed to a URL the user should see →
     First call browser_get_state(include_screenshot=true) after your final
-    browser interaction so Agent Canvas has a screenshot to display, then call
+    browser interaction so NovaAgent has a screenshot to display, then call
     command="open_tab", tab="browser"
     (browser_navigate alone only updates the URL; without browser_get_state,
     the Browser tab will open without a screenshot.)
@@ -59,7 +59,10 @@ the same turn.`;
 
 export const CANVAS_UI_CLIENT_TOOL: ClientToolSpec = {
   name: CANVAS_UI_CLIENT_TOOL_NAME,
-  description: CANVAS_UI_DESCRIPTION,
+  description: `${CANVAS_UI_DESCRIPTION}
+
+Do not pass security_risk or other analyzer fields as tool arguments — risk
+is handled outside this tool's parameter schema.`,
   parameters: {
     type: "object",
     additionalProperties: false,
@@ -78,6 +81,17 @@ export const CANVAS_UI_CLIENT_TOOL: ClientToolSpec = {
         type: "string",
         enum: ["files", "browser", "vscode", "terminal", "planner", "tasklist"],
         description: "Tab to open. Required for open_tab; ignored otherwise.",
+      },
+      summary: {
+        type: "string",
+        description:
+          "Optional short note for the UI; ignored by the client dispatcher.",
+      },
+      // Models often inject LLM risk analyzer fields into every tool call.
+      // Accept and ignore so validation does not fail the canvas UI tool.
+      security_risk: {
+        type: "string",
+        description: "Ignored. Do not set; risk is analyzed outside this tool.",
       },
     },
     required: ["command"],

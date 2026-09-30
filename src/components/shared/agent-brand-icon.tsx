@@ -1,5 +1,5 @@
-import { Bot } from "lucide-react";
 import TerminalIcon from "#/icons/terminal.svg?react";
+import NovaAgentLogo from "#/assets/branding/novaagent-logo.svg?react";
 import {
   CLAUDE_CODE_MARK_PATH,
   CLAUDE_CODE_VIEWBOX,
@@ -15,7 +15,7 @@ import { cn } from "#/utils/utils";
  * Icons the conversation chip + onboarding tiles can render. Strictly broader
  * than {@link ACPProviderIcon} — that type covers ACP CLI subprocesses only
  * (Claude Code, Codex, Gemini, generic terminal fallback), whereas this type
- * additionally includes the native OpenHands harness.
+ * additionally includes the native NovaAgent harness.
  */
 export type AgentBrandIconKind = "openhands" | ACPProviderIcon;
 
@@ -34,7 +34,7 @@ export function AgentBrandIcon({
 }: AgentBrandIconProps) {
   if (kind === "openhands") {
     return (
-      <Bot
+      <NovaAgentLogo
         width={size}
         height={size}
         className={cn("shrink-0", className)}

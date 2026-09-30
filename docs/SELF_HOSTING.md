@@ -1,7 +1,15 @@
 # Self-Hosting Agent Canvas on a Virtual Machine
 
-This guide walks through running Agent Canvas on a virtual machine (VM) so you
+This guide walks through running Agent Canvas / NovaAgent on a virtual machine (VM) so you
 can reach it from anywhere via a browser.
+
+For the **Thin Client** topology (agent-server stays on the VM; users only open
+a browser or thin Electron) — including conversation/workspace limits and
+per-user isolation notes — see
+[REMOTE_THIN_CLIENT.md](./REMOTE_THIN_CLIENT.md).
+
+For **Hybrid** (full local agent-server on each laptop; only LLM inference on a
+company vLLM / OpenAI-compatible endpoint), see [HYBRID.md](./HYBRID.md).
 
 > [!WARNING]
 > Agent Canvas drives an agent that can read and write the filesystem of the
@@ -9,6 +17,11 @@ can reach it from anywhere via a browser.
 > can talk to the agent server can do the same. **Treat the VM as you would any
 > machine that holds production credentials**, and lock it down before exposing
 > it to the public internet.
+
+> [!IMPORTANT]
+> With a shared `LOCAL_BACKEND_API_KEY`, every user sees the **same** conversations,
+> secrets, and LLM profiles on that server. Tools run on the **VM filesystem**,
+> not on each user's laptop.
 
 ## Quickstart
 
@@ -269,7 +282,24 @@ as an additional backend and switch between local and remote from the UI.
 1. In your local Agent Canvas, open **Manage backends** → **Add a backend**:
    - **Host Name** — anything memorable, e.g. `my-vm`.
    - **Host** — the URL from step 4, e.g. `https://canvas.example.com`.
-     If using an SSH tunnel instead, use `http://localhost:8000`.
+     If using an SSH tunnel instead, use `http://127.0.0.1:8000` (prefer
+     `127.0.0.1` over `localhost` to avoid IPv6/`::1` issues).
    - **Session API key** — the `LOCAL_BACKEND_API_KEY` you chose in step 3.
 2. Save. The new backend should show as "Connected". Pick it from the
    backend switcher to talk to the remote machine.
+
+## 6. Thin clients for teammates (no local agent-server)
+
+Most teammates should **not** install the heavy desktop pack. Give them:
+
+1. The public URL from step 4 (or VPN + `http://127.0.0.1:8000`)
+2. The `LOCAL_BACKEND_API_KEY` (shared team trust boundary)
+
+Or ship **NovaAgent Client** installers (thin `.deb` / Windows zip):
+
+```bash
+NOVAAGENT_REMOTE_URL=https://canvas.example.com npm run build:desktop:thin
+NOVAAGENT_REMOTE_URL=https://canvas.example.com npm run build:desktop:thin:win
+```
+
+Full detail: [REMOTE_THIN_CLIENT.md](./REMOTE_THIN_CLIENT.md).

@@ -30,6 +30,10 @@
  *   node scripts/download-node.mjs           # uses NODE_BUNDLE_VERSION below
  *   NODE_VERSION=22.10.0 node scripts/download-node.mjs
  *
+ * Cross-compile (Linux host → Windows package):
+ *   ELECTRON_DOWNLOAD_PLATFORM=win32 ELECTRON_DOWNLOAD_ARCH=x64 \
+ *     node scripts/download-node.mjs
+ *
  * Output (per platform):
  *   POSIX:   resources/node/bin/{node,npm,npx} + resources/node/lib/node_modules/npm/...
  *   Windows: resources/node/{node.exe,npm.cmd,npx.cmd} + resources/node/node_modules/npm/...
@@ -43,6 +47,7 @@ import {
   mkdirSync,
   readdirSync,
   readlinkSync,
+  renameSync,
   rmSync,
   statSync,
   unlinkSync,
@@ -70,9 +75,32 @@ const outDir = join(projectRoot, "resources", "node");
 const NODE_BUNDLE_VERSION = "22.12.0";
 
 // ── Platform detection ───────────────────────────────────────────────────────
+//
+// Default to the build host. Override with ELECTRON_DOWNLOAD_PLATFORM /
+// ELECTRON_DOWNLOAD_ARCH when cross-packing (e.g. Linux host → Windows zip).
+// Without the override, a Linux host ships ELF `bin/node` into a Windows
+// package, and the app looks for `node.exe` and fails at runtime.
 
-const PLATFORM = process.platform; // 'darwin' | 'linux' | 'win32'
-const ARCH = process.arch; // 'x64' | 'arm64' | 'ia32'
+const ALLOWED_PLATFORMS = new Set(["darwin", "linux", "win32"]);
+const ALLOWED_ARCHES = new Set(["x64", "arm64"]);
+
+function resolveDownloadTarget() {
+  const platform = process.env.ELECTRON_DOWNLOAD_PLATFORM || process.platform;
+  const arch = process.env.ELECTRON_DOWNLOAD_ARCH || process.arch;
+  if (!ALLOWED_PLATFORMS.has(platform)) {
+    throw new Error(
+      `Unsupported ELECTRON_DOWNLOAD_PLATFORM / platform for Node download: ${platform}`,
+    );
+  }
+  if (!ALLOWED_ARCHES.has(arch)) {
+    throw new Error(
+      `Unsupported ELECTRON_DOWNLOAD_ARCH / arch for Node download: ${arch}`,
+    );
+  }
+  return { platform, arch };
+}
+
+const { platform: PLATFORM, arch: ARCH } = resolveDownloadTarget();
 
 /**
  * Map (platform, arch) → Node's published distribution name.
@@ -139,11 +167,32 @@ function downloadFile(url, dest) {
 // ── Extraction ───────────────────────────────────────────────────────────────
 
 function extract(archivePath, targetDir, ext) {
-  // Both tar.gz and zip extract via system `tar`:
-  //   GNU/BSD tar (macOS/Linux) handles .tar.gz natively.
-  //   bsdtar (Windows 10+) handles both .tar.gz and .zip.
-  // --strip-components=1 drops the "node-vX.Y.Z-<platform>-<arch>/" top dir.
-  void ext; // archive content is identified by tar's own magic bytes
+  // tar.gz: GNU/BSD tar with --strip-components=1.
+  // zip (Windows Node dist): prefer unzip — GNU tar on Linux cannot read zip.
+  // Fall back to `tar -xf … --strip-components=1` for bsdtar (Windows/macOS).
+  if (ext === "zip") {
+    try {
+      execFileSync("unzip", ["-o", "-q", archivePath, "-d", targetDir], {
+        stdio: "inherit",
+      });
+      // Node's Windows zip wraps contents in node-vX.Y.Z-win-x64/; hoist them
+      // to match the --strip-components=1 layout tar produces.
+      const entries = readdirSync(targetDir);
+      if (entries.length === 1) {
+        const nested = join(targetDir, entries[0]);
+        if (statSync(nested).isDirectory()) {
+          for (const name of readdirSync(nested)) {
+            renameSync(join(nested, name), join(targetDir, name));
+          }
+          rmSync(nested, { recursive: true, force: true });
+        }
+      }
+      return;
+    } catch (err) {
+      if (err?.code !== "ENOENT" && err?.status == null) throw err;
+      // unzip missing or failed — try tar below (bsdtar on Windows/macOS).
+    }
+  }
   execFileSync(
     "tar",
     ["-xf", archivePath, "-C", targetDir, "--strip-components=1"],
@@ -152,7 +201,8 @@ function extract(archivePath, targetDir, ext) {
 }
 
 function ensureExecutable(p) {
-  if (process.platform === "win32") return;
+  // chmod only for POSIX *target* binaries (not based on the build host).
+  if (PLATFORM === "win32") return;
   try {
     chmodSync(p, 0o755);
   } catch {}

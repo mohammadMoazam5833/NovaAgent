@@ -21,6 +21,9 @@ import { BrandButton } from "../settings/brand-button";
 import { WorkspaceDropdown } from "./workspace-dropdown/workspace-dropdown";
 import { FolderBrowserModal } from "./workspace-dropdown/folder-browser-modal";
 import { ManageWorkspacesModal } from "./workspace-dropdown/manage-workspaces-modal";
+import { HOME_SELECTED_WORKSPACE_PATH_KEY } from "#/constants/home-workspace";
+
+export { HOME_SELECTED_WORKSPACE_PATH_KEY } from "#/constants/home-workspace";
 
 interface WorkspaceSelectionFormProps {
   isLoadingSettings?: boolean;
@@ -33,9 +36,6 @@ interface WorkspaceSelectionFormProps {
    */
   onConfirm?: (workspace: LocalWorkspace) => void;
 }
-
-export const HOME_SELECTED_WORKSPACE_PATH_KEY =
-  "oh:home-selected-workspace-path";
 
 function getStoredSelectedWorkspacePath(): string | null {
   if (typeof window === "undefined") return null;

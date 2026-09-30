@@ -73,12 +73,18 @@ function syncLauncherDefaultLocalBackend(backends: Backend[]): Backend[] {
       return backend;
     }
 
-    if (backend.apiKey === defaultBackend.apiKey) return backend;
+    // Keep default-local loopback host in lockstep with the launcher too.
+    // Desktop used to open http://localhost:8000 while .env-baked builds
+    // seeded http://127.0.0.1:8000 (different origins → CORS/network toast).
+    const apiKeyMatches = backend.apiKey === defaultBackend.apiKey;
+    const hostMatches = backend.host === defaultBackend.host;
+    if (apiKeyMatches && hostMatches) return backend;
 
     didSync = true;
     return {
       ...backend,
       apiKey: defaultBackend.apiKey,
+      host: defaultBackend.host,
     };
   });
 

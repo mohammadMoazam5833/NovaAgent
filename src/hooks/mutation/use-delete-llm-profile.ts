@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import ProfilesService from "#/api/profiles-service/profiles-service.api";
+import { deleteLlmProfileWithUnblocking } from "#/api/profiles-service/delete-llm-profile-unblocking";
 import SettingsService from "#/api/settings-service/settings-service.api";
 import {
   LLM_PROFILES_QUERY_KEYS,
@@ -11,7 +11,7 @@ export function useDeleteLlmProfile() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (name: string) => ProfilesService.deleteProfile(name),
+    mutationFn: (name: string) => deleteLlmProfileWithUnblocking(name),
     onSuccess: async (_response, name) => {
       if (getActiveBackend().backend.kind === "local") {
         const settings = await SettingsService.getSettings();

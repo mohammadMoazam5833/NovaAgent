@@ -37,6 +37,13 @@ export const LLM_SUBSCRIPTION_QUERY_KEYS = {
   openaiModels: ["llm-subscription", "openai", "models"] as const,
 } as const;
 
+/** Company-managed Hybrid LLM gateway queries (browser → company HTTPS). */
+export const COMPANY_LLM_QUERY_KEYS = {
+  all: ["company-llm"] as const,
+  models: ["company-llm", "models"] as const,
+  bootstrap: ["company-llm", "bootstrap"] as const,
+} as const;
+
 export const LOCAL_WORKSPACES_QUERY_KEYS = {
   all: ["local-workspaces"] as const,
 } as const;

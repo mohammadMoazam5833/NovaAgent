@@ -8,7 +8,7 @@
 import net from "node:net";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
@@ -50,6 +50,30 @@ describe("buildAutomationCommand", () => {
     expect(cmd.args).toContain("uvicorn");
     expect(cmd.args).toContain("openhands.automation.app:app");
     expect(cmd.source).toBe(`PyPI (${DEFAULT_AUTOMATION_VERSION}, default)`);
+  });
+
+  it("uses bundled CPython offline runtime when OH_BUNDLED_PYTHON* is set", () => {
+    const dir = mkdtempSync(path.join(tmpdir(), "bundled-auto-"));
+    const python = path.join(dir, "python");
+    const site = path.join(dir, "site");
+    writeFileSync(python, "");
+    mkdirSync(site);
+    try {
+      const cmd = buildAutomationCommand({
+        OH_BUNDLED_PYTHON: python,
+        OH_BUNDLED_PYTHON_ENV: site,
+      });
+      expect(cmd.command).toBe(python);
+      expect(cmd.args).toEqual([
+        "-m",
+        "uvicorn",
+        "openhands.automation.app:app",
+      ]);
+      expect(cmd.source).toContain("bundled");
+      expect(cmd.bundledPythonEnv?.UV_OFFLINE).toBe("1");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 
   it("uses custom git ref from OH_AUTOMATION_GIT_REF", () => {
@@ -412,7 +436,7 @@ describe("stack mode routing", () => {
     expect(config.launchAutomation).toBe(false);
     expect(getLocalServiceRoutes(config)).toEqual([]);
     expect(getFrontendBackend(config)).toBe(
-      `http://localhost:${config.vitePort}`,
+      `http://127.0.0.1:${config.vitePort}`,
     );
     expect(buildRouteArgs(getLocalServiceRoutes(config))).toEqual([]);
   });
@@ -494,21 +518,35 @@ describe("stack mode routing", () => {
     const routes = getLocalServiceRoutes(config);
     expect(routes).toContainEqual([
       "/api/automation",
-      `http://localhost:${config.autoBackendPort}`,
+      `http://127.0.0.1:${config.autoBackendPort}`,
     ]);
     expect(routes).toContainEqual([
       "/api",
-      `http://localhost:${config.agentServerPort}`,
+      `http://127.0.0.1:${config.agentServerPort}`,
     ]);
 
     const routeArgs = buildRouteArgs(routes);
     expect(routeArgs).toContain(
-      `/api/automation=http://localhost:${config.autoBackendPort}`,
+      `/api/automation=http://127.0.0.1:${config.autoBackendPort}`,
     );
     expect(routeArgs).toContain(
-      `/server_info=http://localhost:${config.agentServerPort}`,
+      `/server_info=http://127.0.0.1:${config.agentServerPort}`,
     );
     expect(routeArgs).not.toContain("--default");
+  });
+
+  it("routes /customer-workspace to the company-local gateway when enabled", async () => {
+    const config = await buildConfig(
+      { backendOnly: true },
+      envWithIsolatedKeyPath(),
+    );
+    const routes = getLocalServiceRoutes(config, {
+      NOVAAGENT_CUSTOMER_WORKSPACE_GATEWAY: "1",
+    });
+    expect(routes).toContainEqual([
+      "/customer-workspace",
+      "http://127.0.0.1:18766",
+    ]);
   });
 
   it("rejects mutually exclusive partial-stack modes", async () => {
@@ -649,7 +687,7 @@ describe("dev-with-automation CLI", () => {
     const [code] = await once(child, "exit");
 
     expect(code).toBe(0);
-    expect(output).toContain("Agent Canvas + Automation Development Stack");
+    expect(output).toContain("NovaAgent + Automation Development Stack");
     expect(output).toContain("--port");
     expect(output).toContain("--automation-ref");
     expect(output).toContain("--automation-repo");

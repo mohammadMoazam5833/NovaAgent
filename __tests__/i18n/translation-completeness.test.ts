@@ -90,7 +90,7 @@ describe('translation.json', () => {
 
   it('has no stale entries in the identical-value allowlist', () => {
     const staleKeys = [...IDENTICAL_VALUE_ALLOWLIST].filter(
-      (key) => !(key in translationJson),
+      (key): key is string => typeof key === "string" && !(key in translationJson),
     );
 
     expect(staleKeys).toEqual([]);

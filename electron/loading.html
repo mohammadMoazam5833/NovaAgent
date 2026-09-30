@@ -3,32 +3,32 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Agent Canvas</title>
+  <title>NovaAgent</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    /* Agent Canvas design tokens. The splash renders before the frontend is
-       served, so it cannot import the app's CSS — these values mirror the
-       static baseline in src/tailwind.css / src/index.css. Keep in sync. */
     :root {
-      --oh-background: #0b0e14; /* cool-grey-950 */
-      --oh-foreground: #eef2f7; /* cool-grey-100 */
-      --oh-muted: #a3b0c4; /* cool-grey-400 */
-      --oh-text-dim: #7e8a9e; /* cool-grey-500 */
-      --oh-text-subtle: #626d82; /* cool-grey-600 */
-      --oh-border: #4b5468; /* cool-grey-700 */
-      --oh-border-subtle: #383f50; /* cool-grey-800 */
-      --oh-surface-deep: #05070a; /* cool-grey-975 */
+      --oh-background: #0b0e14;
+      --oh-foreground: #eef2f7;
+      --oh-muted: #a3b0c4;
+      --oh-text-dim: #7e8a9e;
+      --oh-text-subtle: #626d82;
+      --oh-border: #4b5468;
+      --oh-border-subtle: #383f50;
+      --oh-surface-deep: #05070a;
       --oh-color-danger: #e76a5e;
+      --oh-accent: #3d9a8b;
     }
 
     html, body {
       width: 100%; height: 100%;
-      background: var(--oh-background);
+      background:
+        radial-gradient(120% 80% at 50% -10%, rgba(61, 154, 139, 0.14), transparent 55%),
+        radial-gradient(80% 60% at 100% 100%, rgba(163, 176, 196, 0.06), transparent 50%),
+        var(--oh-background);
       font-family:
-        -apple-system, "SF Pro", BlinkMacSystemFont, "Segoe UI", "Roboto",
-        "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
-        "Helvetica Neue", sans-serif;
+        "Segoe UI", "SF Pro Display", -apple-system, BlinkMacSystemFont,
+        "Roboto", "Helvetica Neue", sans-serif;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
       color: var(--oh-foreground);
@@ -47,43 +47,48 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      /* Must equal the collapsed window height (LOADING_WIN_HEIGHT in
-         main.mjs): the block keeps its layout when the window grows to
-         reveal the startup-log console below it. */
       height: 360px;
       flex: none;
       gap: 0;
     }
 
-    /* Real app icon — squircle corners are baked into the PNG. Kept inert so
-       image dragging cannot hijack the -webkit-app-region window drag. */
-    .logo {
-      width: 72px;
-      height: 72px;
-      margin-bottom: 20px;
-      -webkit-user-drag: none;
+    .mark {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 22px;
+      color: var(--oh-foreground);
+    }
+
+    .mark-frame {
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.25;
+      opacity: 0.92;
+    }
+
+    .mark-accent {
+      fill: var(--oh-accent);
     }
 
     h1 {
-      font-size: 22px;
-      font-weight: 600;
-      letter-spacing: -0.3px;
-      margin-bottom: 8px;
+      font-size: 24px;
+      font-weight: 650;
+      letter-spacing: -0.45px;
+      margin-bottom: 6px;
       color: var(--oh-foreground);
     }
 
     .tagline {
       font-size: 13px;
       color: var(--oh-muted);
-      margin-bottom: 36px;
+      margin-bottom: 34px;
+      letter-spacing: 0.01em;
     }
 
-    /* The app's canonical loading indicator: the 270° arc from
-       src/icons/loading-outer.svg with LoadingSpinner's animate-spin timing. */
     .spinner {
-      width: 25px;
-      height: 25px;
-      color: #fff;
+      width: 22px;
+      height: 22px;
+      color: var(--oh-accent);
       animation: spin 1s linear infinite;
       margin-bottom: 14px;
     }
@@ -95,8 +100,6 @@
       font-size: 12px;
       color: var(--oh-text-dim);
       letter-spacing: 0.3px;
-      /* Long lines (e.g. uvx "Installing openhands-agent-server==1.24.0…")
-         must not push the window or wrap awkwardly. */
       max-width: 360px;
       text-align: center;
       white-space: nowrap;
@@ -114,7 +117,6 @@
       line-height: 1.5;
     }
 
-    /* Progress dots animation for status text */
     .dots::after {
       content: "";
       animation: dots 1.5s steps(3, end) infinite;
@@ -149,11 +151,6 @@
       background: rgba(255, 255, 255, 0.06);
     }
 
-    /* ── Startup-log console ─────────────────────────────────────────────
-       Fills the extra height revealed by "Show details" (the window grows —
-       see setLoadingWindowExpanded in main.mjs); zero-height and clipped
-       while the window is collapsed. Interactive: opts out of the window
-       drag region and re-enables text selection. */
     .console {
       flex: 1 1 auto;
       min-height: 0;
@@ -183,7 +180,6 @@
       min-height: 0;
       overflow-y: auto;
       padding: 8px 12px;
-      /* The app's `code` stack (src/index.css). */
       font-family:
         source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
       font-size: 10.5px;
@@ -192,7 +188,6 @@
       user-select: text;
       -webkit-user-select: text;
       cursor: text;
-      /* Full lines, never truncated — long uvx/pip output wraps. */
       white-space: pre-wrap;
       overflow-wrap: anywhere;
     }
@@ -208,13 +203,11 @@
       color: var(--oh-color-danger);
     }
 
-    /* ── Failure state (main.mjs::showStartupFailure) ──────────────────── */
     body.failed .spinner {
       display: none;
     }
     body.failed .status {
       color: var(--oh-color-danger);
-      /* The full error summary matters more than a tidy single line here. */
       white-space: normal;
       line-height: 1.45;
     }
@@ -231,9 +224,14 @@
 </head>
 <body>
   <div class="container">
-    <img class="logo" src="build-resources/icon.png" alt="" draggable="false" />
-    <h1>Agent Canvas</h1>
-    <p class="tagline">AI coding agent interface</p>
+    <!-- NovaAgent mark -->
+    <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+      <rect class="mark-frame" x="8" y="8" width="48" height="48" rx="12" />
+      <path d="M20 44V20L44 44V20" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle class="mark-accent" cx="44" cy="18" r="3.5" />
+    </svg>
+    <h1>NovaAgent</h1>
+    <p class="tagline">Local coding agent control center</p>
     <svg class="spinner" viewBox="0 0 66 66" fill="none" aria-hidden="true"
       xmlns="http://www.w3.org/2000/svg">
       <path d="M63 33C63 16.4315 49.5685 3 33 3C16.4315 3 3 16.4315 3 33C3 49.5685 16.4315 63 33 63"
@@ -241,7 +239,7 @@
     </svg>
     <p id="status" class="status">Starting services<span class="dots"></span></p>
     <p class="hint">
-      First launch downloads Python + the OpenHands agent server.<br />
+      First launch may download the agent runtime.<br />
       This can take a few minutes on a fresh machine.
     </p>
     <div class="actions">

@@ -1,10 +1,15 @@
+import { AxiosError } from "axios";
 import { render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { DeleteProfileModal } from "#/components/features/settings/llm-profiles/delete-profile-modal";
 import { ProfileInfo } from "#/api/profiles-service/profiles-service.api";
-import ProfilesService from "#/api/profiles-service/profiles-service.api";
+import {
+  CANNOT_DELETE_LAST_LLM_PROFILE_CODE,
+  CannotDeleteLastLlmProfileError,
+  deleteLlmProfileWithUnblocking,
+} from "#/api/profiles-service/delete-llm-profile-unblocking";
 import * as toastHandlers from "#/utils/custom-toast-handlers";
 
 vi.mock("react-i18next", () => ({
@@ -18,6 +23,8 @@ vi.mock("react-i18next", () => ({
         "SETTINGS$PROFILE_DELETED": params?.name
           ? `Profile "${params.name}" deleted`
           : "Profile deleted",
+        "SETTINGS$PROFILE_CANNOT_DELETE_LAST_LLM":
+          "Cannot delete the last LLM profile. Create another profile first.",
         "BUTTON$DELETE": "Delete",
         "BUTTON$CANCEL": "Cancel",
         "ERROR$GENERIC": "An error occurred",
@@ -27,7 +34,15 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-vi.mock("#/api/profiles-service/profiles-service.api");
+vi.mock("#/api/profiles-service/delete-llm-profile-unblocking", async () => {
+  const actual = await vi.importActual<
+    typeof import("#/api/profiles-service/delete-llm-profile-unblocking")
+  >("#/api/profiles-service/delete-llm-profile-unblocking");
+  return {
+    ...actual,
+    deleteLlmProfileWithUnblocking: vi.fn(),
+  };
+});
 vi.mock("#/utils/custom-toast-handlers");
 
 const mockProfile: ProfileInfo = {
@@ -58,6 +73,7 @@ describe("DeleteProfileModal", () => {
         mutations: { retry: false },
       },
     });
+    vi.mocked(deleteLlmProfileWithUnblocking).mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -86,14 +102,11 @@ describe("DeleteProfileModal", () => {
   });
 
   it("places Cancel before Delete in the footer so the dominant action is the last focusable button", () => {
-    // Arrange: render the modal so both footer buttons are mounted.
     renderModal(mockProfile);
 
-    // Act: locate both footer buttons.
     const cancel = screen.getByText("Cancel");
     const danger = screen.getByTestId("delete-profile-confirm");
 
-    // Assert: Cancel precedes the dominant Delete action in DOM order.
     // eslint-disable-next-line no-bitwise
     expect(
       cancel.compareDocumentPosition(danger) &
@@ -109,23 +122,19 @@ describe("DeleteProfileModal", () => {
     await user.click(screen.getByText("Cancel"));
 
     expect(handleClose).toHaveBeenCalledTimes(1);
-    expect(ProfilesService.deleteProfile).not.toHaveBeenCalled();
+    expect(deleteLlmProfileWithUnblocking).not.toHaveBeenCalled();
   });
 
-  it("calls deleteProfile and shows success toast on successful delete", async () => {
+  it("calls delete helper and shows success toast on successful delete", async () => {
     const user = userEvent.setup();
     const handleClose = vi.fn();
-    vi.mocked(ProfilesService.deleteProfile).mockResolvedValue({
-      name: "profile-to-delete",
-      message: "Profile deleted",
-    });
 
     renderModal(mockProfile, handleClose);
 
     await user.click(screen.getByTestId("delete-profile-confirm"));
 
     await waitFor(() => {
-      expect(ProfilesService.deleteProfile).toHaveBeenCalledWith(
+      expect(deleteLlmProfileWithUnblocking).toHaveBeenCalledWith(
         "profile-to-delete",
       );
     });
@@ -139,7 +148,7 @@ describe("DeleteProfileModal", () => {
   it("shows error toast on delete failure", async () => {
     const user = userEvent.setup();
     const handleClose = vi.fn();
-    vi.mocked(ProfilesService.deleteProfile).mockRejectedValue(
+    vi.mocked(deleteLlmProfileWithUnblocking).mockRejectedValue(
       new Error("Delete failed"),
     );
 
@@ -156,9 +165,24 @@ describe("DeleteProfileModal", () => {
     expect(handleClose).not.toHaveBeenCalled();
   });
 
-  it("shows generic error message for non-Error exceptions", async () => {
+  it("shows backend detail from axios errors", async () => {
     const user = userEvent.setup();
-    vi.mocked(ProfilesService.deleteProfile).mockRejectedValue("Unknown error");
+    const axiosError = new AxiosError(
+      "Request failed with status code 409",
+      "ERR_BAD_REQUEST",
+      undefined,
+      undefined,
+      {
+        status: 409,
+        statusText: "Conflict",
+        headers: {},
+        config: {} as never,
+        data: {
+          detail: "Profile is referenced by agent profile default",
+        },
+      },
+    );
+    vi.mocked(deleteLlmProfileWithUnblocking).mockRejectedValue(axiosError);
 
     renderModal(mockProfile);
 
@@ -166,7 +190,42 @@ describe("DeleteProfileModal", () => {
 
     await waitFor(() => {
       expect(toastHandlers.displayErrorToast).toHaveBeenCalledWith(
-        "An error occurred",
+        "Profile is referenced by agent profile default",
+      );
+    });
+  });
+
+  it("shows localized message when deleting the last LLM profile", async () => {
+    const user = userEvent.setup();
+    vi.mocked(deleteLlmProfileWithUnblocking).mockRejectedValue(
+      new CannotDeleteLastLlmProfileError(),
+    );
+
+    renderModal(mockProfile);
+
+    await user.click(screen.getByTestId("delete-profile-confirm"));
+
+    await waitFor(() => {
+      expect(toastHandlers.displayErrorToast).toHaveBeenCalledWith(
+        "Cannot delete the last LLM profile. Create another profile first.",
+      );
+    });
+    expect(CANNOT_DELETE_LAST_LLM_PROFILE_CODE).toBe(
+      "CANNOT_DELETE_LAST_LLM_PROFILE",
+    );
+  });
+
+  it("shows string rejection messages from the delete helper", async () => {
+    const user = userEvent.setup();
+    vi.mocked(deleteLlmProfileWithUnblocking).mockRejectedValue("Unknown error");
+
+    renderModal(mockProfile);
+
+    await user.click(screen.getByTestId("delete-profile-confirm"));
+
+    await waitFor(() => {
+      expect(toastHandlers.displayErrorToast).toHaveBeenCalledWith(
+        "Unknown error",
       );
     });
   });
@@ -174,15 +233,14 @@ describe("DeleteProfileModal", () => {
   it("delete button has danger variant styling", () => {
     renderModal(mockProfile);
     const deleteButton = screen.getByTestId("delete-profile-confirm");
-    // The BrandButton with variant="danger" should be rendered
     expect(deleteButton).toBeInTheDocument();
   });
 
   describe("isPending state", () => {
     it("prevents closing modal during deletion", async () => {
       const user = userEvent.setup();
-      vi.mocked(ProfilesService.deleteProfile).mockImplementation(
-        () => new Promise(() => {}), // Never resolves
+      vi.mocked(deleteLlmProfileWithUnblocking).mockImplementation(
+        () => new Promise(() => {}),
       );
       const handleClose = vi.fn();
       renderModal(mockProfile, handleClose);
@@ -195,8 +253,8 @@ describe("DeleteProfileModal", () => {
 
     it("disables Cancel button during deletion", async () => {
       const user = userEvent.setup();
-      vi.mocked(ProfilesService.deleteProfile).mockImplementation(
-        () => new Promise(() => {}), // Never resolves
+      vi.mocked(deleteLlmProfileWithUnblocking).mockImplementation(
+        () => new Promise(() => {}),
       );
       renderModal(mockProfile);
 
@@ -207,8 +265,8 @@ describe("DeleteProfileModal", () => {
 
     it("disables Delete button during deletion", async () => {
       const user = userEvent.setup();
-      vi.mocked(ProfilesService.deleteProfile).mockImplementation(
-        () => new Promise(() => {}), // Never resolves
+      vi.mocked(deleteLlmProfileWithUnblocking).mockImplementation(
+        () => new Promise(() => {}),
       );
       renderModal(mockProfile);
 

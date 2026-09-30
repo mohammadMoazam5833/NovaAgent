@@ -9,6 +9,8 @@ import {
   readOnboardingPreviewStep,
 } from "./onboarding-preview";
 import { useOnboardingCompletion } from "./use-onboarding-completion";
+import { isCompanyLlmManagedMode } from "#/api/company-llm/company-llm-config";
+import { hasCompanyLlmSession } from "#/api/company-llm";
 
 function hasUsableCloudLlm(settings: Settings | undefined): boolean {
   const llm = settings?.agent_settings?.llm as
@@ -47,6 +49,8 @@ export function OnboardingHost() {
 
   if (!isPreview) {
     if (isCompleted) return null;
+    // Company-managed Hybrid already configured LLM via gateway login.
+    if (isCompanyLlmManagedMode() && hasCompanyLlmSession()) return null;
     if (isCloudBackend && settings.isLoading) return null;
     if (isCloudBackend && hasUsableCloudLlm(settings.data)) {
       return null;

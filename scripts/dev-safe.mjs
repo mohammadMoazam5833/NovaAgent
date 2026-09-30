@@ -48,12 +48,73 @@ const LOCAL_AGENT_SERVER_SUBDIRS = [
   "openhands-workspace",
 ];
 const DEFAULT_AGENT_SERVER_VERSION = SHARED_DEFAULTS.versions.agentServer;
-// Temporary transitive-dep pin: openhands-sdk 1.38.0 leaves agent-client-protocol
-// unbounded (>=0.10.1), but acp 0.11.0 reordered the ACP prompt() args and breaks
-// the SDK's ACP client. Hold acp <0.11 until a fixed SDK ships. See config/defaults.json.
-const AGENT_CLIENT_PROTOCOL_CONSTRAINT =
-  SHARED_DEFAULTS.constraints?.agentClientProtocol;
+// Temporary transitive-dep pins from config/defaults.json (skip `_comment` and
+// other non-string metadata). Applied as uvx `--with` constraints so unbounded
+// SDK deps (acp, fastmcp) cannot resolve to breaking majors/prereleases.
+const AGENT_SERVER_TRANSITIVE_CONSTRAINTS = Object.entries(
+  SHARED_DEFAULTS.constraints ?? {},
+)
+  .filter(
+    ([key, value]) =>
+      !key.startsWith("_") && typeof value === "string" && value.length > 0,
+  )
+  .map(([, value]) => value);
 const FRONTEND_REQUIRED_BINS = ["cross-env", "react-router"];
+
+function appendAgentServerTransitiveConstraints(uvxArgs) {
+  for (const constraint of AGENT_SERVER_TRANSITIVE_CONSTRAINTS) {
+    uvxArgs.push("--with", constraint);
+  }
+}
+
+/**
+ * Resolve a packaged-desktop offline Python runtime when Electron (or a test)
+ * sets OH_BUNDLED_PYTHON + OH_BUNDLED_PYTHON_ENV.
+ *
+ * @param {Record<string, string | undefined>} env
+ * @returns {{ python: string, sitePackages: string } | null}
+ */
+export function getBundledPythonRuntime(env = process.env) {
+  const python = env.OH_BUNDLED_PYTHON;
+  const sitePackages = env.OH_BUNDLED_PYTHON_ENV;
+  if (!python || !sitePackages) return null;
+  if (!existsSync(python) || !existsSync(sitePackages)) return null;
+  return { python, sitePackages };
+}
+
+/**
+ * Env patch so a bundled CPython can import packages from the prefilled
+ * python-env tree (and find pywin32 DLLs on Windows).
+ *
+ * @param {{ python: string, sitePackages: string }} runtime
+ * @param {Record<string, string | undefined>} [baseEnv]
+ * @param {string} [platform]
+ * @returns {Record<string, string>}
+ */
+export function buildBundledPythonEnv(
+  runtime,
+  baseEnv = process.env,
+  platform = process.platform,
+) {
+  const sep = platform === "win32" ? ";" : ":";
+  const pathPrefix = [runtime.sitePackages];
+  const pywin32DllDir = path.join(runtime.sitePackages, "pywin32_system32");
+  if (existsSync(pywin32DllDir)) {
+    pathPrefix.push(pywin32DllDir);
+  }
+  const existingPath = baseEnv.PATH ?? "";
+  const existingPythonPath = baseEnv.PYTHONPATH ?? "";
+  return {
+    PYTHONPATH: [runtime.sitePackages, existingPythonPath]
+      .filter(Boolean)
+      .join(sep),
+    PATH: [...pathPrefix, existingPath].filter(Boolean).join(sep),
+    // Belt-and-suspenders if any leftover code path still invokes uvx.
+    UV_OFFLINE: "1",
+    UV_PYTHON_DOWNLOADS: "never",
+    UV_PYTHON: runtime.python,
+  };
+}
 
 /**
  * Generate a cryptographically secure random API key.
@@ -406,12 +467,25 @@ export function validateFrontendDependencies(
  * git branch or commit instead.
  *
  * @param {Record<string, string | undefined>} env
- * @returns {{ command: string, args: string[], source: string }}
+ * @returns {{ command: string, args: string[], source: string,
+ *   bundledPythonEnv?: Record<string, string> }}
  */
 export function buildAgentServerCommand(env = process.env) {
   const localPath = env.OH_AGENT_SERVER_LOCAL_PATH;
   const gitRef = env.OH_AGENT_SERVER_GIT_REF;
   const version = env.OH_AGENT_SERVER_VERSION;
+  const bundled = !localPath ? getBundledPythonRuntime(env) : null;
+
+  // Packaged desktop offline pack: run the prefilled site-packages tree
+  // with the bundled CPython (no uvx / PyPI on first launch).
+  if (bundled) {
+    return {
+      command: bundled.python,
+      args: ["-m", "openhands.agent_server"],
+      source: `bundled (${bundled.sitePackages})`,
+      bundledPythonEnv: buildBundledPythonEnv(bundled, env),
+    };
+  }
 
   const uvxArgs = [];
   let source = "";
@@ -432,8 +506,9 @@ export function buildAgentServerCommand(env = process.env) {
       path.join(localPath, "openhands-tools"),
       "--with-editable",
       path.join(localPath, "openhands-workspace"),
-      "agent-server",
     );
+    appendAgentServerTransitiveConstraints(uvxArgs);
+    uvxArgs.push("agent-server");
     source = `local (${localPath})`;
   } else if (gitRef) {
     // Use git ref with subdirectory syntax for uv workspace monorepo.
@@ -456,8 +531,9 @@ export function buildAgentServerCommand(env = process.env) {
       `${baseGitUrl}#subdirectory=openhands-tools`,
       "--with",
       `${baseGitUrl}#subdirectory=openhands-workspace`,
-      "agent-server",
     );
+    appendAgentServerTransitiveConstraints(uvxArgs);
+    uvxArgs.push("agent-server");
     source = `git (${gitRef})`;
   } else if (version) {
     // Use specific PyPI version: uvx --from openhands-agent-server==version agent-server
@@ -473,9 +549,7 @@ export function buildAgentServerCommand(env = process.env) {
       "--with",
       `openhands-workspace==${version}`,
     );
-    if (AGENT_CLIENT_PROTOCOL_CONSTRAINT) {
-      uvxArgs.push("--with", AGENT_CLIENT_PROTOCOL_CONSTRAINT);
-    }
+    appendAgentServerTransitiveConstraints(uvxArgs);
     uvxArgs.push("agent-server");
     source = `PyPI (${version})`;
   } else {
@@ -491,9 +565,7 @@ export function buildAgentServerCommand(env = process.env) {
       "--with",
       `openhands-workspace==${DEFAULT_AGENT_SERVER_VERSION}`,
     );
-    if (AGENT_CLIENT_PROTOCOL_CONSTRAINT) {
-      uvxArgs.push("--with", AGENT_CLIENT_PROTOCOL_CONSTRAINT);
-    }
+    appendAgentServerTransitiveConstraints(uvxArgs);
     uvxArgs.push("agent-server");
     source = `PyPI (${DEFAULT_AGENT_SERVER_VERSION}, default)`;
   }
@@ -676,15 +748,95 @@ function buildConfigFromPorts(ports, cwd, env) {
 }
 
 /**
+ * Resolve Local Tools Sidecar → agent-server bridge settings from env.
+ *
+ * Enabled when a token is present AND either `NOVAAGENT_LOCAL_TOOLS_URL` is set
+ * or `NOVAAGENT_LOCAL_TOOLS_SIDECAR=1` (URL defaults to http://127.0.0.1:18765).
+ *
+ * @param {NodeJS.ProcessEnv} [env=process.env]
+ * @returns {{ enabled: boolean, url: string | null, token: string | null, importModules: string | null }}
+ */
+export function resolveLocalToolsSidecarBridgeEnv(env = process.env) {
+  const token = String(
+    env.NOVAAGENT_CUSTOMER_WORKSPACE_TOKEN ||
+      env.NOVAAGENT_LOCAL_TOOLS_TOKEN ||
+      "",
+  ).trim();
+  let url = String(env.NOVAAGENT_LOCAL_TOOLS_URL || "").trim();
+  if (!url && env.NOVAAGENT_CUSTOMER_WORKSPACE_GATEWAY === "1") {
+    const host = String(
+      env.NOVAAGENT_CUSTOMER_WORKSPACE_HOST || "127.0.0.1",
+    ).trim();
+    const port = String(
+      env.NOVAAGENT_CUSTOMER_WORKSPACE_PORT || "18766",
+    ).trim();
+    url = `http://${host}:${port}`;
+  } else if (!url && env.NOVAAGENT_LOCAL_TOOLS_SIDECAR === "1") {
+    const host = String(env.NOVAAGENT_LOCAL_TOOLS_HOST || "127.0.0.1").trim();
+    const port = String(env.NOVAAGENT_LOCAL_TOOLS_PORT || "18765").trim();
+    url = `http://${host}:${port}`;
+  }
+  const enabled = Boolean(url && token);
+  return {
+    enabled,
+    url: enabled ? url : null,
+    token: enabled ? token : null,
+    importModules: enabled ? "sidecar_bridge" : null,
+  };
+}
+
+/**
+ * Extra CLI args for agent-server when the sidecar bridge is enabled.
+ * Append after `agent-server` / `-m openhands.agent_server`.
+ *
+ * @param {NodeJS.ProcessEnv} [env=process.env]
+ * @returns {string[]}
+ */
+export function buildAgentServerCliExtraArgs(env = process.env) {
+  const bridge = resolveLocalToolsSidecarBridgeEnv(env);
+  if (!bridge.enabled || !bridge.importModules) return [];
+  return ["--import-modules", bridge.importModules];
+}
+
+/**
  * Build the environment variables object for spawning the agent-server process.
  *
  * This is exported so downstream consumers (e.g., automation service) can use
  * the same env vars without duplicating the mapping logic.
  *
  * @param {ReturnType<typeof buildSafeDevConfig>} config - Config from buildSafeDevConfig
+ * @param {NodeJS.ProcessEnv} [env=process.env]
  * @returns {Record<string, string>} Environment variables for agent-server
  */
-export function buildAgentServerEnv(config) {
+export function buildAgentServerEnv(config, env = process.env) {
+  const bridge = resolveLocalToolsSidecarBridgeEnv(env);
+  /** @type {Record<string, string>} */
+  const sidecarEnv = {};
+  if (bridge.enabled && bridge.url && bridge.token) {
+    sidecarEnv.NOVAAGENT_LOCAL_TOOLS_URL = bridge.url;
+    sidecarEnv.NOVAAGENT_LOCAL_TOOLS_TOKEN = bridge.token;
+    if (env.NOVAAGENT_LOCAL_TOOLS_SIDECAR) {
+      sidecarEnv.NOVAAGENT_LOCAL_TOOLS_SIDECAR = String(
+        env.NOVAAGENT_LOCAL_TOOLS_SIDECAR,
+      );
+    }
+    if (env.NOVAAGENT_LOCAL_TOOLS_HOST) {
+      sidecarEnv.NOVAAGENT_LOCAL_TOOLS_HOST = String(
+        env.NOVAAGENT_LOCAL_TOOLS_HOST,
+      );
+    }
+    if (env.NOVAAGENT_LOCAL_TOOLS_PORT) {
+      sidecarEnv.NOVAAGENT_LOCAL_TOOLS_PORT = String(
+        env.NOVAAGENT_LOCAL_TOOLS_PORT,
+      );
+    }
+    if (env.NOVAAGENT_LOCAL_TOOLS_ROOTS) {
+      sidecarEnv.NOVAAGENT_LOCAL_TOOLS_ROOTS = String(
+        env.NOVAAGENT_LOCAL_TOOLS_ROOTS,
+      );
+    }
+  }
+
   return {
     // Force Python to use UTF-8 for all file I/O and streams.
     //
@@ -719,8 +871,10 @@ export function buildAgentServerEnv(config) {
     // OH_SESSION_API_KEYS_0 directly (which is already in env).
     AGENT_SERVER_URL: config.backendBaseUrl,
     // Let the agent-server resolve canvas_ui_tool when old persisted metadata
-    // requests that compatibility module during startup.
+    // requests that compatibility module during startup. Also hosts
+    // tools/sidecar_bridge for Phase 2 Local Tools Sidecar integration.
     OH_EXTRA_PYTHON_PATH: config.canvasToolsDir,
+    ...sidecarEnv,
   };
 }
 
@@ -893,6 +1047,7 @@ async function main() {
       "127.0.0.1",
       "--port",
       String(config.backendPort),
+      ...buildAgentServerCliExtraArgs(process.env),
     ],
     {
       cwd: config.cwd,

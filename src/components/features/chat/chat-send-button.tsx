@@ -8,8 +8,8 @@ export interface ChatSendButtonProps {
 }
 
 /**
- * Theme-aware send control. Hardcoded `white` / `border-white` made the
- * button invisible on light backgrounds; use foreground tokens instead.
+ * Filled send control: uses foreground fill + background-colored icon so light
+ * mode reads as black circle / white arrow, and dark mode inverts cleanly.
  */
 export function ChatSendButton({
   buttonClassName,
@@ -20,10 +20,10 @@ export function ChatSendButton({
     <button
       type="button"
       className={cn(
-        "flex items-center justify-center rounded-full border size-8",
+        "flex items-center justify-center rounded-full size-8 border-0",
         disabled
-          ? "cursor-not-allowed border-[color-mix(in_srgb,var(--oh-foreground)_28%,transparent)] text-[color-mix(in_srgb,var(--oh-foreground)_40%,transparent)]"
-          : "cursor-pointer border-[var(--oh-foreground)] text-[var(--oh-foreground)] hover:bg-[color-mix(in_srgb,var(--oh-foreground)_10%,transparent)]",
+          ? "cursor-not-allowed bg-[color-mix(in_srgb,var(--oh-foreground)_28%,transparent)] text-[var(--oh-background)]"
+          : "cursor-pointer bg-[var(--oh-foreground)] text-[var(--oh-background)] hover:opacity-90",
         buttonClassName,
       )}
       data-name="arrow-up-circle-fill"
@@ -32,7 +32,7 @@ export function ChatSendButton({
       disabled={disabled}
       aria-disabled={disabled}
     >
-      <ArrowUp className="w-4 h-4" aria-hidden />
+      <ArrowUp className="w-4 h-4" strokeWidth={2.5} aria-hidden />
     </button>
   );
 }

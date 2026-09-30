@@ -5,7 +5,11 @@ interface ToggleSwitchVisualProps {
   className?: string;
 }
 
-/** Shared toggle track + thumb used by settings labels and automation controls. */
+/**
+ * Shared toggle track + thumb. Uses foreground/background tokens so the ON
+ * state stays high-contrast in both light (dark track / light thumb) and dark
+ * themes — hardcoded `bg-white` vanished on light Verification settings.
+ */
 export function ToggleSwitchVisual({
   enabled,
   className,
@@ -17,8 +21,8 @@ export function ToggleSwitchVisual({
         "relative inline-flex h-[22px] w-[40px] shrink-0 items-center rounded-full border",
         "transition-colors duration-200 ease-in-out motion-reduce:transition-none",
         enabled
-          ? "border-white bg-white"
-          : "border-[var(--oh-border)] bg-surface-raised",
+          ? "border-[var(--oh-foreground)] bg-[var(--oh-foreground)]"
+          : "border-[var(--oh-border)] bg-[var(--oh-surface-raised)]",
         className,
       )}
     >
@@ -27,7 +31,7 @@ export function ToggleSwitchVisual({
           "inline-block size-4 rounded-full",
           "transition-transform duration-200 ease-in-out motion-reduce:transition-none",
           enabled
-            ? "translate-x-[21px] bg-base-secondary"
+            ? "translate-x-[21px] bg-[var(--oh-background)]"
             : "translate-x-[2px] bg-[var(--oh-muted)]",
         )}
       />

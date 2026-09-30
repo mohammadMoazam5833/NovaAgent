@@ -66,24 +66,39 @@ afterEach(() => {
 });
 
 describe("pauseConversation local branch", () => {
-  it("calls interruptConversation on the local agent server", async () => {
-    vi.spyOn(
+  it("interrupts immediately without prefetching conversation metadata", async () => {
+    const batchGet = vi.spyOn(
       AgentServerConversationService,
       "batchGetAppConversations",
-    ).mockResolvedValue([buildConversation()]);
+    );
     interruptConversationMock.mockResolvedValue({ success: true });
 
     await pauseConversation("conv-local-1");
 
+    expect(batchGet).not.toHaveBeenCalled();
     expect(interruptConversationMock).toHaveBeenCalledOnce();
     expect(interruptConversationMock).toHaveBeenCalledWith("conv-local-1");
   });
 
-  it("propagates errors from interruptConversation", async () => {
-    vi.spyOn(
+  it("still skips prefetch when cache meta is provided", async () => {
+    const batchGet = vi.spyOn(
       AgentServerConversationService,
       "batchGetAppConversations",
-    ).mockResolvedValue([buildConversation()]);
+    );
+    interruptConversationMock.mockResolvedValue({ success: true });
+
+    await pauseConversation("conv-local-1", {
+      meta: {
+        conversationUrl: "http://localhost:18000",
+        sessionApiKey: "sess-key",
+      },
+    });
+
+    expect(batchGet).not.toHaveBeenCalled();
+    expect(interruptConversationMock).toHaveBeenCalledWith("conv-local-1");
+  });
+
+  it("propagates errors from interruptConversation", async () => {
     interruptConversationMock.mockRejectedValue(new Error("interrupt failed"));
 
     await expect(pauseConversation("conv-local-1")).rejects.toThrow(

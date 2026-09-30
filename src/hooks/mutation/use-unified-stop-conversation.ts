@@ -12,6 +12,7 @@ import {
   pauseConversation,
   patchConversationInCache,
 } from "./conversation-mutation-utils";
+import { useConversationStateStore } from "#/stores/conversation-state-store";
 
 export const useUnifiedPauseConversation = () => {
   const { t } = useTranslation("openhands");
@@ -21,8 +22,8 @@ export const useUnifiedPauseConversation = () => {
   return useMutation({
     mutationKey: ["stop-conversation"],
     mutationFn: async (variables: { conversationId: string }) =>
-      pauseConversation(variables.conversationId),
-    onMutate: async () => {
+      pauseConversation(variables.conversationId, { queryClient }),
+    onMutate: async (variables) => {
       const toastId = toast.loading(
         t(I18nKey.TOAST$STOPPING_CONVERSATION),
         TOAST_OPTIONS,
@@ -33,14 +34,34 @@ export const useUnifiedPauseConversation = () => {
         "user",
         "conversations",
       ]);
+      const previousExecutionStatus =
+        useConversationStateStore.getState().execution_status;
 
-      return { previousConversations, toastId };
+      useConversationStateStore
+        .getState()
+        .setExecutionStatus(ExecutionStatus.PAUSED);
+      patchConversationInCache(queryClient, variables.conversationId, {
+        execution_status: ExecutionStatus.PAUSED,
+      });
+
+      return { previousConversations, previousExecutionStatus, toastId };
     },
-    onError: (_, __, context) => {
+    onError: (_, variables, context) => {
       if (context?.toastId) {
         toast.dismiss(context.toastId);
       }
       displayErrorToast(t(I18nKey.TOAST$FAILED_TO_STOP_CONVERSATION));
+
+      if (context?.previousExecutionStatus != null) {
+        useConversationStateStore
+          .getState()
+          .setExecutionStatus(context.previousExecutionStatus);
+      }
+      if (context?.previousExecutionStatus != null) {
+        patchConversationInCache(queryClient, variables.conversationId, {
+          execution_status: context.previousExecutionStatus,
+        });
+      }
 
       if (context?.previousConversations) {
         queryClient.setQueryData(

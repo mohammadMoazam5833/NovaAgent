@@ -6,6 +6,7 @@ import {
   Plus,
   Server,
   Settings,
+  BookOpen,
 } from "lucide-react";
 import { OpenHandsLogoButton } from "#/components/shared/buttons/openhands-logo-button";
 import { AppearanceToggle } from "#/components/features/settings/app-settings/appearance-toggle";
@@ -33,7 +34,7 @@ import {
 
 const ICON_SIZE = 18;
 const SIDEBAR_LOGO_WIDTH = 34;
-const SIDEBAR_LOGO_HEIGHT = Math.round((SIDEBAR_LOGO_WIDTH * 30) / 46);
+const SIDEBAR_LOGO_HEIGHT = 34;
 
 export interface SidebarRailBodyProps {
   collapsed: boolean;
@@ -205,6 +206,13 @@ export function SidebarRailBody({
               <path d="M12 13.5V8" />
             </svg>
           }
+        />
+        <SidebarNavLink
+          to="/rules"
+          label={t(I18nKey.RULES$NAV)}
+          testId="sidebar-rules-link"
+          collapsed={collapsed}
+          icon={<BookOpen width={ICON_SIZE} height={ICON_SIZE} />}
         />
         <SidebarNavLink
           to="/automations"

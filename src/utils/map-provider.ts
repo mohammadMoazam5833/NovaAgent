@@ -23,7 +23,7 @@ export const MAP_PROVIDER = {
   replicate: "Replicate",
   voyage: "Voyage AI",
   openrouter: "OpenRouter",
-  openhands: "OpenHands",
+  openhands: "NovaAgent",
   lemonade: "Lemonade",
   clarifai: "Clarifai",
   moonshot: "Moonshot",

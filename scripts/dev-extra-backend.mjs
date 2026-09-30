@@ -8,6 +8,7 @@ import { pathToFileURL } from "node:url";
 import {
   buildAgentServerCommand,
   buildAgentServerEnv,
+  buildAgentServerCliExtraArgs,
   buildSafeDevConfig,
   formatMissingUvxGuidance,
   validateLocalAgentServerPath,
@@ -160,6 +161,7 @@ async function main() {
       "127.0.0.1",
       "--port",
       String(config.backendPort),
+      ...buildAgentServerCliExtraArgs(process.env),
     ],
     {
       cwd: config.cwd,

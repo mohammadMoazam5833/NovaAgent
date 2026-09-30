@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { BrandButton } from "#/components/features/settings/brand-button";
 import { LoadingSpinner } from "#/components/shared/loading-spinner";
 import { ApiKeyModalBase } from "#/components/features/settings/api-key-modal-base";
+import { CannotDeleteLastLlmProfileError } from "#/api/profiles-service/delete-llm-profile-unblocking";
 import { ProfileInfo } from "#/api/profiles-service/profiles-service.api";
 import { useDeleteLlmProfile } from "#/hooks/mutation/use-delete-llm-profile";
 import {
@@ -10,6 +11,7 @@ import {
   displaySuccessToast,
 } from "#/utils/custom-toast-handlers";
 import { I18nKey } from "#/i18n/declaration";
+import { retrieveAxiosErrorMessage } from "#/utils/retrieve-axios-error-message";
 
 interface DeleteProfileModalProps {
   profile: ProfileInfo | null;
@@ -34,8 +36,13 @@ export function DeleteProfileModal({
       );
       onClose();
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : t(I18nKey.ERROR$GENERIC);
+      let message: string;
+      if (error instanceof CannotDeleteLastLlmProfileError) {
+        message = t(I18nKey.SETTINGS$PROFILE_CANNOT_DELETE_LAST_LLM);
+      } else {
+        const extracted = retrieveAxiosErrorMessage(error);
+        message = extracted || t(I18nKey.ERROR$GENERIC);
+      }
       displayErrorToast(message);
     }
   };

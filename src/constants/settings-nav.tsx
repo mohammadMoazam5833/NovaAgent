@@ -1,4 +1,4 @@
-import { AppWindow, Brain, Shield } from "lucide-react";
+import { AppWindow, Brain, Gauge, Shield } from "lucide-react";
 import KeyIcon from "#/icons/key.svg?react";
 import MemoryIcon from "#/icons/memory_icon.svg?react";
 import CircuitIcon from "#/icons/u-circuit.svg?react";
@@ -36,6 +36,12 @@ export const OSS_NAV_ITEMS: SettingsNavItem[] = [
     subtitle: "SETTINGS$PAGE_CONDENSER_SUBLINE",
   },
   {
+    icon: <Gauge className="size-4" strokeWidth={2} aria-hidden />,
+    to: "/settings/long-run",
+    text: "SETTINGS$NAV_LONG_RUN",
+    subtitle: "SETTINGS$PAGE_LONG_RUN_SUBLINE",
+  },
+  {
     // The agent's ``agent_context`` section, whatever the schema exposes in it
     // — today only persistent memory (``agent_context.load_memory``). Not
     // ``disabledByAcp``: the stored flag rides the shared agent_settings
@@ -46,6 +52,12 @@ export const OSS_NAV_ITEMS: SettingsNavItem[] = [
     to: "/settings/agent-context",
     text: "SETTINGS$NAV_AGENT_CONTEXT",
     subtitle: "SETTINGS$PAGE_AGENT_CONTEXT_SUBLINE",
+  },
+  {
+    icon: <RobotIcon width={16} height={16} />,
+    to: "/settings/sub-agents",
+    text: "SUBAGENTS$NAV",
+    subtitle: "SUBAGENTS$SUBLINE",
   },
   {
     icon: <Shield className="size-4" strokeWidth={2} aria-hidden />,

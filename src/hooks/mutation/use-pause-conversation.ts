@@ -1,22 +1,54 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { pauseConversation } from "./conversation-mutation-utils";
+import { ExecutionStatus } from "#/types/agent-server/core/base/common";
+import { useConversationStateStore } from "#/stores/conversation-state-store";
+import {
+  pauseConversation,
+  updateConversationExecutionStatusInCache,
+} from "./conversation-mutation-utils";
 
+/**
+ * Mid-run pause from the chat chrome. Optimistically flips live agent status
+ * to PAUSED so the stop button does not wait on network + WebSocket.
+ */
 export const usePauseConversation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (variables: { conversationId: string }) =>
-      pauseConversation(variables.conversationId),
-    onMutate: async () => {
+      pauseConversation(variables.conversationId, { queryClient }),
+    onMutate: async (variables) => {
       await queryClient.cancelQueries({ queryKey: ["user", "conversations"] });
       const previousConversations = queryClient.getQueryData([
         "user",
         "conversations",
       ]);
+      const previousExecutionStatus =
+        useConversationStateStore.getState().execution_status;
 
-      return { previousConversations };
+      useConversationStateStore
+        .getState()
+        .setExecutionStatus(ExecutionStatus.PAUSED);
+      updateConversationExecutionStatusInCache(
+        queryClient,
+        variables.conversationId,
+        ExecutionStatus.PAUSED,
+      );
+
+      return { previousConversations, previousExecutionStatus };
     },
-    onError: (_, __, context) => {
+    onError: (_, variables, context) => {
+      if (context?.previousExecutionStatus != null) {
+        useConversationStateStore
+          .getState()
+          .setExecutionStatus(context.previousExecutionStatus);
+      }
+      if (context?.previousExecutionStatus != null) {
+        updateConversationExecutionStatusInCache(
+          queryClient,
+          variables.conversationId,
+          context.previousExecutionStatus,
+        );
+      }
       if (context?.previousConversations) {
         queryClient.setQueryData(
           ["user", "conversations"],
@@ -25,13 +57,10 @@ export const usePauseConversation = () => {
       }
     },
     onSettled: (_, __, variables) => {
-      // Invalidate the specific conversation query to trigger automatic refetch
       queryClient.invalidateQueries({
         queryKey: ["user", "conversation", variables.conversationId],
       });
-      // Also invalidate the conversations list for consistency
       queryClient.invalidateQueries({ queryKey: ["user", "conversations"] });
-      // Invalidate V1 batch get queries
       queryClient.invalidateQueries({
         queryKey: ["v1-batch-get-app-conversations"],
       });

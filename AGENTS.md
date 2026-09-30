@@ -19,6 +19,20 @@
 - Primary verification commands: `npm run lint`, `npm test`, `npm run build`, and `npm run build:lib`.
 - GitHub automation now includes `.github/workflows/ci.yml` for `npm ci`, `npm test`, and `npm run build`, plus `.github/dependabot.yml` with weekly npm/github-actions updates gated by a 7-day cooldown.
 
+## Remote agent-server + thin frontend
+
+Team topology where agent-server/SDK (+ automation) stay on a company VM and users only open a browser or thin Electron window:
+
+- Guide: `docs/REMOTE_THIN_CLIENT.md` (also linked from `docs/SELF_HOSTING.md` and `docs/README.md`).
+- Server: `npx @openhands/agent-canvas --public` (or `--backend-only` + separate UI) behind TLS/VPN; shared `LOCAL_BACKEND_API_KEY` means shared conversations/secrets/workspaces on that host.
+- SPA build without baked backend/session: `npm run build:frontend-only` (clears `VITE_BACKEND_BASE_URL` / `VITE_SESSION_API_KEY`).
+- Thin Electron (no local stack): `NOVAAGENT_REMOTE_URL=https://… npm run desktop:remote` (alias `OH_REMOTE_UI_URL`); resolver in `scripts/desktop-remote-url.mjs`.
+- **Customer Client packs** (`.deb` / Windows dir, no Python): `NOVAAGENT_REMOTE_URL=https://… npm run build:desktop:thin` or `build:desktop:thin:win` → `NovaAgent-Client-*` via `electron-builder.thin.config.mjs`. First-run URL prompt if bake is empty. Thin Client starts a Node local-tools sidecar (homedir) and an outbound WebSocket to `{remote}/customer-workspace` so company agent-server tools can use the laptop FS/shell. Company HTTP to customer `:18765` is not used (NAT). Gateway listens on company `127.0.0.1:18766`; VPN door remains `:8000`. Do not bind Docker LLM ports `8001`/`8003`.
+- Guide: `docs/REMOTE_THIN_CLIENT.md` and `docs/LOCAL_TOOLS_SIDECAR.md`.
+- Tools and Folder Browser see the **server** filesystem unless the reverse customer-workspace tunnel is connected (Thin Client sidecar → `:8000/customer-workspace` → company `127.0.0.1:18766`). Home/search_subdirs are best-effort proxied; other `/api/file/*` may still be company-local.
+- One agent-server process is not multi-tenant; isolate via separate state dirs/containers/keys per user if needed.
+- **Near-term Hybrid** (different product): full local agent-server/tools/workspace on the customer machine + company LLM via LLM profile `base_url` — see `docs/HYBRID.md`. Cursor-like remote brain + laptop FS uses the reverse WS gateway in `docs/LOCAL_TOOLS_SIDECAR.md`.
+
 ## PR Description Human Check
 
 The `HUMAN:` section in PR descriptions is reserved for human contributors only.
@@ -495,6 +509,7 @@ When adding code that needs a new string, decide up front which rule it falls un
   - `OH_SECRET_KEY` — secret key for settings encryption; auto-generated and persisted to `~/.openhands/agent-canvas/secret-key.txt` on first run (same file Docker uses), ensuring dev mode and Docker share the same key when both mount the same `~/.openhands` directory. Override with the env var to pin a specific key.
   - `SESSION_API_KEY` / `OH_SESSION_API_KEYS_0` / `VITE_SESSION_API_KEY` — session API key for agent-server authentication; auto-generated using `crypto.randomBytes(32)` if not set, passed to both agent-server (`OH_SESSION_API_KEYS_0`) and frontend (`VITE_SESSION_API_KEY`)
   - Default: released PyPI version `1.38.0` for agent-server SDK libraries
+  - Transitive pins from `config/defaults.json` `constraints` are passed as uvx `--with` (currently `agent-client-protocol<0.11` and `fastmcp>=3,<4`) so unbounded SDK deps cannot resolve to breaking majors/prereleases
 
 - Security: launchers generate and persist a 64-character session API key at `~/.openhands/agent-canvas/session-api-key.txt` unless overridden. The agent-server and automation backend share that session key. `OH_SECRET_KEY` protects settings encryption and is persisted separately at `~/.openhands/agent-canvas/secret-key.txt`.
 - `scripts/dev-safe.mjs` should fail fast if `uvx` cannot be spawned (for example missing PATH entries).

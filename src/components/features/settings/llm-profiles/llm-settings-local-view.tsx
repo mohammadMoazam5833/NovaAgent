@@ -44,6 +44,8 @@ import {
 import { BackNavButton } from "#/components/shared/buttons/back-nav-button";
 import { Typography } from "#/ui/typography";
 import { useSettingsSectionHeader } from "#/contexts/settings-section-header-context";
+import { isCompanyLlmManagedMode } from "#/api/company-llm/company-llm-config";
+import { CompanyManagedLlmSettings } from "./company-managed-llm-settings";
 
 type ViewMode = "list" | "create" | "edit";
 
@@ -365,6 +367,13 @@ export function LlmSettingsLocalView() {
     t,
     handleBackToList,
   ]);
+
+  // Managed mode renders the company-managed settings instead. This
+  // check must stay AFTER every hook call so hook order is consistent
+  // across renders (rules-of-hooks).
+  if (isCompanyLlmManagedMode()) {
+    return <CompanyManagedLlmSettings />;
+  }
 
   // List view: show profiles manager
   if (viewMode === "list") {

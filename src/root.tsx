@@ -51,6 +51,8 @@ import {
   readPersistedColorTheme,
 } from "#/themes/color-themes";
 import { readPersistedAppearance } from "#/themes/appearance";
+import { isCompanyLlmManagedMode } from "#/api/company-llm/company-llm-config";
+import { hasCompanyLlmSession } from "#/api/company-llm";
 
 /** Applies the persisted color palette + light/dark appearance on mount. */
 function ColorThemeApplier() {
@@ -71,6 +73,16 @@ const ManageBackendsModal = React.lazy(() =>
 // Rendered when the backend returns 401 (public mode — user must paste key).
 const ApiKeyEntryScreen = React.lazy(
   () => import("#/components/features/backends/api-key-entry-screen"),
+);
+
+// Hybrid company-managed LLM: username/password against the company gateway.
+const CompanyLlmLoginScreen = React.lazy(
+  () => import("#/components/features/company-llm/company-llm-login-screen"),
+);
+const CompanyLlmBootstrapGate = React.lazy(() =>
+  import("#/components/features/company-llm/company-llm-bootstrap-gate").then(
+    (m) => ({ default: m.CompanyLlmBootstrapGate }),
+  ),
 );
 
 // Rendered only for first-run public/frontend-only bootstraps; keep the
@@ -225,7 +237,7 @@ export const links: LinksFunction = () => [
 ];
 
 export const meta: MetaFunction = () => [
-  { title: "Agent Canvas" },
+  { title: "NovaAgent" },
   { name: "description", content: "Let's Start Building!" },
 ];
 
@@ -287,7 +299,9 @@ export default function App() {
     ? !shouldCheckMainAppAuth &&
       (!isActiveLockedCloudBackend ||
         (lockedCloudAuthMode !== "cookie" && !onboardingCompleted))
-    : !onboardingCompleted;
+    : // Company-managed Hybrid: login screen owns LLM setup; skip welcome
+      // onboarding so users land on the gateway login after agent-server is up.
+      !onboardingCompleted && !isCompanyLlmManagedMode();
   const mainAppAuth = useQuery({
     queryKey: QUERY_KEYS.MAIN_APP_COOKIE_AUTH,
     queryFn: authenticateWithMainAppCookie,
@@ -367,6 +381,30 @@ export default function App() {
     isAgentServerUnavailableError(config.error)
   ) {
     return <MissingAgentServerScreen />;
+  }
+
+  // Hybrid company-managed LLM: after the local agent-server is healthy,
+  // require company gateway login (workspace stays local).
+  if (isCompanyLlmManagedMode() && !hasCompanyLlmSession()) {
+    return (
+      <React.Suspense fallback={<AgentServerBootstrapLoading />}>
+        <CompanyLlmLoginScreen
+          onSuccess={() => {
+            window.location.reload();
+          }}
+        />
+      </React.Suspense>
+    );
+  }
+
+  if (isCompanyLlmManagedMode() && hasCompanyLlmSession()) {
+    return (
+      <React.Suspense fallback={<AgentServerBootstrapLoading />}>
+        <CompanyLlmBootstrapGate>
+          <Outlet />
+        </CompanyLlmBootstrapGate>
+      </React.Suspense>
+    );
   }
 
   return <Outlet />;

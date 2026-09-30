@@ -403,7 +403,7 @@ const getCanvasUIClientObservationContent = (
     return null;
   }
 
-  return `UI command '${correspondingAction.action.command}' dispatched to the Agent Canvas frontend.`;
+  return `UI command '${correspondingAction.action.command}' dispatched to the NovaAgent frontend.`;
 };
 
 export const getEventContent = (

@@ -15,6 +15,12 @@ import type {
   EventSearchPage,
 } from "./event-service.types";
 
+/** Wire shape for POST …/confirmation_policy (matches agent-server kinds). */
+export type ConversationConfirmationPolicy = {
+  kind: string;
+  [key: string]: unknown;
+};
+
 /**
  * Cloud-mode REST calls are split between two upstream hosts (matching
  * OpenHands' cloud frontend):
@@ -66,6 +72,39 @@ class EventService {
       conversationId,
       request,
     );
+  }
+
+  /**
+   * Update the live conversation confirmation policy (e.g. NeverConfirm after
+   * the user chooses "Always allow" for the rest of the session).
+   */
+  static async setConfirmationPolicy(
+    conversationId: string,
+    conversationUrl: string,
+    policy: ConversationConfirmationPolicy,
+    sessionApiKey?: string | null,
+  ): Promise<void> {
+    const active = getActiveBackend().backend;
+
+    if (active.kind === "cloud") {
+      await callCloudProxy({
+        backend: active,
+        method: "POST",
+        hostOverride: buildHttpBaseUrl(conversationUrl),
+        path: `/api/conversations/${conversationId}/confirmation_policy`,
+        body: { policy },
+        authMode: "session-api-key",
+        sessionApiKey,
+      });
+      return;
+    }
+
+    await new ConversationClient(
+      getAgentServerClientOptions({
+        conversationUrl,
+        sessionApiKey,
+      }),
+    ).setConfirmationPolicy(conversationId, { policy });
   }
 
   static async getEventCount(

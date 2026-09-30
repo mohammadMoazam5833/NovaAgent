@@ -86,6 +86,7 @@ export function parseArgs(argv = process.argv.slice(2)) {
     authRequired: false,
     runtimeServicesInfo: null,
     lockToCloud: null,
+    companyLlmUrl: null,
     basePath: "/",
   };
 
@@ -127,6 +128,9 @@ export function parseArgs(argv = process.argv.slice(2)) {
         break;
       case "--lock-to-cloud":
         config.lockToCloud = argv[++i] || null;
+        break;
+      case "--company-llm-url":
+        config.companyLlmUrl = argv[++i] || null;
         break;
       case "--base-path":
         config.basePath = normalizeBasePath(argv[++i]);
@@ -206,6 +210,9 @@ OPTIONS:
   --lock-to-cloud <cloud-url>  Lock backend setup to a single OpenHands Cloud
                                URL. Hides manual/local backend setup and the
                                custom Cloud URL field in the pre-built frontend.
+  --company-llm-url <url>      Hybrid company LLM gateway root URL. Injected as
+                               window.__NOVAAGENT_COMPANY_LLM_URL__ so the UI
+                               shows company login (workspace stays local).
   --base-path <path>           Mount the SPA under <path> (default: /).
                                For example, --base-path /canvas serves
                                index.html and assets under /canvas.
@@ -263,6 +270,11 @@ ROUTING:
  *   `agent-server-config.ts` so pre-built frontend bundles can hide manual
  *   backend setup and the custom Cloud URL field at runtime.
  *
+ * - `companyLlmUrl`: company LLM gateway root URL exposed as
+ *   `window.__NOVAAGENT_COMPANY_LLM_URL__`. Read by `getCompanyLlmUrl()` so
+ *   Hybrid desktop packs can enable company-managed login without baking
+ *   VITE_NOVAAGENT_COMPANY_LLM_URL into the SPA.
+ *
  * - `basePath`: the path prefix the SPA is mounted under, exposed as
  *   `window.__AGENT_CANVAS_BASE_PATH__` so runtime static assets like locale
  *   files can resolve through the same subpath as the built bundle.
@@ -273,6 +285,7 @@ function makeConfigInjectionScript(
   runtimeServicesInfo,
   lockToCloud,
   basePath,
+  companyLlmUrl,
 ) {
   const parts = [];
 
@@ -316,6 +329,12 @@ function makeConfigInjectionScript(
     );
   }
 
+  if (companyLlmUrl) {
+    parts.push(
+      `window.__NOVAAGENT_COMPANY_LLM_URL__=${JSON.stringify(companyLlmUrl)};`,
+    );
+  }
+
   if (basePath && basePath !== "/") {
     parts.push(
       `window.__AGENT_CANVAS_BASE_PATH__=${JSON.stringify(basePath)};`,
@@ -341,6 +360,7 @@ async function serveInjectedIndexHtml(
     runtimeServicesInfo,
     lockToCloud,
     basePath,
+    companyLlmUrl,
   } = {},
 ) {
   let content;
@@ -356,6 +376,7 @@ async function serveInjectedIndexHtml(
     runtimeServicesInfo,
     lockToCloud,
     basePath,
+    companyLlmUrl,
   );
   // Inject right before </head> so the key is available before any app code runs.
   // replace() targets the first (and only) </head> in well-formed HTML.
@@ -404,6 +425,7 @@ function needsRuntimeInjection(injectionOpts) {
     injectionOpts.authRequired ||
     injectionOpts.runtimeServicesInfo ||
     injectionOpts.lockToCloud ||
+    injectionOpts.companyLlmUrl ||
     (injectionOpts.basePath && injectionOpts.basePath !== "/"),
   );
 }
@@ -547,6 +569,7 @@ export function startStaticServer(config) {
     authRequired: config.authRequired || false,
     runtimeServicesInfo: config.runtimeServicesInfo || null,
     lockToCloud: config.lockToCloud || null,
+    companyLlmUrl: config.companyLlmUrl || null,
     basePath: normalizeBasePath(config.basePath),
   };
   const basePath = injectionOpts.basePath;
@@ -610,6 +633,9 @@ export function startStaticServer(config) {
       }
       if (config.lockToCloud) {
         console.log(`  Backend setup locked to Cloud: ${config.lockToCloud}`);
+      }
+      if (config.companyLlmUrl) {
+        console.log(`  Company LLM gateway: ${config.companyLlmUrl}`);
       }
       console.log("  * (default) -> static files + SPA fallback");
       console.log("");

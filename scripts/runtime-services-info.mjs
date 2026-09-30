@@ -90,7 +90,7 @@ export function buildRuntimeServicesInfo(options) {
   const services = {
     agent_server: {
       description:
-        "The OpenHands Agent Server this agent is running inside. " +
+        "The NovaAgent agent-server this agent is running inside. " +
         "Tool calls (terminal, file_editor, browser, etc.) execute here.",
       url_from_agent: agentServerUrlResolved,
     },
@@ -130,7 +130,7 @@ export function buildRuntimeServicesInfo(options) {
     const authEnvVar = automation.authEnvVar ?? "OPENHANDS_AUTOMATION_API_KEY";
     services.automation = {
       description:
-        "OpenHands Automations service. All routes are mounted under " +
+        "NovaAgent Automations service. All routes are mounted under " +
         `'${apiPrefix}'. Authenticate with header ` +
         `'X-Session-API-Key: $${authEnvVar}'.`,
       url_from_agent: automationBaseUrl,

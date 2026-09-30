@@ -1,11 +1,12 @@
 import { useTranslation } from "react-i18next";
-import { Bot } from "lucide-react";
+import NovaAgentLogo from "#/assets/branding/novaagent-logo.svg?react";
 import { NavigationLink } from "#/components/shared/navigation-link";
 import { I18nKey } from "#/i18n/declaration";
+import { PRODUCT_NAME } from "#/constants/brand";
 import { cn } from "#/utils/utils";
 
-const DEFAULT_LOGO_WIDTH = 46;
-const DEFAULT_LOGO_HEIGHT = 30;
+const DEFAULT_LOGO_WIDTH = 40;
+const DEFAULT_LOGO_HEIGHT = 40;
 
 export type OpenHandsLogoButtonProps = {
   className?: string;
@@ -16,8 +17,7 @@ export type OpenHandsLogoButtonProps = {
 };
 
 /**
- * Home / brand mark in the sidebar. Uses a neutral bot icon instead of the
- * OpenHands raised-hands logo so white-label / light UI builds stay unbranded.
+ * Home / brand mark in the sidebar — NovaAgent geometric N mark.
  */
 export function OpenHandsLogoButton({
   className,
@@ -28,17 +28,17 @@ export function OpenHandsLogoButton({
   const { t } = useTranslation("openhands");
 
   const ariaLabel = t(I18nKey.BRANDING$OPENHANDS_LOGO);
-  const size = Math.round(Math.min(logoWidth, logoHeight) * 0.85);
 
   return (
     <NavigationLink
       to="/conversations"
       aria-label={ariaLabel}
+      title={PRODUCT_NAME}
       className={cn(className)}
     >
-      <Bot
-        width={size}
-        height={size}
+      <NovaAgentLogo
+        width={logoWidth}
+        height={logoHeight}
         className={cn("shrink-0 text-foreground", logoClassName)}
         aria-hidden
       />

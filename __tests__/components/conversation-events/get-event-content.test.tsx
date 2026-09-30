@@ -316,7 +316,7 @@ describe("getEventContent", () => {
         content: [
           {
             type: "text",
-            text: "UI command 'open_tab' dispatched to the Agent Canvas frontend.",
+            text: "UI command 'open_tab' dispatched to the NovaAgent frontend.",
           },
         ],
         is_error: false,
@@ -331,7 +331,7 @@ describe("getEventContent", () => {
     ).toBeInTheDocument();
     // The body is exactly the acknowledgement text, not a JSON dump.
     expect(details).toBe(
-      "UI command 'open_tab' dispatched to the Agent Canvas frontend.",
+      "UI command 'open_tab' dispatched to the NovaAgent frontend.",
     );
   });
 
@@ -389,7 +389,7 @@ describe("getEventContent", () => {
       screen.getByText("OBSERVATION_MESSAGE$CANVAS_UI"),
     ).toBeInTheDocument();
     expect(details).toBe(
-      "UI command 'open_tab' dispatched to the Agent Canvas frontend.",
+      "UI command 'open_tab' dispatched to the NovaAgent frontend.",
     );
   });
 });

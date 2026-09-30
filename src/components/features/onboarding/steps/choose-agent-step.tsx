@@ -39,14 +39,12 @@ function getAgentOptionIcon(id: string): AgentBrandIconKind {
 export function AgentOptionIcon({ id, muted }: { id: string; muted: boolean }) {
   const icon = getAgentOptionIcon(id);
 
-  // The OpenHands wordmark is wider than the square brand marks (24×16 vs
-  // 18×18) and dims via opacity rather than a muted text colour — its paths
-  // inherit ``currentColor`` so it stays white on the tile.
+  // NovaAgent mark is square; dim via opacity so the cyan accent stays visible.
   if (icon === "openhands") {
     return (
       <AgentBrandIcon
         kind="openhands"
-        size={16}
+        size={18}
         className={cn("text-white", muted && "opacity-55")}
         data-testid="onboarding-agent-icon-openhands"
       />
@@ -77,7 +75,7 @@ function getAgentOptions(): AgentOption[] {
   return [
     {
       id: "openhands",
-      label: "OpenHands",
+      label: "NovaAgent",
       descriptionKey: I18nKey.ONBOARDING$AGENT_OPENHANDS_DESCRIPTION,
     },
     ...ACP_PROVIDERS.map<AgentOption>((provider) => ({
