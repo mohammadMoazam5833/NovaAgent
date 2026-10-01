@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NovaAgent — دانلود</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0b0e14; --fg: #eef2f7; --muted: #a3b0c4; --dim: #7e8a9e; --subtle: #626d82;
+    --border: #2a3140; --card: #10141d; --card2: #131826;
+    --coral: #d97757; --violet: #8b7cf6;
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    background:
+      radial-gradient(110% 70% at 50% -10%, rgba(217,119,87,.10), transparent 55%),
+      radial-gradient(90% 60% at 90% 100%, rgba(139,124,246,.09), transparent 55%),
+      var(--bg);
+    color: var(--fg);
+    font-family: "Segoe UI", "Vazirmatn", Tahoma, -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.7;
+  }
+  code, .ltr { direction: ltr; text-align: left; font-family: "Cascadia Code", Consolas, Menlo, monospace; }
+
+  /* ── nav ── */
+  nav {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 28px;
+    background: rgba(11,14,20,.75); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 650; font-size: 16px; letter-spacing: -.2px; }
+  .brand svg { width: 26px; height: 26px; color: var(--fg); }
+  .ver {
+    font-size: 11px; color: var(--muted);
+    border: 1px solid var(--border); border-radius: 999px; padding: 1px 10px;
+  }
+  nav .links { margin-inline-start: auto; display: flex; gap: 22px; font-size: 13.5px; }
+  nav .links a { color: var(--muted); text-decoration: none; }
+  nav .links a:hover { color: var(--fg); }
+
+  /* ── hero ── */
+  .hero { text-align: center; padding: 88px 24px 56px; }
+  .mark-wrap { position: relative; width: 104px; height: 104px; margin: 0 auto 26px; display: flex; align-items: center; justify-content: center; }
+  .halo {
+    position: absolute; inset: -22px; border-radius: 50%;
+    background: conic-gradient(from 140deg, var(--coral), var(--violet), var(--coral));
+    filter: blur(30px); opacity: .22; animation: breathe 3.4s ease-in-out infinite;
+  }
+  @keyframes breathe { 0%,100% { opacity:.15; transform:scale(1);} 50% { opacity:.30; transform:scale(1.06);} }
+  .mark { width: 68px; height: 68px; position: relative; color: var(--fg); }
+  h1 { font-size: 44px; font-weight: 700; letter-spacing: -.5px; margin-bottom: 10px; }
+  .tagline { font-size: 17px; color: var(--muted); margin-bottom: 44px; }
+  .tagline b { color: var(--fg); font-weight: 600; }
+
+  .dl-main {
+    display: inline-flex; align-items: center; gap: 12px;
+    background: linear-gradient(135deg, var(--coral), var(--violet));
+    color: #fff; text-decoration: none;
+    font-size: 16.5px; font-weight: 650;
+    padding: 15px 38px; border-radius: 999px;
+    box-shadow: 0 8px 34px rgba(217,119,87,.30);
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .dl-main:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(139,124,246,.35); }
+  .dl-main svg { width: 19px; height: 19px; }
+  .dl-sub { margin-top: 22px; display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+  .dl-alt {
+    font-size: 13.5px; color: var(--muted); text-decoration: none;
+    border: 1px solid var(--border); border-radius: 999px; padding: 9px 20px;
+    transition: color .15s ease, border-color .15s ease, background .15s ease;
+  }
+  .dl-alt:hover { color: var(--fg); border-color: var(--subtle); background: rgba(255,255,255,.04); }
+  .dl-alt.recommended { color: var(--fg); border-color: var(--coral); background: rgba(217,119,87,.10); }
+  .os-note { margin-top: 18px; font-size: 12.5px; color: var(--subtle); }
+  .os-note .os-name { color: var(--muted); font-weight: 600; }
+
+  /* ── sections ── */
+  section { max-width: 980px; margin: 0 auto; padding: 56px 24px; }
+  h2 { font-size: 26px; font-weight: 700; text-align: center; margin-bottom: 8px; letter-spacing: -.3px; }
+  .sub2 { text-align: center; color: var(--muted); font-size: 14.5px; margin-bottom: 40px; }
+
+  /* install steps */
+  .tabs { display: flex; justify-content: center; gap: 8px; margin-bottom: 26px; flex-wrap: wrap; }
+  .tab {
+    font: inherit; font-size: 13.5px; cursor: pointer;
+    color: var(--muted); background: transparent;
+    border: 1px solid var(--border); border-radius: 999px; padding: 8px 22px;
+  }
+  .tab.active { color: #fff; background: rgba(217,119,87,.14); border-color: var(--coral); }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .steps { max-width: 640px; margin: 0 auto; }
+  .step { display: flex; gap: 14px; padding: 13px 0; align-items: flex-start; }
+  .stepnum {
+    flex: none; width: 26px; height: 26px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12.5px; font-weight: 700;
+    background: linear-gradient(135deg, var(--coral), var(--violet)); color: #fff;
+    margin-top: 2px;
+  }
+  .steptext { font-size: 14.5px; color: var(--muted); }
+  .steptext b { color: var(--fg); font-weight: 600; }
+  .cmd {
+    display: block; margin-top: 8px; padding: 10px 14px;
+    background: #05070a; border: 1px solid var(--border); border-radius: 10px;
+    font-size: 13px; color: #9fe8c8; overflow-x: auto; white-space: pre;
+  }
+
+  /* features */
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 16px; }
+  .card {
+    background: linear-gradient(180deg, var(--card2), var(--card));
+    border: 1px solid var(--border); border-radius: 16px; padding: 24px;
+  }
+  .card h3 { font-size: 15.5px; font-weight: 650; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+  .card h3 .ic {
+    width: 34px; height: 34px; border-radius: 10px; flex: none;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, rgba(217,119,87,.18), rgba(139,124,246,.18));
+    color: var(--coral);
+  }
+  .card p { font-size: 13.5px; color: var(--muted); }
+
+  footer {
+    text-align: center; padding: 40px 24px 56px;
+    color: var(--subtle); font-size: 12.5px;
+    border-top: 1px solid var(--border);
+  }
+  footer .req { color: var(--dim); direction: ltr; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="brand">
+    <svg viewBox="0 0 64 64" aria-hidden="true">
+      <rect x="8" y="8" width="48" height="48" rx="14" fill="none" stroke="currentColor" stroke-width="2.5" opacity=".94"/>
+      <path d="M20 44V20L44 44V20" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="44" cy="18" r="3.5" fill="#d97757"/>
+    </svg>
+    NovaAgent
+  </div>
+  <span class="ver">v1.6.3</span>
+  <div class="links">
+    <a href="#install">نصب</a>
+    <a href="#features">قابلیت‌ها</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="mark-wrap">
+    <div class="halo"></div>
+    <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+      <rect x="8" y="8" width="48" height="48" rx="14" fill="none" stroke="currentColor" stroke-width="2.25" opacity=".94"/>
+      <path d="M20 44V20L44 44V20" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="44" cy="18" r="3.5" fill="#d97757"/>
+    </svg>
+  </div>
+  <h1>NovaAgent</h1>
+  <p class="tagline">دستیار هوشمند توسعه — <b>کد می‌نویسد، اجرا می‌کند، می‌بیند.</b></p>
+
+  <a id="dl-main" class="dl-main" href="/download/NovaAgent-Client-1.6.3-Windows-portable.zip">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    <span id="dl-main-label">دانلود برای Windows</span>
+  </a>
+
+  <div class="dl-sub">
+    <a class="dl-alt" id="alt-win" href="/download/NovaAgent-Client-1.6.3-Windows-portable.zip">Windows — Portable ZIP</a>
+    <a class="dl-alt" id="alt-deb" href="/download/NovaAgent-Client-1.6.3-amd64.deb">Linux — DEB</a>
+    <a class="dl-alt" id="alt-appimage" href="/download/NovaAgent-Client-1.6.3-x86_64.AppImage">Linux — AppImage</a>
+  </div>
+  <p class="os-note">سیستم عامل شناسایی‌شده: <span class="os-name" id="os-name">—</span></p>
+</header>
+
+<section id="install">
+  <h2>نصب</h2>
+  <p class="sub2">سه مرحله تا اولین گفتگو با ایجنت</p>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="win">Windows</button>
+    <button class="tab" data-tab="deb">Linux — DEB</button>
+    <button class="tab" data-tab="appimage">Linux — AppImage</button>
+  </div>
+
+  <div class="steps">
+    <div class="panel active" id="panel-win">
+      <div class="step"><span class="stepnum">۱</span><div class="steptext"><b>دانلود و Extract</b> — فایل ZIP را باز کنید و پوشهٔ <code class="ltr">novaagent-client</code> را در محل دلخواه بگذارید.</div></div>
+      <div class="step"><span class="stepnum">۲</span><div class="steptext"><b>اجرا</b> — <code class="ltr">NovaAgent Client.exe</code> را اجرا کنید. برای دسترسی سریع، میان‌بر دسکتاپ بسازید.</div></div>
+      <div class="step"><span class="stepnum">۳</span><div class="steptext"><b>ورود</b> — با حساب شرکتی خود وارد شوید؛ همه‌چیز آماده است.</div></div>
+    </div>
+
+    <div class="panel" id="panel-deb">
+      <div class="step"><span class="stepnum">۱</span><div class="steptext"><b>نصب بسته</b></div></div>
+      <code class="cmd ltr">sudo dpkg -i NovaAgent-Client-1.6.3-amd64.deb</code>
+      <div class="step"><span class="stepnum">۲</span><div class="steptext"><b>اجرا</b> — «NovaAgent» را از منوی برنامه‌ها باز کنید (آیکون و میان‌بر خودکار ساخته می‌شود).</div></div>
+      <div class="step"><span class="stepnum">۳</span><div class="steptext"><b>ورود</b> — با حساب شرکتی خود وارد شوید.</div></div>
+    </div>
+
+    <div class="panel" id="panel-appimage">
+      <div class="step"><span class="stepnum">۱</span><div class="steptext"><b>اجرا</b></div></div>
+      <code class="cmd ltr">chmod +x NovaAgent-Client-1.6.3-x86_64.AppImage
+./NovaAgent-Client-1.6.3-x86_64.AppImage --no-sandbox</code>
+      <div class="step"><span class="stepnum">۲</span><div class="steptext"><b>ورود</b> — با حساب شرکتی خود وارد شوید.</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="features">
+  <h2>قابلیت‌ها</h2>
+  <p class="sub2">یک ایجنت که واقعاً کار می‌کند، نه فقط حرف می‌زند</p>
+  <div class="grid">
+    <div class="card"><h3><span class="ic">✦</span>چت هوشمند با اجرای واقعی</h3><p>ایجنت پرامپت را می‌فهمد، برنامه‌ریزی می‌کند و کد را می‌نویسد، اصلاح می‌کند و اجرا می‌کند.</p></div>
+    <div class="card"><h3><span class="ic">⌘</span>ترمینال و مدیریت فایل</h3><p>دسترسی کامل به workspace اختصاصی شما: اجرای دستور، مرور و ویرایش فایل‌ها، مشاهدهٔ diff.</p></div>
+    <div class="card"><h3><span class="ic">◉</span>پیش‌نمایش زنده</h3><p>خروجی پروژه را همان لحظه در تب مرورگر ببینید — مثل یک استودیوی طراحی.</p></div>
+    <div class="card"><h3><span class="ic">🛡</span>ایزوله‌سازی کامل</h3><p>هر کاربر workspace، تاریخچه و تنظیمات کاملاً جدا دارد؛ داده‌ها بین کاربران اشتراک نمی‌شوند.</p></div>
+    <div class="card"><h3><span class="ic">⚡</span>مدل‌های قدرتمند شرکت</h3><p>متصل به مدل‌های منتخب شرکتی — بدون نیاز به کلید یا اشتراک جداگانه.</p></div>
+    <div class="card"><h3><span class="ic">◷</span>اتوماسیون</h3><p>کارهای تکراری را زمان‌بندی کنید؛ ایجنت سر وقت خودش انجام‌شان می‌دهد.</p></div>
+  </div>
+</section>
+
+<footer>
+  برای استفاده، دسترسی شبکه به سرور <span class="req">172.16.40.188:8000</span> لازم است.<br/>
+  © 2026 NovaAgent — v1.6.3
+</footer>
+
+<script>
+  // OS detect
+  var ua = navigator.userAgent, os = "Linux", key = "deb";
+  if (/Windows|Win32|WOW64/i.test(ua)) { os = "Windows"; key = "win"; }
+  else if (/Mac OS|Macintosh/i.test(ua)) { os = "macOS"; key = "appimage"; }
+  document.getElementById("os-name").textContent = os;
+
+  var targets = { win: "alt-win", deb: "alt-deb", appimage: "alt-appimage" };
+  if (os === "macOS") {
+    document.getElementById("dl-main").style.display = "none";
+  } else {
+    var main = document.getElementById("dl-main");
+    main.setAttribute("href", document.getElementById(targets[key]).getAttribute("href"));
+    document.getElementById(targets[key]).classList.add("recommended");
+  }
+
+  // tabs
+  document.querySelectorAll(".tab").forEach(function (t) {
+    t.addEventListener("click", function () {
+      document.querySelectorAll(".tab").forEach(function (x) { x.classList.remove("active"); });
+      document.querySelectorAll(".panel").forEach(function (x) { x.classList.remove("active"); });
+      t.classList.add("active");
+      document.getElementById("panel-" + t.dataset.tab).classList.add("active");
+    });
+  });
+</script>
+</body>
+</html>

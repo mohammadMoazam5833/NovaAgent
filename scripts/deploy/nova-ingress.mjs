@@ -288,12 +288,62 @@ function handleLogin(req, res) {
   });
 }
 
+// ── Public download site + artifacts (/download) ────────────────────────
+const DOWNLOAD_DIR = "/home/moazemi-gc/downloads";
+const DOWNLOAD_MIME = {
+  ".html": "text/html; charset=utf-8",
+  ".zip": "application/zip",
+  ".deb": "application/vnd.debian.binary-package",
+  ".appimage": "application/x-executable",
+};
+
+function serveDownload(req, res, urlPath) {
+  try {
+    if (urlPath === "/download" || urlPath === "/download/") {
+      res.writeHead(200, {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "no-cache",
+      });
+      createReadStream(join(DOWNLOAD_DIR, "index.html")).pipe(res);
+      return;
+    }
+    const name = decodeURIComponent(urlPath.slice("/download/".length));
+    if (!name || name.includes("/") || name.includes("\\") || name.includes("..")) {
+      res.writeHead(400);
+      res.end("bad request");
+      return;
+    }
+    const file = join(DOWNLOAD_DIR, name);
+    if (!existsSync(file) || !statSync(file).isFile()) {
+      res.writeHead(404);
+      res.end("not found");
+      return;
+    }
+    const size = statSync(file).size;
+    res.writeHead(200, {
+      "Content-Type":
+        DOWNLOAD_MIME[extname(file).toLowerCase()] || "application/octet-stream",
+      "Content-Length": String(size),
+      "Content-Disposition": 'attachment; filename="' + name + '"',
+      "Cache-Control": "no-cache",
+    });
+    createReadStream(file).pipe(res);
+  } catch (e) {
+    res.writeHead(500);
+    res.end("download error: " + e.message);
+  }
+}
+
 const server = http.createServer((req, res) => {
   try {
     const urlPath = decodeURIComponent((req.url || "/").split("?")[0]);
     console.log(`[req] ${req.method} ${urlPath}`);
     if (urlPath === "/llmapi" || urlPath.startsWith("/llmapi/")) {
       proxyCompanyLlm(req, res);
+      return;
+    }
+    if (urlPath === "/download" || urlPath.startsWith("/download/")) {
+      serveDownload(req, res, urlPath);
       return;
     }
     if (req.method === "POST" && urlPath === "/api/auth/login") {
