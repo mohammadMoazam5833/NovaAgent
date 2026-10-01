@@ -1,9 +1,29 @@
+import { Sparkles } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { I18nKey } from "#/i18n/declaration";
+
+/**
+ * Claude-style "agent is working" pill shown at the bottom of the message
+ * list while the agent runs: a pulsing sparkle plus a shimmering status
+ * phrase. Replaces the three bouncing dots.
+ */
 export function TypingIndicator() {
+  const { t } = useTranslation("openhands");
+
   return (
-    <div className="flex items-center space-x-1.5 rounded-full bg-[var(--oh-surface)] px-3 py-1.5">
-      <span className="h-1.5 w-1.5 rounded-full bg-[var(--oh-muted)] animate-[bounce_0.5s_infinite] translate-y-[1px] [animation-delay:0ms]" />
-      <span className="h-1.5 w-1.5 rounded-full bg-[var(--oh-muted)] animate-[bounce_0.5s_infinite] translate-y-[1px] [animation-delay:75ms]" />
-      <span className="h-1.5 w-1.5 rounded-full bg-[var(--oh-muted)] animate-[bounce_0.5s_infinite] translate-y-[1px] [animation-delay:150ms]" />
+    <div
+      data-testid="typing-indicator"
+      role="status"
+      aria-live="polite"
+      className="flex select-none items-center gap-1.5 whitespace-nowrap rounded-full border border-[var(--oh-border)] bg-[var(--oh-surface)] px-3 py-1.5"
+    >
+      <Sparkles
+        aria-hidden
+        className="nova-agent-loading-sparkle h-3.5 w-3.5 text-[var(--oh-muted)]"
+      />
+      <span className="nova-agent-loading-shimmer text-xs font-medium leading-5">
+        {t(I18nKey.ACTION_MESSAGE$THINK)}…
+      </span>
     </div>
   );
 }
