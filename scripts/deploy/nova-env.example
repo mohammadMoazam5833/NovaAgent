@@ -1,0 +1,7 @@
+# /home/<user>/.nova-env  (chmod 600) — referenced by systemd EnvironmentFile
+OH_SECRET_KEY=<random-64-hex>
+SESSION_API_KEY=<session-api-key-for-default-tenant>
+NOVAAGENT_TENANT=default
+NOVAAGENT_CUSTOMER_HOME=/home/<user>
+NOVAAGENT_LOCAL_TOOLS_URL=http://127.0.0.1:<port>
+NOVAAGENT_LOCAL_TOOLS_TOKEN=<token>
