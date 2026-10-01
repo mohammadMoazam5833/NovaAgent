@@ -6,31 +6,14 @@ import { useConfig } from "#/hooks/query/use-config";
 import { displayErrorToast } from "#/utils/custom-toast-handlers";
 import { I18nKey } from "#/i18n/declaration";
 import { useNavigation } from "#/context/navigation-context";
-import { useActiveBackendContext } from "#/contexts/active-backend-context";
 import { cn } from "#/utils/utils";
 import { useSidebarMobileNav } from "./sidebar-mobile-nav-context";
 import { useSidebarStore } from "#/stores/sidebar-store";
-import { useClickOutsideElement } from "#/hooks/use-click-outside-element";
-import { useBackendsHealth } from "#/hooks/query/use-backends-health";
 // The LLM settings modal is only mounted when the settings query 404s and
 // LLM settings aren't hidden — keep it out of the sidebar's eager graph.
 const SettingsModal = React.lazy(() =>
   import("#/components/shared/modals/settings/settings-modal").then((m) => ({
     default: m.SettingsModal,
-  })),
-);
-
-// Add/Manage backend modals are lifted into the sidebar (instead of living
-// inside BackendSelector) so they survive the collapsed popover unmounting
-// when the user moves the cursor out of the popover toward the modal.
-const AddBackendModal = React.lazy(() =>
-  import("#/components/features/backends/add-backend-modal").then((m) => ({
-    default: m.AddBackendModal,
-  })),
-);
-const ManageBackendsModal = React.lazy(() =>
-  import("#/components/features/backends/manage-backends-modal").then((m) => ({
-    default: m.ManageBackendsModal,
   })),
 );
 
@@ -46,23 +29,9 @@ export function Sidebar() {
     isError: settingsIsError,
     isFetching: isFetchingSettings,
   } = useSettings();
-  const { backends, active } = useActiveBackendContext();
-  const healthByBackendId = useBackendsHealth(backends);
-  const activeBackendHealth = healthByBackendId[active.backend.id];
   const collapsed = useSidebarStore((state) => state.collapsed);
   const setCollapsed = useSidebarStore((state) => state.setCollapsed);
   const [settingsModalIsOpen, setSettingsModalIsOpen] = React.useState(false);
-  const [collapsedBackendPopoverOpen, setCollapsedBackendPopoverOpen] =
-    React.useState(false);
-  const collapsedBackendCloseTimer = React.useRef<ReturnType<
-    typeof setTimeout
-  > | null>(null);
-  // Lifted out of BackendSelector so opening these modals from the
-  // collapsed-sidebar popover doesn't lose state when the popover unmounts
-  // (cursor moving toward the modal triggers onMouseLeave -> close).
-  const [addBackendModalOpen, setAddBackendModalOpen] = React.useState(false);
-  const [manageBackendsModalOpen, setManageBackendsModalOpen] =
-    React.useState(false);
   const [collapsedRailHovered, setCollapsedRailHovered] = React.useState(false);
   const suppressCollapsedExpandRef = React.useRef(false);
   const [, refreshCollapsedExpandGate] = React.useReducer((n) => n + 1, 0);
@@ -70,9 +39,6 @@ export function Sidebar() {
     useSidebarMobileNav();
   const [mobileDrawerMounted, setMobileDrawerMounted] = React.useState(false);
   const [mobileDrawerVisible, setMobileDrawerVisible] = React.useState(false);
-  const collapsedBackendPopoverRef = useClickOutsideElement<HTMLDivElement>(
-    () => setCollapsedBackendPopoverOpen(false),
-  );
   const settingsErrorStatus = getErrorStatus(settingsError);
 
   React.useEffect(() => {
@@ -191,13 +157,6 @@ export function Sidebar() {
     showCollapsedExpandButton,
     isExtensionsActive,
     currentPath,
-    activeBackendHealth,
-    collapsedBackendPopoverOpen,
-    setCollapsedBackendPopoverOpen,
-    collapsedBackendPopoverRef,
-    collapsedBackendCloseTimer,
-    onOpenAddBackend: () => setAddBackendModalOpen(true),
-    onOpenManageBackends: () => setManageBackendsModalOpen(true),
   };
 
   return (
@@ -273,18 +232,6 @@ export function Sidebar() {
           <SettingsModal
             settings={settings}
             onClose={() => setSettingsModalIsOpen(false)}
-          />
-        </React.Suspense>
-      )}
-      {addBackendModalOpen && (
-        <React.Suspense fallback={null}>
-          <AddBackendModal onClose={() => setAddBackendModalOpen(false)} />
-        </React.Suspense>
-      )}
-      {manageBackendsModalOpen && (
-        <React.Suspense fallback={null}>
-          <ManageBackendsModal
-            onClose={() => setManageBackendsModalOpen(false)}
           />
         </React.Suspense>
       )}

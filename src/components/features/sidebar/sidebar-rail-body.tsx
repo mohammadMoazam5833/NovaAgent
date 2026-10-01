@@ -4,7 +4,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Plus,
-  Server,
   Settings,
   BookOpen,
 } from "lucide-react";
@@ -16,8 +15,6 @@ import { SidebarNavLink } from "./sidebar-nav-link";
 import { I18nKey } from "#/i18n/declaration";
 import { cn } from "#/utils/utils";
 import { StyledTooltip } from "#/components/shared/buttons/styled-tooltip";
-import { BackendSelector } from "#/components/features/backends/backend-selector";
-import { BackendStatusDot } from "#/components/features/backends/backend-status-dot";
 import { CommandMenuTrigger } from "#/components/features/command-menu/command-menu-trigger";
 import { SidebarConversationList } from "./sidebar-conversation-list";
 import AutomationsIcon from "#/icons/automations.svg?react";
@@ -47,15 +44,6 @@ export interface SidebarRailBodyProps {
   showCollapsedExpandButton: boolean;
   isExtensionsActive: boolean;
   currentPath: string;
-  activeBackendHealth: { isConnected: boolean | null } | undefined;
-  collapsedBackendPopoverOpen: boolean;
-  setCollapsedBackendPopoverOpen: (open: boolean) => void;
-  collapsedBackendPopoverRef: React.RefObject<HTMLDivElement | null>;
-  collapsedBackendCloseTimer: React.MutableRefObject<ReturnType<
-    typeof setTimeout
-  > | null>;
-  onOpenAddBackend: () => void;
-  onOpenManageBackends: () => void;
 }
 
 export function SidebarRailBody({
@@ -69,16 +57,8 @@ export function SidebarRailBody({
   showCollapsedExpandButton,
   isExtensionsActive,
   currentPath,
-  activeBackendHealth,
-  collapsedBackendPopoverOpen,
-  setCollapsedBackendPopoverOpen,
-  collapsedBackendPopoverRef,
-  collapsedBackendCloseTimer,
-  onOpenAddBackend,
-  onOpenManageBackends,
 }: SidebarRailBodyProps) {
   const { t } = useTranslation("openhands");
-  const backendCloseTimerRef = collapsedBackendCloseTimer;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -252,80 +232,7 @@ export function SidebarRailBody({
               </span>
             </NavigationLink>
           </StyledTooltip>
-          <div
-            className="relative"
-            ref={collapsedBackendPopoverRef}
-            onMouseEnter={() => {
-              if (backendCloseTimerRef.current) {
-                clearTimeout(backendCloseTimerRef.current);
-                backendCloseTimerRef.current = null;
-              }
-              setCollapsedBackendPopoverOpen(true);
-            }}
-            onMouseLeave={() => {
-              backendCloseTimerRef.current = setTimeout(
-                () => setCollapsedBackendPopoverOpen(false),
-                150,
-              );
-            }}
-          >
-            <button
-              type="button"
-              data-testid="collapsed-backend-selector-link"
-              aria-label={t(I18nKey.BACKEND$MANAGE)}
-              aria-expanded={collapsedBackendPopoverOpen}
-              onMouseDown={(event) => {
-                event.preventDefault();
-                event.stopPropagation();
-              }}
-              onMouseUp={(event) => event.stopPropagation()}
-              className={cn(
-                sidebarNavRowClassName({ collapsed: true }),
-                "relative",
-              )}
-            >
-              <SidebarCollapsedIconSlot active={collapsedBackendPopoverOpen}>
-                <span className="relative inline-flex size-[18px] shrink-0 items-center justify-center">
-                  <BackendStatusDot
-                    isConnected={activeBackendHealth?.isConnected ?? null}
-                    className="absolute -left-0.5 -top-0.5 z-[1] pointer-events-none"
-                  />
-                  <Server width={ICON_SIZE} height={ICON_SIZE} />
-                </span>
-              </SidebarCollapsedIconSlot>
-              <span className={sidebarNavLabelClassName(true)}>
-                {t(I18nKey.BACKEND$MANAGE)}
-              </span>
-            </button>
-            {collapsedBackendPopoverOpen ? (
-              <div
-                className="absolute bottom-[-4px] left-full pl-2.5 z-40 w-[272px]"
-                onClick={(event) => event.stopPropagation()}
-              >
-                <BackendSelector
-                  sidebarCollapsed={collapsed}
-                  hideTrigger
-                  defaultOpen
-                  openUpward
-                  onSelectOption={() => setCollapsedBackendPopoverOpen(false)}
-                  onOpenAddBackend={onOpenAddBackend}
-                  onOpenManageBackends={onOpenManageBackends}
-                />
-              </div>
-            ) : null}
-          </div>
         </nav>
-      ) : null}
-
-      {!collapsed ? (
-        <div
-          className={cn(
-            "flex flex-col items-stretch max-w-none box-border shrink-0",
-            "-ml-2.5 w-[calc(100%+0.625rem)] border-t border-[var(--oh-border)] pt-2 px-2.5",
-          )}
-        >
-          <BackendSelector sidebarCollapsed={collapsed} openUpward />
-        </div>
       ) : null}
     </div>
   );
