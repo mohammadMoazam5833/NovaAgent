@@ -68,7 +68,9 @@ export function ChatInputContainer({
       ref={chatContainerRef}
       className={cn(
         "bg-[var(--oh-surface)] box-border content-stretch flex flex-col items-start justify-center p-4 relative rounded-[15px] w-full",
-        conversationMode === "plan" && "border border-[#597FF4]",
+        conversationMode === "plan"
+          ? "border border-[#597FF4]"
+          : "border border-[var(--oh-border)]",
       )}
       onDragOver={(e) => onDragOver(e, disabled)}
       onDragLeave={(e) => onDragLeave(e, disabled)}

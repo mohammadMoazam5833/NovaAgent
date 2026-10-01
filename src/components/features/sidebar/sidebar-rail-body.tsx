@@ -6,7 +6,6 @@ import {
   Plus,
   Settings,
   BookOpen,
-  Cpu,
 } from "lucide-react";
 import { OpenHandsLogoButton } from "#/components/shared/buttons/openhands-logo-button";
 import { AppearanceToggle } from "#/components/features/settings/app-settings/appearance-toggle";
@@ -18,7 +17,6 @@ import { cn } from "#/utils/utils";
 import { StyledTooltip } from "#/components/shared/buttons/styled-tooltip";
 import { CommandMenuTrigger } from "#/components/features/command-menu/command-menu-trigger";
 import { SidebarConversationList } from "./sidebar-conversation-list";
-import { SidebarModelPicker } from "./sidebar-model-picker";
 import AutomationsIcon from "#/icons/automations.svg?react";
 import {
   SIDEBAR_COLLAPSE_TOGGLE_OVERLAY_CLASS,
@@ -234,25 +232,6 @@ export function SidebarRailBody({
               </span>
             </NavigationLink>
           </StyledTooltip>
-          <StyledTooltip
-            content={t(I18nKey.SETTINGS$AGENT_MODEL)}
-            placement="right"
-          >
-            <button
-              type="button"
-              data-testid="collapsed-model-picker-link"
-              aria-label={t(I18nKey.SETTINGS$AGENT_MODEL)}
-              onClick={onExpand}
-              className={sidebarNavRowClassName({ collapsed: true })}
-            >
-              <SidebarCollapsedIconSlot active={false}>
-                <Cpu width={ICON_SIZE} height={ICON_SIZE} />
-              </SidebarCollapsedIconSlot>
-              <span className={sidebarNavLabelClassName(true)}>
-                {t(I18nKey.SETTINGS$AGENT_MODEL)}
-              </span>
-            </button>
-          </StyledTooltip>
         </nav>
       ) : null}
 
@@ -263,7 +242,21 @@ export function SidebarRailBody({
             "-ml-2.5 w-[calc(100%+0.625rem)] border-t border-[var(--oh-border)] pt-2 px-2.5",
           )}
         >
-          <SidebarModelPicker />
+          <NavigationLink
+            to="/settings"
+            data-testid="sidebar-settings-link"
+            className={cn(
+              sidebarNavRowClassName({ collapsed: false }),
+              "text-[var(--oh-muted)] hover:text-foreground hover:bg-[var(--oh-surface-raised)]",
+            )}
+          >
+            <span className={SIDEBAR_ICON_SLOT_CLASS}>
+              <Settings width={ICON_SIZE} height={ICON_SIZE} />
+            </span>
+            <span className={sidebarNavLabelClassName(false)}>
+              {t(I18nKey.SIDEBAR$SETTINGS)}
+            </span>
+          </NavigationLink>
         </div>
       ) : null}
     </div>
