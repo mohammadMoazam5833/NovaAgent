@@ -15,7 +15,7 @@ export function TypingIndicator() {
       data-testid="typing-indicator"
       role="status"
       aria-live="polite"
-      className="flex select-none items-center gap-1.5 whitespace-nowrap rounded-full border border-[var(--oh-border)] bg-[var(--oh-surface)] px-3 py-1.5"
+      className="flex select-none items-center gap-1.5 whitespace-nowrap px-1"
     >
       <Sparkles
         aria-hidden
