@@ -1,20 +1,8 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { useTranslation } from "react-i18next";
-import { Cpu } from "lucide-react";
 import { AgentStatus } from "#/components/features/controls/agent-status";
 import { ChangeAgentButton } from "../change-agent-button";
-import { ChatInputModel, ChatInputModelMenuContent } from "./chat-input-model";
-import {
-  ChatInputLlmProfilePicker,
-  ChatInputLlmProfileMenuContent,
-} from "./chat-input-llm-profile-picker";
-import {
-  ChatInputCompanyModelPicker,
-  ChatInputCompanyModelMenuContent,
-} from "./chat-input-company-model-picker";
-import { resolvePickerKind } from "./resolve-picker-kind";
-import { ChatAddFileButton } from "../chat-add-file-button";
 import { ChatSendButton } from "../chat-send-button";
 import CarretRightFillIcon from "#/icons/carret-right-fill.svg?react";
 import LessonPlanIcon from "#/icons/lesson-plan.svg?react";
@@ -25,9 +13,7 @@ import { useOptionalConversationId } from "#/hooks/use-conversation-id";
 import { usePauseConversation } from "#/hooks/mutation/use-pause-conversation";
 import { useResumeConversation } from "#/hooks/mutation/use-resume-conversation";
 import { useActiveBackend } from "#/contexts/active-backend-context";
-import { useAgentProfiles } from "#/hooks/query/use-agent-profiles";
 import { useChatInputModelState } from "#/hooks/use-chat-input-model-state";
-import { isCompanyLlmManagedMode } from "#/api/company-llm/company-llm-config";
 import { useConversationStore } from "#/stores/conversation-store";
 import { useAgentState } from "#/hooks/use-agent-state";
 import { AgentState } from "#/types/agent-state";
@@ -39,10 +25,7 @@ import { ContextMenuListItem } from "../../context-menu/context-menu-list-item";
 import { ContextMenu } from "#/ui/context-menu";
 import { useClickOutsideElement } from "#/hooks/use-click-outside-element";
 import { cn } from "#/utils/utils";
-import {
-  chatInputIconButtonClassName,
-  formControlTransitionClassName,
-} from "#/utils/form-control-classes";
+import { chatInputIconButtonClassName } from "#/utils/form-control-classes";
 
 interface ChatInputActionsProps {
   disabled: boolean;
@@ -57,8 +40,6 @@ interface ChatInputActionsProps {
 export function ChatInputActions({
   disabled,
   canSubmit = true,
-  hasStartedConversation,
-  onAddFileClick = () => {},
   showButton = true,
   buttonClassName = "",
   handleSubmit = () => {},
@@ -71,18 +52,6 @@ export function ChatInputActions({
   const { backend } = useActiveBackend();
   const isCloud = backend.kind === "cloud";
   const modelState = useChatInputModelState();
-  // Agent-profile switching lives in the "+" tools menu while the conversation
-  // hasn't started (OSS-5735) — the pill itself is always an LLM selector. The
-  // gate is computed here (not in the menu) so ToolsContextMenu only mounts the
-  // profile submenu when it can actually be used: pre-start, not on a task
-  // route, and only when the backend has profiles (#1571 fallback). Fetch is
-  // limited to the pre-start window.
-  const isPreStart = !conversationId || hasStartedConversation === false;
-  const agentProfilesForStart = useAgentProfiles({ enabled: isPreStart });
-  const showAgentProfileSwitch =
-    isPreStart &&
-    !(conversationId?.startsWith("task-") ?? false) &&
-    (agentProfilesForStart.data?.profiles?.length ?? 0) > 0;
   // Code/Plan mode switching is a cloud OpenHands feature — it doesn't apply
   // to ACP conversations (which have no "plan" mode), so hide it when ACP.
   const showChangeAgentButton = isCloud && !modelState.isAcpContext;
@@ -93,17 +62,13 @@ export function ChatInputActions({
 
   const actionsRowRef = React.useRef<HTMLDivElement>(null);
   const rightSectionRef = React.useRef<HTMLDivElement>(null);
-  const addFileRef = React.useRef<HTMLDivElement>(null);
   const codeRef = React.useRef<HTMLDivElement>(null);
-  const modelRef = React.useRef<HTMLDivElement>(null);
   const overflowTriggerRef = React.useRef<HTMLButtonElement>(null);
   const [actionsRowWidth, setActionsRowWidth] = React.useState<number>(
     Number.POSITIVE_INFINITY,
   );
   const [rightSectionWidth, setRightSectionWidth] = React.useState(0);
-  const [addFileWidth, setAddFileWidth] = React.useState(32);
   const [codeWidth, setCodeWidth] = React.useState(96);
-  const [modelWidth, setModelWidth] = React.useState(120);
   const [isOverflowOpen, setIsOverflowOpen] = React.useState(false);
   const [activeSubmenu, setActiveSubmenu] = React.useState<
     "agent" | "model" | null
@@ -114,15 +79,11 @@ export function ChatInputActions({
   React.useEffect(() => {
     const rowEl = actionsRowRef.current;
     const rightEl = rightSectionRef.current;
-    const addEl = addFileRef.current;
     const codeEl = codeRef.current;
-    const modelEl = modelRef.current;
 
     if (
       !rowEl ||
       !rightEl ||
-      !addEl ||
-      !modelEl ||
       (showChangeAgentButton && !codeEl) ||
       typeof ResizeObserver === "undefined"
     ) {
@@ -132,13 +93,9 @@ export function ChatInputActions({
     const syncWidths = () => {
       const nextRowWidth = rowEl.getBoundingClientRect().width;
       const nextRightWidth = rightEl.getBoundingClientRect().width;
-      const nextAddWidth = addEl.getBoundingClientRect().width;
-      const nextModelWidth = modelEl.getBoundingClientRect().width;
 
       if (nextRowWidth > 0) setActionsRowWidth(nextRowWidth);
       if (nextRightWidth > 0) setRightSectionWidth(nextRightWidth);
-      if (nextAddWidth > 0) setAddFileWidth(nextAddWidth);
-      if (nextModelWidth > 0) setModelWidth(nextModelWidth);
 
       if (codeEl) {
         const nextCodeWidth = codeEl.getBoundingClientRect().width;
@@ -152,8 +109,6 @@ export function ChatInputActions({
 
     observer.observe(rowEl);
     observer.observe(rightEl);
-    observer.observe(addEl);
-    observer.observe(modelEl);
     if (codeEl) {
       observer.observe(codeEl);
     }
@@ -185,7 +140,6 @@ export function ChatInputActions({
       let remaining = availableWidth;
       const next = {
         showCodeInline: false,
-        showModelInline: false,
       };
 
       if (showChangeAgentButton && remaining >= codeWidth) {
@@ -193,22 +147,16 @@ export function ChatInputActions({
         remaining -= codeWidth + INLINE_GAP;
       }
 
-      if (remaining >= modelWidth) {
-        next.showModelInline = true;
-      }
-
       return next;
     },
-    [showChangeAgentButton, codeWidth, modelWidth],
+    [showChangeAgentButton, codeWidth],
   );
 
-  const leftBaseWidth =
-    actionsRowWidth - rightSectionWidth - ROOT_GAP - addFileWidth - INLINE_GAP;
+  const leftBaseWidth = actionsRowWidth - rightSectionWidth - ROOT_GAP;
 
   const fitWithoutOverflow = fitOptionalItems(leftBaseWidth);
   const allOptionalFit =
-    (!showChangeAgentButton || fitWithoutOverflow.showCodeInline) &&
-    fitWithoutOverflow.showModelInline;
+    !showChangeAgentButton || fitWithoutOverflow.showCodeInline;
 
   const fitWithOverflow = allOptionalFit
     ? fitWithoutOverflow
@@ -217,14 +165,9 @@ export function ChatInputActions({
   const showCodeInline = !showChangeAgentButton
     ? false
     : fitWithOverflow.showCodeInline;
-  const showModelInline = fitWithOverflow.showModelInline;
-  const showAddFileInline = true;
   const showAgentStatusInline = actionsRowWidth >= 360;
 
-  const hasOverflowItems =
-    !showAddFileInline ||
-    (showChangeAgentButton && !showCodeInline) ||
-    !showModelInline;
+  const hasOverflowItems = showChangeAgentButton && !showCodeInline;
 
   React.useEffect(() => {
     if (!hasOverflowItems) {
@@ -247,23 +190,6 @@ export function ChatInputActions({
     setActiveSubmenu(null);
     setIsOverflowOpen(false);
   };
-
-  // Which chat-input LLM picker to show — ACP models, company gateway models,
-  // or LLM profiles (unit-tested in `resolve-picker-kind.test.ts`).
-  const pickerKind = resolvePickerKind({
-    isAcp: modelState.isAcpContext,
-    isCompanyManaged: isCompanyLlmManagedMode(),
-  });
-
-  // Shared styling for the settings link inside the overflow submenu content.
-  const overflowSettingsLinkClassName = cn(
-    "group",
-    formControlTransitionClassName,
-  );
-  const overflowSettingsIconClassName = cn(
-    "text-[var(--oh-muted)] group-hover:text-[var(--oh-foreground)]",
-    formControlTransitionClassName,
-  );
 
   React.useLayoutEffect(() => {
     if (!isOverflowOpen || !overflowTriggerRef.current) {
@@ -374,64 +300,6 @@ export function ChatInputActions({
           )}
         </div>
       )}
-      {!showModelInline && (
-        <div className="relative group/overflow-model">
-          <ContextMenuListItem
-            testId="overflow-model-button"
-            onClick={() =>
-              setActiveSubmenu((current) =>
-                current === "model" ? null : "model",
-              )
-            }
-          >
-            <ToolsContextMenuIconText
-              icon={<Cpu width={16} height={16} strokeWidth={2} aria-hidden />}
-              text={t(I18nKey.SETTINGS$AGENT_MODEL)}
-              rightIcon={<CarretRightFillIcon width={10} height={10} />}
-            />
-          </ContextMenuListItem>
-          <div
-            className={cn(
-              "absolute left-full top-[-4px] z-60 opacity-0 invisible pointer-events-none transition-all duration-200 ml-[1px]",
-              "group-hover/overflow-model:opacity-100 group-hover/overflow-model:visible group-hover/overflow-model:pointer-events-auto",
-              "hover:opacity-100 hover:visible hover:pointer-events-auto",
-              activeSubmenu === "model" &&
-                "opacity-100 visible pointer-events-auto",
-            )}
-          >
-            {/* overflow-y-auto (not overflow-visible) so a long ACP model list
-                scrolls within the menu instead of overflowing the viewport.
-                Safe because this menu has no floating children (tooltips /
-                nested popovers) that would be clipped — only a flat model list
-                + Settings link. Revisit if floating children are added here. */}
-            <ContextMenu
-              testId="overflow-model-submenu"
-              className="min-w-[220px] max-w-[320px] max-h-[60vh] overflow-y-auto gap-0"
-            >
-              {pickerKind === "model" ? (
-                <ChatInputModelMenuContent
-                  model={modelState}
-                  onClose={closeOverflowMenus}
-                  dividerInset="menu"
-                  settingsLinkClassName={overflowSettingsLinkClassName}
-                  settingsIconClassName={overflowSettingsIconClassName}
-                />
-              ) : pickerKind === "company-model" ? (
-                <ChatInputCompanyModelMenuContent
-                  onClose={closeOverflowMenus}
-                />
-              ) : (
-                <ChatInputLlmProfileMenuContent
-                  onClose={closeOverflowMenus}
-                  dividerInset="menu"
-                  settingsLinkClassName={overflowSettingsLinkClassName}
-                  settingsIconClassName={overflowSettingsIconClassName}
-                />
-              )}
-            </ContextMenu>
-          </div>
-        </div>
-      )}
     </ContextMenu>
   );
 
@@ -442,29 +310,11 @@ export function ChatInputActions({
     >
       <div className="flex min-w-0 items-center gap-1">
         <div className="flex min-w-0 items-center gap-3">
-          <div ref={addFileRef} className={cn(!showAddFileInline && "hidden")}>
-            <ChatAddFileButton
-              disabled={disabled}
-              handleFileIconClick={onAddFileClick}
-              showAgentProfileSwitch={showAgentProfileSwitch}
-            />
-          </div>
           {showChangeAgentButton && (
             <div ref={codeRef} className={cn(!showCodeInline && "hidden")}>
               <ChangeAgentButton />
             </div>
           )}
-          <div ref={modelRef} className={cn(!showModelInline && "hidden")}>
-            {/* Picker depends on backend + ACP context; see the `pickerKind`
-                cases above. */}
-            {pickerKind === "model" ? (
-              <ChatInputModel />
-            ) : pickerKind === "company-model" ? (
-              <ChatInputCompanyModelPicker />
-            ) : (
-              <ChatInputLlmProfilePicker />
-            )}
-          </div>
           {hasOverflowItems && (
             <div className="relative shrink-0">
               <button

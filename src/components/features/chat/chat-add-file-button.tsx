@@ -23,12 +23,18 @@ export interface ChatAddFileButtonProps {
    * starts, the agent profile is locked).
    */
   showAgentProfileSwitch?: boolean;
+  /**
+   * Omit the "add files and images" footer action (used when this button is
+   * rendered outside the chat input, e.g. in the sidebar model picker).
+   */
+  hideFileAction?: boolean;
 }
 
 export function ChatAddFileButton({
   handleFileIconClick,
   disabled = false,
   showAgentProfileSwitch = false,
+  hideFileAction = false,
 }: ChatAddFileButtonProps) {
   const { t } = useTranslation("openhands");
   const { conversationId } = useOptionalConversationId();
@@ -103,18 +109,22 @@ export function ChatAddFileButton({
           shouldShowAgentTools={shouldShowAgentTools}
           shouldShowHooks={shouldShowHooks}
           shouldShowPlugins={shouldShowPlugins}
-          footerAction={{
-            testId: "add-files-and-images-button",
-            icon: (
-              <Paperclip
-                className="h-4 w-4 shrink-0"
-                strokeWidth={2}
-                aria-hidden
-              />
-            ),
-            label: t(I18nKey.CHAT_INTERFACE$ADD_FILES_AND_IMAGES),
-            onClick: handleFileIconClick,
-          }}
+          footerAction={
+            hideFileAction
+              ? undefined
+              : {
+                  testId: "add-files-and-images-button",
+                  icon: (
+                    <Paperclip
+                      className="h-4 w-4 shrink-0"
+                      strokeWidth={2}
+                      aria-hidden
+                    />
+                  ),
+                  label: t(I18nKey.CHAT_INTERFACE$ADD_FILES_AND_IMAGES),
+                  onClick: handleFileIconClick,
+                }
+          }
         />
       )}
 
