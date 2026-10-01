@@ -6,7 +6,7 @@
 <meta name="description" content="دانلود NovaAgent برای Windows و Linux — دستیار هوشمند توسعه که کد می‌نویسد، اجرا می‌کند و نتیجه را نشان می‌دهد." />
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20x='8'%20y='8'%20width='48'%20height='48'%20rx='14'%20fill='%230a0d13'/%3E%3Cpath%20d='M20%2044V20L44%2044V20'%20fill='none'%20stroke='%23eef1f6'%20stroke-width='4'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3Ccircle%20cx='44'%20cy='18'%20r='3.5'%20fill='%23e0805f'/%3E%3C/svg%3E" />
 <meta name="theme-color" content="#0a0d13" />
-<title>NovaAgent — دانلود</title>
+<title>NovaAgent</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--bg:#0a0d13;--s1:#10141d;--s2:#151a26;--line:#232a38;--fg:#eef1f6;--mut:#9aa6ba;--dim:#6b778c;--coral:#e0805f;--mint:#7be0b4;--vio:#8b7cf6;--ease:cubic-bezier(.2,.7,.2,1)}
@@ -83,7 +83,7 @@ h1 span.done{color:#7d889c}
 .term{padding:14px 16px;background:#06080c;font-size:12px;line-height:1.9;color:#9fe8c8;direction:ltr;text-align:left}
 .term div{opacity:0;transition:opacity .25s}
 .term div.show{opacity:1}
-.term .d{color:var(--dim)}
+.term .d{color:var(--dim)}.term .ok{color:var(--mint)}
 .prev{opacity:0;transform:translateY(14px);background:#f6f1ea;color:#2a1d16;padding:18px;display:flex;flex-direction:column;gap:10px}
 .show-prev .prev{opacity:1;transform:none}
 .show-prev .term{opacity:0}
@@ -175,7 +175,7 @@ footer .req{color:var(--mut);direction:ltr;unicode-bidi:isolate}
 
 <header class="hero" id="top"><div class="wrap">
   <div>
-    <h1 id="phrases"><span>کد می‌نویسد.</span><span>اجرا می‌کند.</span><span>می‌بیند.</span></h1>
+    <h1 id="phrases"><span>برنامه‌ریزی می‌کند.</span><span>کد می‌نویسد.</span><span>تست می‌گیرد.</span><span>تحویل می‌دهد.</span></h1>
     <p class="lead">NovaAgent یک مهندس نرم‌افزار هوشمند است؛ کافی است بگویید چه می‌خواهید — او خودش برنامه‌ریزی می‌کند، کد می‌نویسد، تست می‌گیرد، در ترمینال اجرا می‌کند و نتیجه را زنده پیشِ چشم شما می‌بیند.</p>
 
     <div class="cta">
@@ -199,18 +199,18 @@ footer .req{color:var(--mut);direction:ltr;unicode-bidi:isolate}
     <div class="body">
       <div class="chat">
         <div class="me"><span id="typed"></span><span class="caret"></span></div>
-        <div class="task" id="t1"><span class="ck"></span>ساخت index.html و استایل</div>
-        <div class="task" id="t2"><span class="ck"></span>اجرای سرور توسعه</div>
-        <div class="task" id="t3"><span class="ck"></span>بررسی خروجی در پیش‌نمایش</div>
+        <div class="task" id="t1"><span class="ck"></span>تحلیل مخزن و نوشتن کد</div>
+        <div class="task" id="t2"><span class="ck"></span>اجرای تست‌ها</div>
+        <div class="task" id="t3"><span class="ck"></span>ساخت Pull Request</div>
       </div>
       <div class="ws" id="ws">
         <div class="wtabs"><span id="tabT" class="on">ترمینال</span><span id="tabP">پیش‌نمایش</span></div>
         <div class="pane">
           <div class="term" id="term">
-            <div><span class="d">$</span> npm run dev</div>
-            <div class="d">&nbsp; VITE v5 ready in 312 ms</div>
-            <div>&nbsp; ➜ Local: http://localhost:5173</div>
-            <div><span class="d">$</span> ✓ 3 files written</div>
+            <div><span class="d">$</span> pytest -q</div>
+            <div>&nbsp; ............ <span class="ok">14 passed</span> in 2.31s</div>
+            <div><span class="d">$</span> git push origin feature/menu</div>
+            <div>&nbsp; → PR #42 opened — ready for review</div>
           </div>
           <div class="prev">
             <div class="pnav"><span>کافه صبح</span><span>منو · درباره ما</span></div>
@@ -357,7 +357,7 @@ footer .req{color:var(--mut);direction:ltr;unicode-bidi:isolate}
   });
 
   /* hero demo: write → run → see */
-  var prompt="یک صفحهٔ فرود برای کافه بساز و نتیجه را نشان بده",
+  var prompt="برای کافه صفحهٔ منو بساز؛ تست‌ها را بزن و PR آماده کن",
       ph=[].slice.call($("phrases").children),
       T=[$("t1"),$("t2"),$("t3")],L=[].slice.call($("term").children),
       ws=$("ws"),typed=$("typed");
@@ -381,11 +381,11 @@ footer .req{color:var(--mut);direction:ltr;unicode-bidi:isolate}
       await sleep(900);
       state(0);
       for(var i=1;i<=prompt.length;i++){typed.textContent=prompt.slice(0,i);await sleep(34)}
-      await sleep(350);T[0].className="task show run";await sleep(1100);T[0].className="task show ok";
-      state(1);T[1].className="task show run";
+      await sleep(350);T[0].className="task show run";await sleep(1200);state(1);await sleep(450);T[0].className="task show ok";
+      state(2);T[1].className="task show run";
       for(var j=0;j<L.length;j++){L[j].className="show";await sleep(520)}
       T[1].className="task show ok";
-      state(2);T[2].className="task show run";await sleep(500);state(2,0,true);await sleep(900);T[2].className="task show ok";
+      state(3);T[2].className="task show run";await sleep(500);state(3,0,true);await sleep(900);T[2].className="task show ok";
       await sleep(4800);
     }
   }
