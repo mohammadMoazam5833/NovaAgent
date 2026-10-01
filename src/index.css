@@ -149,9 +149,10 @@ code {
   background: linear-gradient(
     90deg,
     var(--oh-muted) 0%,
-    var(--oh-muted) 38%,
-    var(--oh-foreground, #e6e9f0) 50%,
-    var(--oh-muted) 62%,
+    var(--oh-muted) 35%,
+    #d97757 48%,
+    #8b7cf6 52%,
+    var(--oh-muted) 65%,
     var(--oh-muted) 100%
   );
   background-size: 200% 100%;
@@ -174,5 +175,6 @@ code {
 }
 
 .nova-agent-loading-sparkle {
+  color: #d97757;
   animation: nova-sparkle-pulse 1.8s ease-in-out infinite;
 }
