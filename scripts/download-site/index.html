@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="description" content="دانلود NovaAgent برای Windows و Linux — دستیار هوشمند توسعه که کد می‌نویسد، اجرا می‌کند و نتیجه را نشان می‌دهد." />
+<link rel="icon" type="image/svg+xml" href=",%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20x='8'%20y='8'%20width='48'%20height='48'%20rx='14'%20fill='%230a0d13'/%3E%3Cpath%20d='M20%2044V20L44%2044V20'%20fill='none'%20stroke='%23eef1f6'%20stroke-width='4'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3Ccircle%20cx='44'%20cy='18'%20r='3.5'%20fill='%23e0805f'/%3E%3C/svg%3E" />" />
 <meta name="theme-color" content="#0a0d13" />
 <title>NovaAgent — دانلود</title>
 <style>
@@ -129,7 +130,7 @@ h2{font-size:clamp(26px,3.4vw,34px);font-weight:800;letter-spacing:-.3px}
 .bento{display:grid;grid-template-columns:repeat(6,1fr);gap:14px}
 .f{background:linear-gradient(180deg,var(--s2),var(--s1));border:1px solid var(--line);border-radius:20px;padding:26px;overflow:hidden;transition:border-color .3s}
 .f:hover{border-color:#3a4458}
-.f.a{grid-column:span 4}.f.b{grid-column:span 2}.f.c,.f.d,.f.e{grid-column:span 2}.f.g{grid-column:span 6;display:flex;gap:24px;align-items:center}
+.f.a{grid-column:span 4}.f.b{grid-column:span 2}.f.c,.f.d,.f.e,.f.g,.f.h,.f.i{grid-column:span 2}.f.j{grid-column:span 6;display:flex;gap:24px;align-items:center}
 .f h3{font-size:16.5px;margin-bottom:6px}
 .f p{font-size:14px;color:var(--mut);max-width:34em}
 .mini{margin-top:20px;border-radius:12px;background:#06080c;border:1px solid var(--line);padding:12px 16px;font-size:12px;line-height:1.9;color:#9fe8c8}
@@ -156,7 +157,7 @@ footer{margin-top:84px;border-top:1px solid var(--line);padding:32px 0 48px;colo
 footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 footer .req{color:var(--mut);direction:ltr;unicode-bidi:isolate}
 
-@media(max-width:900px){.hero .wrap{grid-template-columns:1fr;gap:40px}.install{grid-template-columns:1fr;gap:20px}.tabs{flex-direction:row;overflow-x:auto}.tab{white-space:nowrap}.tab.on{box-shadow:inset 0 -3px 0 var(--coral)}.f.a,.f.b,.f.c,.f.d,.f.e,.f.g{grid-column:span 6}.f.g{flex-direction:column;align-items:flex-start}.links a:not(.navdl){display:none}}
+@media(max-width:900px){.hero .wrap{grid-template-columns:1fr;gap:40px}.install{grid-template-columns:1fr;gap:20px}.tabs{flex-direction:row;overflow-x:auto}.tab{white-space:nowrap}.tab.on{box-shadow:inset 0 -3px 0 var(--coral)}.f.a,.f.b,.f.c,.f.d,.f.e,.f.g,.f.h,.f.i,.f.j{grid-column:span 6}.f.j{flex-direction:column;align-items:flex-start}.links a:not(.navdl){display:none}}
 @media(max-width:520px){.body{grid-template-columns:1fr;height:auto}.chat{border:0;border-bottom:1px solid var(--line)}.pane{height:200px}.hero{padding-top:44px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
@@ -175,7 +176,7 @@ footer .req{color:var(--mut);direction:ltr;unicode-bidi:isolate}
 <header class="hero" id="top"><div class="wrap">
   <div>
     <h1 id="phrases"><span>کد می‌نویسد.</span><span>اجرا می‌کند.</span><span>می‌بیند.</span></h1>
-    <p class="lead">NovaAgent دستیار توسعهٔ شماست: از یک توضیح ساده، پروژه را می‌سازد، در ترمینال اجرا می‌کند و نتیجه را همان لحظه نشان می‌دهد.</p>
+    <p class="lead">NovaAgent یک مهندس نرم‌افزار هوشمند است؛ کافی است بگویید چه می‌خواهید — او خودش برنامه‌ریزی می‌کند، کد می‌نویسد، تست می‌گیرد، در ترمینال اجرا می‌کند و نتیجه را زنده پیشِ چشم شما می‌بیند.</p>
 
     <div class="cta">
       <a id="dl-main" class="dl-main" href="/download/NovaAgent-Client-1.6.3-Windows-portable.zip">
@@ -256,17 +257,19 @@ footer .req{color:var(--mut);direction:ltr;unicode-bidi:isolate}
 </div></section>
 
 <section id="features"><div class="wrap">
-  <h2>ایجنتی که واقعاً کار می‌کند</h2>
-  <p class="sub">فقط پیشنهاد نمی‌دهد؛ اجرا می‌کند و نتیجه را نشان می‌دهد.</p>
+  <h2>یک مهندس نرم‌افزار تمام‌عیار</h2>
+  <p class="sub">بر پایهٔ موتوری که در بنچمارک معتبر SWE-bench جزو بهترین‌های دنیاست — نه فقط حرف، اجرا.</p>
   <div class="bento">
-    <div class="f a"><h3>چت هوشمند با اجرای واقعی</h3><p>ایجنت درخواست شما را می‌فهمد، برنامه‌ریزی می‌کند، کد را می‌نویسد، اصلاح می‌کند و اجرا می‌کند.</p>
+    <div class="f a"><h3>یک مهندس نرم‌افزار واقعی</h3><p>برنامه‌ریزی می‌کند، کد می‌نویسد، تست اجرا می‌کند، خطا را می‌خواند و خودش اصلاح می‌کند — این چرخه را تا سبز شدن تست‌ها تکرار می‌کند.</p>
       <div class="mini ltr"><div><span class="d">// utils.ts</span></div><div><span class="del">- const total = a + b</span></div><div><span class="add">+ const total = sum(items)</span></div></div></div>
-    <div class="f b"><h3>پیش‌نمایش زنده</h3><p>خروجی پروژه را همان لحظه در یک تب ببینید.</p></div>
-    <div class="f c"><h3>ترمینال و فایل‌ها</h3><p>اجرای دستور، مرور و ویرایش فایل‌ها و دیدن تغییرات (diff) در workspace اختصاصی شما.</p></div>
-    <div class="f d"><h3>ایزوله برای هر کاربر</h3><p>workspace، تاریخچه و تنظیمات هر نفر جداست.</p>
-      <div class="users"><span>شما</span><span>همکار ۱</span><span>همکار ۲</span></div></div>
-    <div class="f e"><h3>مدل‌های شرکت</h3><p>متصل به مدل‌های منتخب سازمان؛ بدون کلید یا اشتراک جداگانه.</p></div>
-    <div class="f g"><div class="cal" aria-hidden="true"><i class="on"></i><i></i><i class="on"></i><i></i><i></i></div><div><h3>اتوماسیون</h3><p>کارهای تکراری را زمان‌بندی کنید تا ایجنت سر وقت خودش انجام دهد.</p></div></div>
+    <div class="f b"><h3>پیش‌نمایش زنده</h3><p>خروجی وب پروژه را همان لحظه در تب مرورگر ببینید — مثل یک استودیوی طراحی.</p></div>
+    <div class="f c"><h3>تسلط بر ترمینال</h3><p>build، تست و لینت را اجرا می‌کند، خروجی واقعی را می‌بیند و بر اساس آن واکنش نشان می‌دهد.</p></div>
+    <div class="f d"><h3>درک کل مخزن</h3><p>تغییرات چندفایلی، ریفکتور ایمن و جستجو در کدبیس‌های بزرگ — با درک وابستگی‌ها.</p></div>
+    <div class="f e"><h3>گردش‌کار گیت</h3><p>کامیت، شاخه، push و Pull Request آمادهٔ بازبینی — بدون ترک گفتگو.</p></div>
+    <div class="f g"><h3>کانتکست همیشه هوشمند</h3><p>در کارهای طولانی، گفتگو را هوشمندانه جمع‌بندی می‌کند تا تمرکز، حافظه و سرعت حفظ شود.</p></div>
+    <div class="f h"><h3>مرورگر و پژوهش</h3><p>مستندات و منابع وب را خودش می‌خواند و نتیجه را مستقیم به کد پیوند می‌زند.</p></div>
+    <div class="f i"><h3>ایزوله و امن</h3><p>workspace، تاریخچه و تنظیمات اختصاصی برای هر کاربر — داده‌ها هیچ‌وقت مشترک نمی‌شوند.</p></div>
+    <div class="f j"><div class="cal" aria-hidden="true"><i class="on"></i><i></i><i class="on"></i><i></i><i></i></div><div><h3>اتوماسیون سازمانی</h3><p>گزارش روزانه، بیلد شبانه و پشتیبان‌گیری را زمان‌بندی کنید تا سر وقت خودشان انجام شوند؛ همه روی مدل‌های منتخب سازمان، بدون کلید یا اشتراک جداگانه.</p></div></div>
   </div>
 </div></section>
 
