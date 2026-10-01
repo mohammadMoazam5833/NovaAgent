@@ -11,6 +11,8 @@ import {
   LLM_PROFILES_QUERY_KEYS,
 } from "#/hooks/query/query-keys";
 import { isSubscriptionLlmConfig } from "#/constants/llm-subscription";
+import { isCompanyLlmManagedMode } from "#/api/company-llm/company-llm-config";
+import { hasCompanyLlmSession } from "#/api/company-llm";
 
 interface LlmConfiguredResult {
   /**
@@ -37,6 +39,12 @@ interface LlmConfiguredResult {
  * which persists no settings — leaving an OpenHands agent without an API key.
  */
 export function useLlmConfigured(): LlmConfiguredResult {
+  // Company-managed deployments pre-seed every tenant's LLM and agent
+  // profile server-side. The wizard-era banner must never block composers
+  // there — treat the LLM as configured the moment the managed session
+  // exists, regardless of client-side probe/health staleness. Computed as a
+  // plain flag (not an early return) to keep hook order stable.
+  const managedMode = isCompanyLlmManagedMode() && hasCompanyLlmSession();
   const {
     data: settings,
     isLoading: settingsLoading,
@@ -154,7 +162,8 @@ export function useLlmConfigured(): LlmConfiguredResult {
       (activeProfileDetailError && !activeProfileDetail));
 
   return {
-    isConfigured: isAcpAgent || llmSettingsHidden || hasUsableLlm,
+    isConfigured:
+      managedMode || isAcpAgent || llmSettingsHidden || hasUsableLlm,
     isLoading:
       settingsIndeterminate ||
       configIndeterminate ||
