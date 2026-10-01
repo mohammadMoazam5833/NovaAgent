@@ -640,7 +640,7 @@ export function ChatInterface() {
                     </div>
                   ) : (
                     curAgentState === AgentState.RUNNING && (
-                      <div className="absolute left-2 bottom-0 pointer-events-auto">
+                      <div className="absolute left-2 bottom-7 pointer-events-auto">
                         <TypingIndicator />
                       </div>
                     )
