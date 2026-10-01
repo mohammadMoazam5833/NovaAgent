@@ -134,3 +134,45 @@ code {
 .environment-switch-overlay > div {
   animation: environment-switch-overlay-fade 980ms ease-in-out forwards;
 }
+
+/* Claude-style agent activity indicator (shimmer + pulsing sparkle) */
+@keyframes nova-shimmer-sweep {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.nova-agent-loading-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--oh-muted) 0%,
+    var(--oh-muted) 38%,
+    var(--oh-foreground, #e6e9f0) 50%,
+    var(--oh-muted) 62%,
+    var(--oh-muted) 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: nova-shimmer-sweep 2.2s linear infinite;
+}
+
+@keyframes nova-sparkle-pulse {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 0.75;
+  }
+  50% {
+    transform: scale(1.2) rotate(10deg);
+    opacity: 1;
+  }
+}
+
+.nova-agent-loading-sparkle {
+  animation: nova-sparkle-pulse 1.8s ease-in-out infinite;
+}
