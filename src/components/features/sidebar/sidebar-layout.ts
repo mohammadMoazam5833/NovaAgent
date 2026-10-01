@@ -18,7 +18,7 @@ export const SIDEBAR_HEADER_ROW_CLASS =
 export function sidebarHeaderRowClassName(collapsed: boolean): string {
   return cn(
     "flex h-10 min-h-10 shrink-0 items-center w-full",
-    collapsed ? "px-0" : "gap-2 pl-2.5 pr-2.5",
+    collapsed ? "px-0" : "gap-2 pl-2.5 pr-2.5 mb-2",
   );
 }
 
