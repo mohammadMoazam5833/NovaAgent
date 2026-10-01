@@ -180,10 +180,25 @@ function serveIndex(req, res) {
       const u = new URL(req.url || "/", "http://local");
       tenant = novaCustomerByToken(u.searchParams.get("t"));
     } catch {}
+    if (!tenant) {
+      // COOKIE-FALLBACK: SPA navigations/reloads can drop the ?t= query.
+      // Keep the customer bound to their existing ns_t cookie instead of
+      // silently falling back to the default tenant (which made node2
+      // sessions land on the default agent-server and list C:\Users\USER).
+      try {
+        const m = String(req.headers.cookie || "").match(/(?:^|;\s*)ns_t=([^;]+)/);
+        if (m) tenant = novaCustomerByName(decodeURIComponent(m[1]));
+      } catch {}
+    }
     if (!tenant) tenant = novaCustomerByName("default") || loadNovaCustomers()[0] || null;
     const sessKey = tenant && tenant.token ? String(tenant.token) : "novaagent-local";
     const tenantName = tenant ? String(tenant.name || "default") : "default";
+    // Company-managed mode: inject the LLM gateway URL at runtime (same
+    // origin as this ingress) and mark onboarding complete so customers go
+    // straight from login to the app — no "choose your agent" wizard.
     const boot = '<script>window.__AGENT_CANVAS_SESSION_API_KEY__=' + JSON.stringify(sessKey) + ';window.__AGENT_CANVAS_AUTH_REQUIRED__=false;' +
+      'window.__NOVAAGENT_COMPANY_LLM_URL__=location.protocol+"//"+location.host+"/llmapi";' +
+      'try{localStorage.setItem("openhands-onboarded","1");}catch(e){}' +
       'try{document.cookie="ns_t=' + encodeURIComponent(tenantName) + ';path=/;max-age=31536000;samesite=lax";}catch(e){}' +
       'try{if(!localStorage.getItem("novaagent-company-llm-session")){localStorage.setItem("novaagent-company-llm-session",JSON.stringify({access_token:' + tok + ',username:"company"}));}}catch(e){}</script>';
     if (html.includes("<head>")) {
