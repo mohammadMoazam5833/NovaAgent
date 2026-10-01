@@ -8,6 +8,10 @@ import { ThoughtEventMessage } from "./event-message-components/thought-event-me
 import { useModelStore } from "#/stores/model-store";
 import { ModelMessages } from "#/components/features/chat/model-messages";
 import { useOptionalConversationId } from "#/hooks/use-conversation-id";
+import { isUserMessageEvent } from "#/types/agent-server/type-guards";
+import { useAgentState } from "#/hooks/use-agent-state";
+import { AgentState } from "#/types/agent-state";
+import { TypingIndicator } from "#/components/features/chat/typing-indicator";
 // TODO: Implement microagent functionality for V1 when APIs support V1 event IDs
 // import { AgentState } from "#/types/agent-state";
 // import MemoryIcon from "#/icons/memory_icon.svg?react";
@@ -23,6 +27,24 @@ const getLastEvent = (events: OpenHandsEvent[]) => events.at(-1);
 export const Messages: React.FC<MessagesProps> = React.memo(
   ({ messages, allEvents }) => {
     const { conversationId } = useOptionalConversationId();
+    const { curAgentState } = useAgentState();
+    const isAgentRunning = curAgentState === AgentState.RUNNING;
+
+    // Claude-style: the shimmer "thinking" indicator sits directly below the
+    // user's latest prompt and above the agent's subsequent activity.
+    const lastUserEventId = React.useMemo(() => {
+      for (let i = messages.length - 1; i >= 0; i--) {
+        if (isUserMessageEvent(messages[i])) return String(messages[i].id);
+      }
+      return null;
+    }, [messages]);
+
+    const maybeShimmer = (eventId: string | number | undefined) =>
+      isAgentRunning &&
+      lastUserEventId !== null &&
+      String(eventId) === lastUserEventId ? (
+        <TypingIndicator />
+      ) : null;
     // Get the set of event IDs that should render PlanPreview
     // This ensures only one preview per user message "phase"
     const planPreviewEventIds = usePlanPreviewEvents(allEvents);
@@ -89,6 +111,7 @@ export const Messages: React.FC<MessagesProps> = React.memo(
                     duplication. */}
                 {renderEventMessage(item.event, item.index, true)}
                 {maybeRenderModelMessages(item.event.id)}
+                {maybeShimmer(item.event.id)}
               </React.Fragment>
             );
           }
@@ -98,6 +121,7 @@ export const Messages: React.FC<MessagesProps> = React.memo(
               <React.Fragment key={`thought-${item.action.id}`}>
                 <ThoughtEventMessage event={item.action} />
                 {maybeRenderModelMessages(item.action.id)}
+                {maybeShimmer(item.action.id)}
               </React.Fragment>
             );
           }
@@ -124,6 +148,7 @@ export const Messages: React.FC<MessagesProps> = React.memo(
                   {maybeRenderModelMessages(event.id)}
                 </React.Fragment>
               ))}
+              {maybeShimmer(item.events.at(-1)?.id)}
             </React.Fragment>
           );
         })}

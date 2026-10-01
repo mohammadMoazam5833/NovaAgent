@@ -15,7 +15,6 @@ import { AgentState } from "#/types/agent-state";
 import { useFilteredEvents } from "#/hooks/use-filtered-events";
 import { useScrollToBottom } from "#/hooks/use-scroll-to-bottom";
 import { useLoadOlderEvents } from "#/hooks/use-load-older-events";
-import { TypingIndicator } from "./typing-indicator";
 import { ChatSuggestions } from "./chat-suggestions";
 import { ScrollProvider } from "#/context/scroll-context";
 import { useInitialQueryStore } from "#/stores/initial-query-store";
@@ -631,9 +630,6 @@ export function ChatInterface() {
                         statusColor={serverStatusColor}
                         status={serverStatusText}
                       />
-                    )}
-                    {curAgentState === AgentState.RUNNING && (
-                      <TypingIndicator />
                     )}
                   </div>
 
