@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NovaAgent</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --oh-background: #0b0e14;
+      --oh-foreground: #eef2f7;
+      --oh-muted: #a3b0c4;
+      --oh-text-dim: #7e8a9e;
+      --oh-text-subtle: #626d82;
+      --oh-border-subtle: #383f50;
+      --oh-surface-deep: #05070a;
+      --oh-color-danger: #e76a5e;
+      --nova-coral: #d97757;
+      --nova-violet: #8b7cf6;
+    }
+
+    html, body {
+      width: 100%; height: 100%;
+      background:
+        radial-gradient(110% 80% at 50% -15%, rgba(217, 119, 87, 0.11), transparent 55%),
+        radial-gradient(85% 65% at 88% 112%, rgba(139, 124, 246, 0.10), transparent 55%),
+        var(--oh-background);
+      font-family:
+        "Segoe UI", "SF Pro Display", -apple-system, BlinkMacSystemFont,
+        "Roboto", "Helvetica Neue", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      color: var(--oh-foreground);
+      user-select: none;
+      -webkit-app-region: drag;
+      overflow: hidden;
+    }
+
+    body { display: flex; flex-direction: column; }
+
+    .container {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      height: 360px; flex: none; gap: 0;
+    }
+
+    /* ── Logo ─────────────────────────────────────────────── */
+    .logo-wrap {
+      position: relative;
+      width: 92px; height: 92px;
+      margin-bottom: 24px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .halo {
+      position: absolute; inset: -20px; border-radius: 50%;
+      background: conic-gradient(from 140deg, var(--nova-coral), var(--nova-violet), var(--nova-coral));
+      filter: blur(28px); opacity: 0.20;
+      animation: breathe 3.4s ease-in-out infinite;
+    }
+    @keyframes breathe {
+      0%, 100% { opacity: 0.14; transform: scale(1); }
+      50%      { opacity: 0.30; transform: scale(1.07); }
+    }
+    .mark { width: 60px; height: 60px; color: var(--oh-foreground); position: relative; }
+    .mark-frame { fill: none; stroke: currentColor; stroke-width: 2.25; opacity: 0.94; }
+    .mark-accent { fill: var(--nova-coral); }
+
+    h1 {
+      font-size: 25px; font-weight: 650; letter-spacing: -0.45px;
+      margin-bottom: 7px; color: var(--oh-foreground);
+    }
+
+    .tagline {
+      font-size: 12.5px; color: var(--oh-muted);
+      margin-bottom: 40px; letter-spacing: 0.02em;
+    }
+
+    /* ── Spinner: gradient arc ────────────────────────────── */
+    .spinner-wrap { width: 26px; height: 26px; margin-bottom: 16px; }
+    .spinner { width: 100%; height: 100%; animation: spin 1.1s cubic-bezier(0.55, 0.15, 0.45, 0.85) infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Status: shimmer sweep text ───────────────────────── */
+    .status {
+      font-size: 12.5px; letter-spacing: 0.3px;
+      max-width: 380px; text-align: center;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      background: linear-gradient(90deg,
+        var(--oh-text-dim) 0%, var(--oh-text-dim) 38%,
+        var(--nova-coral) 50%, var(--nova-violet) 58%,
+        var(--oh-text-dim) 70%, var(--oh-text-dim) 100%);
+      background-size: 200% 100%;
+      -webkit-background-clip: text; background-clip: text;
+      color: transparent;
+      animation: sweep 2.4s linear infinite;
+    }
+    @keyframes sweep {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .hint {
+      margin-top: 16px; font-size: 11px; color: var(--oh-text-subtle);
+      letter-spacing: 0.2px; max-width: 340px; text-align: center; line-height: 1.55;
+    }
+
+    .actions { margin-top: 18px; display: flex; gap: 10px; -webkit-app-region: no-drag; }
+
+    .ghost-button {
+      font: inherit; font-size: 11px; padding: 5px 14px;
+      color: var(--oh-muted); background: transparent;
+      border: 1px solid var(--oh-border-subtle); border-radius: 999px;
+      cursor: pointer; -webkit-app-region: no-drag;
+      transition: color 120ms ease, background 120ms ease;
+    }
+    .ghost-button:hover { color: var(--oh-foreground); background: rgba(255, 255, 255, 0.06); }
+
+    /* ── Startup log console (collapsed until expanded/fatal) ── */
+    .console {
+      flex: 1 1 auto; min-height: 0;
+      display: flex; flex-direction: column;
+      margin: 0 16px 16px;
+      background: var(--oh-surface-deep);
+      border: 1px solid var(--oh-border-subtle); border-radius: 10px;
+      overflow: hidden; -webkit-app-region: no-drag;
+    }
+    .console-head {
+      flex: none; display: flex; align-items: center; justify-content: space-between;
+      padding: 5px 6px 5px 12px; border-bottom: 1px solid var(--oh-border-subtle);
+      font-size: 11px; color: var(--oh-muted);
+    }
+    .log {
+      flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 8px 12px;
+      font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+      font-size: 10.5px; line-height: 1.55; color: var(--oh-text-dim);
+      user-select: text; -webkit-user-select: text; cursor: text;
+      white-space: pre-wrap; overflow-wrap: anywhere;
+    }
+    .log:empty::before { content: "Waiting for output…"; color: var(--oh-text-subtle); }
+    .log-name { color: var(--oh-text-subtle); }
+    .log-line-error { color: var(--oh-color-danger); }
+
+    body.failed .spinner-wrap { display: none; }
+    body.failed .status {
+      color: var(--oh-color-danger);
+      background: none; -webkit-text-fill-color: var(--oh-color-danger);
+      white-space: normal; line-height: 1.45;
+      animation: none;
+    }
+    body.failed .hint { display: none; }
+    .quit-button { display: none; }
+    body.failed .quit-button { display: inline-block; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo-wrap">
+      <div class="halo"></div>
+      <!-- NovaAgent mark -->
+      <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+        <rect class="mark-frame" x="8" y="8" width="48" height="48" rx="14" />
+        <path d="M20 44V20L44 44V20" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle class="mark-accent" cx="44" cy="18" r="3.5" />
+      </svg>
+    </div>
+    <h1>NovaAgent</h1>
+    <p class="tagline">Your AI development workspace</p>
+    <div class="spinner-wrap">
+      <svg class="spinner" viewBox="0 0 66 66" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="ring" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#d97757" />
+            <stop offset="100%" stop-color="#8b7cf6" />
+          </linearGradient>
+        </defs>
+        <circle cx="33" cy="33" r="28" stroke="url(#ring)" stroke-width="5.5"
+          stroke-linecap="round" fill="none" stroke-dasharray="132 44" />
+      </svg>
+    </div>
+    <p id="status" class="status">Starting services<span class="dots"></span></p>
+    <p class="hint">
+      Connecting to your NovaAgent workspace.<br />
+      First launch may take a few minutes.
+    </p>
+    <div class="actions">
+      <button id="quit-button" type="button" class="ghost-button quit-button">
+        Quit
+      </button>
+    </div>
+  </div>
+  <div class="console" aria-label="Startup log">
+    <div class="console-head">
+      <span>Startup log</span>
+      <button id="copy-logs" type="button" class="ghost-button">Copy</button>
+    </div>
+    <div id="log" class="log"></div>
+  </div>
+  <script>
+    // Called from the Electron main process via webContents.executeJavaScript
+    // (see electron/main.mjs::setLoadingStatus). Replaces the entire status
+    // line, so the shimmer text only animates while no concrete status is set.
+    window.__setLoadingStatus = function (line) {
+      var el = document.getElementById("status");
+      if (!el) return;
+      var text = String(line == null ? "" : line);
+      el.textContent = text || "";
+    };
+
+    // ── Startup-log console ──────────────────────────────────────────────
+    // Fed by the main process over IPC via preload.cjs (window.desktopBoot);
+    // undefined when the file is opened outside Electron, so every use is
+    // guarded and the static layout stays previewable in a plain browser.
+    // All DOM insertion uses textContent — log lines are untrusted process
+    // output and must never be parsed as HTML.
+    (function () {
+      var boot = window.desktopBoot;
+      var logEl = document.getElementById("log");
+      var statusEl = document.getElementById("status");
+      var copyBtn = document.getElementById("copy-logs");
+      var quitBtn = document.getElementById("quit-button");
+
+      // Cap DOM rows so an hours-long install can't grow layout cost;
+      // matches the main process's BOOT_LOG_MAX_LINES buffer cap.
+      var MAX_LINES = 2000;
+      // Follow the tail only while the user hasn't scrolled up.
+      var pinned = true;
+
+      logEl.addEventListener("scroll", function () {
+        pinned =
+          logEl.scrollTop + logEl.clientHeight >= logEl.scrollHeight - 8;
+      });
+
+      function appendBatch(batch) {
+        if (!batch || !batch.length) return;
+        var frag = document.createDocumentFragment();
+        for (var i = 0; i < batch.length; i++) {
+          var entry = batch[i];
+          var row = document.createElement("div");
+          row.className =
+            "log-line" + (entry.level === "error" ? " log-line-error" : "");
+          var name = document.createElement("span");
+          name.className = "log-name";
+          name.textContent = "[" + entry.name + "]";
+          row.appendChild(name);
+          row.appendChild(document.createTextNode(" " + entry.line));
+          frag.appendChild(row);
+        }
+        logEl.appendChild(frag);
+        while (logEl.childElementCount > MAX_LINES) {
+          logEl.removeChild(logEl.firstElementChild);
+        }
+        if (pinned) logEl.scrollTop = logEl.scrollHeight;
+      }
+
+      copyBtn.addEventListener("click", function () {
+        if (!boot) return;
+        boot.copyLogs().then(function () {
+          copyBtn.textContent = "Copied";
+          setTimeout(function () {
+            copyBtn.textContent = "Copy";
+          }, 1200);
+        });
+      });
+
+      quitBtn.addEventListener("click", function () {
+        if (boot) boot.quit();
+      });
+
+      if (boot) {
+        boot.onLogBatch(appendBatch);
+        boot.onFatal(function (summary) {
+          document.body.classList.add("failed");
+          statusEl.textContent = String(summary == null ? "" : summary);
+          // Expand the log console so failure details are visible.
+          boot.setDetailsExpanded(true);
+          if (pinned) logEl.scrollTop = logEl.scrollHeight;
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

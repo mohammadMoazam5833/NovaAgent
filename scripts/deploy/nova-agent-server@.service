@@ -1,0 +1,17 @@
+[Unit]
+Description=NovaAgent agent-server for customer %i
+After=network-online.target nova-gateway.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=moazemi-gc
+EnvironmentFile=/home/moazemi-gc/nova-tenants/%i.env
+Environment=PYTHONPATH=/home/moazemi-gc/OpenHands/tools
+WorkingDirectory=/home/moazemi-gc/nova-tenants/%i
+ExecStart=/home/moazemi-gc/.local/bin/agent-server --host 127.0.0.1 --port ${PORT} --import-modules sidecar_bridge
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

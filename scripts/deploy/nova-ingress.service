@@ -1,0 +1,15 @@
+[Unit]
+Description=NovaAgent public ingress (UI + API proxy + LLM proxy)
+After=network-online.target nova-agent-server.service nova-automation.service nova-gateway.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=moazemi-gc
+Environment=NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
+ExecStart=/home/moazemi-gc/.nvm/versions/node/v24.13.0/bin/node /home/moazemi-gc/nova-ingress.mjs
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
