@@ -466,8 +466,9 @@ h2.sec{font-size:16px;margin:26px 0 14px}
 var S={tab:"dash",tenant:"",unit:"nova-ingress",lines:100,timer:null};
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
 function toast(m){var t=document.getElementById("toast");t.textContent=m;t.classList.add("on");setTimeout(function(){t.classList.remove("on")},2600)}
-function api(p,o){var opts={headers:{"Content-Type":"application/json"}};if(o){opts.method="POST";opts.body=JSON.stringify(o)}return fetch(p,opts).then(function(r){if(r.status===401){renderLogin();throw new Error("auth")}return r.json()})}
-function post(p,o){return fetch(p,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(o||{})}).then(function(r){return r.json().then(function(j){return{j:j,s:r.status}})})}
+var BASE=location.pathname.indexOf("/admin")===0?"/admin":"";
+function api(p,o){var opts={headers:{"Content-Type":"application/json"}};if(o){opts.method="POST";opts.body=JSON.stringify(o)}return fetch(BASE+p,opts).then(function(r){if(r.status===401){renderLogin();throw new Error("auth")}return r.json()})}
+function post(p,o){return fetch(BASE+p,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(o||{})}).then(function(r){return r.json().then(function(j){return{j:j,s:r.status}})})}
 function fmtB(b){if(!b&&b!==0)return"?";var u=["B","KB","MB","GB","TB"],i=0,n=Number(b);while(n>=1024&&i<4){n/=1024;i++}return n.toFixed(n>=100||i===0?0:1)+" "+u[i]}
 function fmtT(ts){if(!ts)return"-";try{return new Date(ts).toLocaleString("fa-IR")}catch(e){return ts}}
 function dot(ok,warn){return '<span class="dot'+(ok?" ok":(warn?" warn":""))+'"></span>'}
@@ -489,7 +490,7 @@ function doLogin(){
     if(r.j.ok){boot()}else{renderLogin(r.j.error||"رمز اشتباه است — با کیبورد انگلیسی تایپ کنید")}
   }).catch(function(){renderLogin("خطا در اتصال")});
 }
-function logout(){fetch("/api/logout").then(function(){renderLogin()})}
+function logout(){fetch(BASE+"/api/logout").then(function(){renderLogin()})}
 
 function shell(){
   document.getElementById("app").innerHTML=
@@ -634,7 +635,7 @@ function loadLogs(){
 }
 
 function probe(){
-  fetch("/api/overview").then(function(r){
+  fetch(BASE+"/api/overview").then(function(r){
     if(r.ok){boot()}else{renderLogin()}
   }).catch(function(){renderLogin()});
 }
