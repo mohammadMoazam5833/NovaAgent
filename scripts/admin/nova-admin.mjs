@@ -476,7 +476,7 @@ function renderLogin(msg){
   document.getElementById("app").innerHTML='<div class="login"><div class="lcard">'+
   '<h1>Nova<span style="color:var(--acc)">Agent</span></h1><p>پنل مدیریت و مانیتورینگ</p>'+
   (msg?'<p style="color:var(--bad)">'+msg+"</p>":"")+
-  '<input id="pw" type="password" placeholder="رمز مدیریت" autofocus onkeydown="if(event.key===\'Enter\')doLogin()">'+
+  '<input id="pw" type="password" placeholder="رمز مدیریت" autofocus onkeydown="if(event.key===\\'Enter\\')doLogin()">'+
   '<div style="height:14px"></div><button style="width:100%" onclick="doLogin()">ورود</button></div></div>';
 }
 function doLogin(){
@@ -491,10 +491,10 @@ function shell(){
   document.getElementById("app").innerHTML=
   '<div class="top"><div class="brand">Nova<span>Agent</span> · پنل مدیریت</div>'+
   '<div class="tabs">'+
-  '<div class="tab" data-t="dash" onclick="setTab(\'dash\')">داشبورد</div>'+
-  '<div class="tab" data-t="tenants" onclick="setTab(\'tenants\')">کاربران</div>'+
-  '<div class="tab" data-t="convs" onclick="setTab(\'convs\')">گفتگوها</div>'+
-  '<div class="tab" data-t="logs" onclick="setTab(\'logs\')">لاگ‌ها</div>'+
+  '<div class="tab" data-t="dash" onclick="setTab(\\'dash\\')">داشبورد</div>'+
+  '<div class="tab" data-t="tenants" onclick="setTab(\\'tenants\\')">کاربران</div>'+
+  '<div class="tab" data-t="convs" onclick="setTab(\\'convs\\')">گفتگوها</div>'+
+  '<div class="tab" data-t="logs" onclick="setTab(\\'logs\\')">لاگ‌ها</div>'+
   "</div>"+
   '<button class="ghost" onclick="logout()">خروج</button></div><div class="wrap" id="view"></div>';
   document.querySelectorAll(".tab").forEach(function(el){el.classList.toggle("on",el.dataset.t===S.tab)});
@@ -528,9 +528,9 @@ function loadDash(){
     document.getElementById("view").innerHTML=
     '<div class="grid">'+
     '<div class="card"><h3>آپ‌تایم سرور</h3><div class="big">'+esc(d.uptimeText)+"</div></div>"+
-    '<div class="card"><h3>حافظه RAM</h3><div class="big">'+memPct+"%</div><div class=\"mut\">"+fmtB(d.mem.total-d.mem.free)+" از "+fmtB(d.mem.total)+'</div><div class="bar"><i style="width:'+memPct+'%"></i></div></div>'+
-    '<div class="card"><h3>دیسک</h3><div class="big">'+diskPct+"%</div><div class=\"mut\">"+fmtB(d.disk.used)+" از "+fmtB(d.disk.total)+'</div><div class="bar"><i style="width:'+diskPct+'%"></i></div></div>'+
-    '<div class="card"><h3>بار CPU</h3><div class="big">'+d.load[0].toFixed(2)+"</div><div class=\"mut\">"+d.cpuCount+" هسته · ۵ دقیقه: "+d.load[1].toFixed(2)+"</div></div>"+
+    '<div class="card"><h3>حافظه RAM</h3><div class="big">'+memPct+"%</div><div class=\\"mut\\">"+fmtB(d.mem.total-d.mem.free)+" از "+fmtB(d.mem.total)+'</div><div class="bar"><i style="width:'+memPct+'%"></i></div></div>'+
+    '<div class="card"><h3>دیسک</h3><div class="big">'+diskPct+"%</div><div class=\\"mut\\">"+fmtB(d.disk.used)+" از "+fmtB(d.disk.total)+'</div><div class="bar"><i style="width:'+diskPct+'%"></i></div></div>'+
+    '<div class="card"><h3>بار CPU</h3><div class="big">'+d.load[0].toFixed(2)+"</div><div class=\\"mut\\">"+d.cpuCount+" هسته · ۵ دقیقه: "+d.load[1].toFixed(2)+"</div></div>"+
     "</div>"+
     '<h2 class="sec">سرویس‌ها</h2><div style="margin-bottom:8px">'+chips+"</div>"+
     '<h2 class="sec">کلاینت‌های متصل (Gateway)</h2><div style="margin-bottom:8px">'+(gw||'<span class="mut">اطلاعاتی نیست</span>')+"</div>"+
@@ -552,9 +552,9 @@ function loadTenants(){
     var rows=d.tenants.map(function(t){
       var act=t.active==="active";
       var btns='<div class="actions">'+
-      (act?'<button class="ghost" onclick="tAction(\''+esc(t.name)+'\',\'restart\')">ری‌استارت</button><button class="ghost" onclick="tAction(\''+esc(t.name)+'\',\'stop\')">توقف</button>'
-          :'<button class="ghost" onclick="tAction(\''+esc(t.name)+'\',\'start\')">راه‌اندازی</button>');
-      if(t.name!=="default")btns+='<button class="danger" onclick="tDel(\''+esc(t.name)+'\')">حذف</button>';
+      (act?'<button class="ghost" onclick="tAction(\\''+esc(t.name)+'\\',\\'restart\\')">ری‌استارت</button><button class="ghost" onclick="tAction(\\''+esc(t.name)+'\\',\\'stop\\')">توقف</button>'
+          :'<button class="ghost" onclick="tAction(\\''+esc(t.name)+'\\',\\'start\\')">راه‌اندازی</button>');
+      if(t.name!=="default")btns+='<button class="danger" onclick="tDel(\\''+esc(t.name)+'\\')">حذف</button>';
       btns+="</div>";
       return "<tr><td><b>"+esc(t.name)+"</b>"+(t.name==="default"?' <span class="badge">اصلی</span>':"")+"</td>"+
       "<td>"+dot(act)+ (act?"فعال":"متوقف")+"</td>"+
@@ -567,8 +567,8 @@ function loadTenants(){
       "<td>"+btns+"</td></tr>";
     }).join("");
     document.getElementById("view").innerHTML=
-    '<div class="rowflex"><h2 class="sec" style="margin:0">کاربران (Tenants)</h2><button onclick="document.getElementById(\'ntfrm\').classList.toggle(\'on\')">+ کاربر جدید</button></div>'+
-    '<div class="frm" id="ntfrm"><input id="ntname" placeholder="مثلاً node3" onkeydown="if(event.key===\'Enter\')tCreate()"><button onclick="tCreate()">ایجاد</button><span class="mut">پورت و کلیدها خودکار ساخته می‌شوند</span></div>'+
+    '<div class="rowflex"><h2 class="sec" style="margin:0">کاربران (Tenants)</h2><button onclick="document.getElementById(\\'ntfrm\\').classList.toggle(\\'on\\')">+ کاربر جدید</button></div>'+
+    '<div class="frm" id="ntfrm"><input id="ntname" placeholder="مثلاً node3" onkeydown="if(event.key===\\'Enter\\')tCreate()"><button onclick="tCreate()">ایجاد</button><span class="mut">پورت و کلیدها خودکار ساخته می‌شوند</span></div>'+
     '<div class="card" style="padding:0"><table><thead><tr><th>نام</th><th>سرویس</th><th>کلاینت</th><th>Agent</th><th>پورت</th><th>گفتگوها</th><th>حجم سرور</th><th>فضای کلاینت</th><th></th></tr></thead><tbody>'+
     (rows||'<tr><td colspan="9" class="empty">کاربری ثبت نشده</td></tr>')+"</tbody></table></div>";
   });
@@ -620,7 +620,7 @@ function loadLogs(){
     var opts=units.map(function(u){return '<option value="'+u+'"'+(S.unit===u?" selected":"")+">"+u+"</option>"}).join("");
     document.getElementById("view").innerHTML=
     '<div class="rowflex"><h2 class="sec" style="margin:0">لاگ سرویس‌ها</h2><select onchange="S.unit=this.value;loadLogs()">'+opts+"</select>"+
-    '<select onchange="S.lines=Number(this.value);loadLogs()"><option'+(S.lines===50?" selected":"")+">50</option><option"+(S.lines===100?" selected":"")+">100</option><option'+(S.lines===300?" selected":"")+">300</option><option'+(S.lines===500?" selected":"")+">500</option></select>"+
+    '<select onchange="S.lines=Number(this.value);loadLogs()"><option'+(S.lines===50?" selected":"")+'>50</option><option'+(S.lines===100?" selected":"")+'>100</option><option'+(S.lines===300?" selected":"")+'>300</option><option'+(S.lines===500?" selected":"")+'>500</option></select>'+
     '<button class="ghost" onclick="loadLogs()">به‌روزرسانی</button></div>'+
     '<pre id="logbox">در حال دریافت…</pre>';
     api("/api/logs?unit="+encodeURIComponent(S.unit)+"&lines="+S.lines).then(function(d){
