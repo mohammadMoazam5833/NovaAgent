@@ -12,6 +12,7 @@ const exec = promisify(execFile);
 const HOME = "/home/moazemi-gc";
 const PORT = Number(process.env.ADMIN_PORT || 8002);
 const CUSTOMERS_FILE = path.join(HOME, ".nova-customers.json");
+const USERS_FILE = path.join(HOME, ".nova-users.json");
 const AUTH_FILE = path.join(HOME, ".local/share/opencode/auth.json");
 const TENANTS_DIR = path.join(HOME, "nova-tenants");
 const GATEWAY = "http://127.0.0.1:18766/health";
@@ -119,6 +120,27 @@ async function parseEnv(name) {
 }
 function unitFor(name) {
   return name === "default" ? "nova-agent-server" : "nova-agent-server@" + name;
+}
+async function loadPortalUsers() {
+  try {
+    return JSON.parse(await readFile(USERS_FILE, "utf8")).users || [];
+  } catch {
+    return [];
+  }
+}
+async function upsertPortalUser(username, customer, password) {
+  const users = await loadPortalUsers();
+  const salt = crypto.randomBytes(12).toString("hex");
+  const hash = crypto.createHash("sha256").update(salt + ":" + password).digest("hex");
+  const idx = users.findIndex((u) => u.username === username);
+  const entry = { username, customer, salt, hash };
+  if (idx >= 0) users[idx] = entry;
+  else users.push(entry);
+  const bak = USERS_FILE + ".bak-" + Date.now();
+  await rename(USERS_FILE, bak).catch(() => {});
+  await writeFile(USERS_FILE, JSON.stringify({ users }, null, 2) + "\n", { mode: 0o600 });
+  await exec("chown", ["moazemi-gc:moazemi-gc", USERS_FILE]).catch(() => {});
+  return entry;
 }
 async function serviceState(unit) {
   return sh("systemctl", ["is-active", unit]).catch(() => "unknown");
@@ -386,27 +408,34 @@ function loadTenants(){
   api("/api/tenants").then(function(d){
     var rows=d.tenants.map(function(t){
       var act=t.active==="active";
-      var appLink='<a href="'+esc(t.appUrl)+'" target="_blank" style="font-size:12px">باز کردن اپ ↗</a>';
       var btns='<div class="actions">'+
       (act?'<button class="mini ghost" onclick=\\'tAction(\\''+esc(t.name)+'\\',\\'restart\\')\\'>ری‌استارت</button><button class="mini ghost" onclick=\\'tAction(\\''+esc(t.name)+'\\',\\'stop\\')\\'>توقف</button>'
-          :'<button class="mini ghost" onclick=\\'tAction(\\''+esc(t.name)+'\\',\\'start\\')\\'>راه‌اندازی</button>');
+          :'<button class="mini ghost" onclick=\\'tAction(\\''+esc(t.name)+'\\',\\'start\\')\\'>راه‌اندازی</button>')+
+      '<button class="mini ghost" onclick=\\'tPw(\\''+esc(t.name)+'\\')\\'>'+(t.hasPortalUser?'تغییر رمز':'رمز')+'</button>';
       if(t.name!=="default")btns+='<button class="mini danger" onclick=\\'tDel(\\''+esc(t.name)+'\\')\\'>حذف</button>';
       btns+="</div>";
-      return "<tr><td><b>"+esc(t.name)+"</b>"+(t.name==="default"?' <span class="badge">اصلی</span>':"")+"</td>"+
+      return "<tr><td><b>"+esc(t.name)+"</b>"+(t.name==="default"?' <span class="badge">اصلی</span>':"")+(t.hasPortalUser?' <span class="badge">پورتال</span>':"")+"</td>"+
       "<td>"+dot(act)+(act?"فعال":"متوقف")+"</td>"+
       "<td>"+dot(t.clientConnected)+(t.clientConnected?"متصل":"قطع")+"</td>"+
       "<td>"+(t.agentOk?dot(true)+"سالم":dot(false)+"بدون پاسخ")+"</td>"+
       "<td>"+t.port+"</td>"+
       "<td>"+(t.convCount==null?'<span class="mut">-</span>':t.convCount)+"</td>"+
       "<td>"+esc(t.sizeText)+"</td>"+
-      "<td>"+appLink+"</td>"+
       "<td>"+btns+"</td></tr>";
     }).join("");
     document.getElementById("view").innerHTML=
-    '<div class="rowflex"><h2 class="sec" style="margin:0">کاربران (Tenants)</h2><button onclick="document.getElementById(\\'ntfrm\\').classList.toggle(\\'on\\')">+ کاربر جدید</button><span class="mut">لینک اپ، NovaAgent را با همین کاربر باز می‌کند</span></div>'+
-    '<div class="frm" id="ntfrm"><input id="ntname" placeholder="مثلاً node3" onkeydown="if(event.key===\\'Enter\\')tCreate()"><button onclick="tCreate()">ایجاد</button><span class="mut">پورت و کلیدها خودکار ساخته می‌شوند</span></div>'+
-    '<div class="card" style="padding:0"><table><thead><tr><th>نام</th><th>سرویس</th><th>کلاینت</th><th>Agent</th><th>پورت</th><th>گفتگوها</th><th>حجم سرور</th><th>اپ</th><th></th></tr></thead><tbody>'+
-    (rows||'<tr><td colspan="9" class="empty">کاربری ثبت نشده</td></tr>')+"</tbody></table></div>";
+    '<div class="rowflex"><h2 class="sec" style="margin:0">کاربران (Tenants)</h2><button onclick="document.getElementById(\\'ntfrm\\').classList.toggle(\\'on\\')">+ کاربر جدید</button><span class="mut">رمز، همان لاگین پورتال NovaAgent است</span></div>'+
+    '<div class="frm" id="ntfrm"><input id="ntname" placeholder="نام کاربری مثلاً node3" onkeydown="if(event.key===\\'Enter\\')document.getElementById(\\'ntpw\\').focus()"><input id="ntpw" type="password" placeholder="رمز پورتال" onkeydown="if(event.key===\\'Enter\\')tCreate()"><button onclick="tCreate()">ایجاد</button><span class="mut">پورت و کلیدها خودکار ساخته می‌شوند</span></div>'+
+    '<div class="card" style="padding:0"><table><thead><tr><th>نام</th><th>سرویس</th><th>کلاینت</th><th>Agent</th><th>پورت</th><th>گفتگوها</th><th>حجم سرور</th><th></th></tr></thead><tbody>'+
+    (rows||'<tr><td colspan="8" class="empty">کاربری ثبت نشده</td></tr>')+"</tbody></table></div>";
+  });
+}
+function tPw(n){
+  var p=prompt("رمز پورتال برای "+n+" (حداقل ۴ کاراکتر):");
+  if(p==null)return;
+  if(p.length<4){toast("رمز کوتاه است");return}
+  post("/api/tenants/"+n+"/password",{password:p}).then(function(r){
+    toast(r.j.ok?"رمز "+r.j.username+" ثبت شد ✓":("خطا: "+(r.j.error||r.s)));loadTenants();
   });
 }
 function tAction(n,a){
@@ -417,9 +446,11 @@ function tAction(n,a){
 }
 function tCreate(){
   var n=document.getElementById("ntname").value.trim();
+  var pw=document.getElementById("ntpw").value;
   if(!n)return;
-  post("/api/tenants",{name:n}).then(function(r){
-    if(r.j.ok){toast("کاربر "+r.j.name+" ساخته شد ✓ (پورت "+r.j.port+")");document.getElementById("ntfrm").classList.remove("on")}
+  if(pw&&pw.length<4){toast("رمز حداقل ۴ کاراکتر");return}
+  post("/api/tenants",{name:n,password:pw}).then(function(r){
+    if(r.j.ok){toast("کاربر "+r.j.name+" ساخته شد ✓ (پورت "+r.j.port+(r.j.portalUser?" · لاگین پورتال فعال":"")+")");document.getElementById("ntfrm").classList.remove("on")}
     else toast("خطا: "+(r.j.error||""));
     loadTenants();
   });
@@ -470,7 +501,6 @@ function dlLogs(){
   window.open(BASE+"/api/logs?unit="+u+"&lines=5000&download=1","_blank");
 }
 
-renderLogin.__x=null;
 probe();
 </script>
 </body>
@@ -551,6 +581,10 @@ const server = http.createServer(async (req, res) => {
     }
     if ((m = /^\/api\/tenants\/([^/]+)$/.exec(p)) && req.method === "DELETE") {
       return void apiTenantDelete(res, m[1]);
+    }
+    if ((m = /^\/api\/tenants\/([^/]+)\/password$/.exec(p)) && req.method === "POST") {
+      const body = JSON.parse(await readBody(req));
+      return void apiTenantPassword(res, m[1], body);
     }
     if (p === "/api/conversations") return void apiConversations(res, u.searchParams.get("tenant") || "default");
     if (p === "/api/logs") return void apiLogs(res, u, res);
@@ -665,13 +699,10 @@ async function apiTenants(res) {
       size,
       sizeText: size == null ? "-" : humanSize(size),
       token: c.token || "",
-      appUrl: "http://" + (c.roots && c.roots[0] && c.roots[0].startsWith("C:") ? locationHost() : "172.16.40.188") + ":8000/?t=" + encodeURIComponent(c.token || ""),
+      hasPortalUser: !!(await loadPortalUsers()).some((u) => u.username === c.name),
     });
   }
   json(res, 200, { tenants: out });
-}
-function locationHost() {
-  return "172.16.40.188";
 }
 
 async function apiTenantAction(req, res, name, body) {
@@ -689,10 +720,14 @@ async function apiTenantAction(req, res, name, body) {
 
 async function apiTenantCreate(res, body) {
   const name = String(body.name || "").trim().toLowerCase();
+  const password = String(body.password || "");
   if (!/^[a-z][a-z0-9-]{0,31}$/.test(name)) return json(res, 400, { error: "نام فقط حروف کوچک، عدد و خط تیره" });
   if (name === "default") return json(res, 400, { error: "نام default مجاز نیست" });
   const customers = await loadCustomers();
   if (customers.some((c) => c.name === name)) return json(res, 400, { error: "این نام وجود دارد" });
+  const portalUsers = await loadPortalUsers();
+  if (portalUsers.some((u) => u.username === name))
+    return json(res, 400, { error: "این نام قبلاً به‌عنوان کاربر پورتال ثبت شده" });
   const maxPort = customers.reduce((mm, c) => Math.max(mm, Number(c.port) || 0), 18000);
   const port = maxPort + 10;
   const home = path.join(TENANTS_DIR, name);
@@ -713,6 +748,7 @@ async function apiTenantCreate(res, body) {
   await writeFile(envPath(name), envContent, { mode: 0o600 });
   customers.push({ name, token, roots: [home], port });
   await saveCustomers(customers);
+  if (password) await upsertPortalUser(name, name, password);
   try {
     await sh("systemctl", ["daemon-reload"], { timeout: 20000 });
     await sh("systemctl", ["enable", "--now", unitFor(name)], { timeout: 40000 });
@@ -720,7 +756,17 @@ async function apiTenantCreate(res, body) {
     json(res, 500, { error: "ساخت tenant انجام شد ولی سرویس بالا نیامد: " + String(e.message).slice(0, 200) });
     return;
   }
-  json(res, 200, { ok: true, name, port, token, home });
+  json(res, 200, { ok: true, name, port, token, home, portalUser: !!password });
+}
+
+async function apiTenantPassword(res, name, body) {
+  if (!/^[a-z0-9_-]{1,32}$/.test(name)) return json(res, 400, { error: "bad name" });
+  const password = String(body.password || "");
+  if (password.length < 4) return json(res, 400, { error: "رمز حداقل ۴ کاراکتر" });
+  const customers = await loadCustomers();
+  if (!customers.some((c) => c.name === name)) return json(res, 404, { error: "tenant پیدا نشد" });
+  await upsertPortalUser(name, name, password);
+  json(res, 200, { ok: true, username: name });
 }
 
 async function apiTenantDelete(res, name) {

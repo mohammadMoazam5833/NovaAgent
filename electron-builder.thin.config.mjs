@@ -101,14 +101,18 @@ const config = {
   },
 
   win: {
-    target: [{ target: "dir", arch: ["x64"] }],
+    target: [
+      { target: "nsis", arch: ["x64"] },
+      { target: "zip", arch: ["x64"] },
+    ],
     icon: "icon.ico",
   },
 
   nsis: {
-    oneClick: true,
+    oneClick: false,
     perMachine: false,
-    allowToChangeInstallationDirectory: false,
+    allowToChangeInstallationDirectory: true,
+    deleteAppDataOnUninstall: true,
     createDesktopShortcut: true,
     createStartMenuShortcut: true,
     shortcutName: "NovaAgent Client",

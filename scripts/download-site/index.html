@@ -179,19 +179,20 @@ footer .req{color:var(--mut);direction:ltr;unicode-bidi:isolate}
     <p class="lead">NovaAgent مثل یه همکار باتجربه کنارته. فقط بگو چی می‌خوای؛ خودش کد رو می‌نویسه، تست می‌زنه، اجرا می‌کنه و نتیجه رو همون لحظه جلوی چشم می‌بینی.</p>
 
     <div class="cta">
-      <a id="dl-main" class="dl-main" href="/download/NovaAgent-Client-1.6.3-Windows-portable.zip">
+      <a id="dl-main" class="dl-main" href="/download/NovaAgent-Client-1.6.3-Setup.exe">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><g class="arrow"><path d="M12 3v12M7 10l5 5 5-5"/></g><path d="M4 20h16"/></svg>
-        <span id="dl-main-label">دانلود برای Windows</span>
+        <span id="dl-main-label">دانلود نصاب برای Windows</span>
       </a>
       <p class="mac-note" id="mac-note">نسخهٔ macOS هنوز منتشر نشده است. یکی از نسخه‌های زیر را برای سیستم دیگری دانلود کنید.</p>
     </div>
 
     <div class="alts" role="group" aria-label="همهٔ نسخه‌ها">
-      <a id="alt-win" href="/download/NovaAgent-Client-1.6.3-Windows-portable.zip">Windows — Portable ZIP</a>
+      <a id="alt-win" href="/download/NovaAgent-Client-1.6.3-Setup.exe">Windows — نصاب (پیشنهادی)</a>
+      <a id="alt-win-zip" href="/download/NovaAgent-Client-1.6.3-Windows-portable.zip">Windows — Portable ZIP</a>
       <a id="alt-deb" href="/download/NovaAgent-Client-1.6.3-amd64.deb">Linux — DEB</a>
       <a id="alt-appimage" href="/download/NovaAgent-Client-1.6.3-x86_64.AppImage">Linux — AppImage</a>
     </div>
-    <div class="meta"><span>سیستم‌عامل شما: <b id="os-name">—</b></span><span>نسخه: <b class="ltr">1.6.3</b></span><span>حجم بسته‌ها: <b class="ltr">91–150 MB</b></span><span>نیازمند دسترسی به سرور <b class="ltr">172.16.40.188:8000</b></span></div>
+    <div class="meta"><span>سیستم‌عامل شما: <b id="os-name">—</b></span><span>نسخه: <b class="ltr">1.6.3</b></span><span>حجم بسته‌ها: <b class="ltr">91–136 MB</b></span><span>نیازمند دسترسی به سرور <b class="ltr">172.16.40.188:8000</b></span></div>
   </div>
 
   <div class="win" id="win" aria-label="نمونهٔ کار NovaAgent">
@@ -230,15 +231,15 @@ footer .req{color:var(--mut);direction:ltr;unicode-bidi:isolate}
   <p class="sub">روش نصب را بر اساس سیستم خود انتخاب کنید.</p>
   <div class="install">
     <div class="tabs" role="tablist" aria-label="روش نصب">
-      <button class="tab on" role="tab" aria-selected="true" data-tab="win">Windows<small>نسخهٔ قابل‌حمل، بدون نصب</small></button>
+      <button class="tab on" role="tab" aria-selected="true" data-tab="win">Windows<small>نصاب رسمی + نسخهٔ قابل‌حمل</small></button>
       <button class="tab" role="tab" aria-selected="false" data-tab="deb">Linux — DEB<small>Ubuntu و Debian</small></button>
       <button class="tab" role="tab" aria-selected="false" data-tab="appimage">Linux — AppImage<small>روی هر توزیع</small></button>
     </div>
     <div>
       <div class="panel on" id="panel-win" role="tabpanel">
-        <div class="step"><span class="num">۱</span><div><b>دانلود و Extract</b><p>فایل ZIP را باز کنید و پوشهٔ <code class="ltr">novaagent-client</code> را در محل دلخواه بگذارید.</p></div></div>
-        <div class="step"><span class="num">۲</span><div><b>اجرا</b><p><code class="ltr">NovaAgent Client.exe</code> را اجرا کنید. برای دسترسی سریع‌تر، میان‌بر دسکتاپ بسازید.</p></div></div>
-        <div class="step"><span class="num">۳</span><div><b>ورود</b><p>با حساب شرکتی خود وارد شوید؛ همه‌چیز آماده است.</p></div></div>
+        <div class="step"><span class="num">۱</span><div><b>دانلود نصاب</b><p>دکمهٔ «دانلود نصاب» بالا را بزنید و فایل <code class="ltr">NovaAgent-Client-1.6.3-Setup.exe</code> را اجرا کنید.</p></div></div>
+        <div class="step"><span class="num">۲</span><div><b>نصب</b><p>مراحل نصب را تأیید کنید (Next → Install). میان‌بر دسکتاپ خودکار ساخته می‌شود.</p></div></div>
+        <div class="step"><span class="num">۳</span><div><b>ورود</b><p>با حساب شرکتی خود وارد شوید؛ همه‌چیز آماده است. نسخهٔ بدون نصب (Portable ZIP) هم در لیست دانلودها هست.</p></div></div>
       </div>
       <div class="panel" id="panel-deb" role="tabpanel">
         <div class="step"><span class="num">۱</span><div><b>نصب بسته</b><p>این دستور را در ترمینال بزنید.</p>
