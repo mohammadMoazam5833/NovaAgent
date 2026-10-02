@@ -1,0 +1,15 @@
+[Unit]
+Description=NovaAgent Admin Panel
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/moazemi-gc
+EnvironmentFile=/home/moazemi-gc/.nova-admin-env
+ExecStart=/home/moazemi-gc/.nvm/versions/node/v24.13.0/bin/node /home/moazemi-gc/nova-admin.mjs
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
