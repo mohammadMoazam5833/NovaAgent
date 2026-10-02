@@ -477,12 +477,15 @@ function renderLogin(msg){
   '<h1>Nova<span style="color:var(--acc)">Agent</span></h1><p>پنل مدیریت و مانیتورینگ</p>'+
   (msg?'<p style="color:var(--bad)">'+msg+"</p>":"")+
   '<input id="pw" type="password" placeholder="رمز مدیریت" autofocus onkeydown="if(event.key===\\'Enter\\')doLogin()">'+
-  '<div style="height:14px"></div><button style="width:100%" onclick="doLogin()">ورود</button></div></div>';
+  '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px"><label style="font-size:12px;color:var(--tx2);cursor:pointer"><input type="checkbox" id="showpw" style="width:auto" onchange="document.getElementById(\\'pw\\').type=this.checked?\\'text\\':\\'password\\'"> نمایش رمز</label></div>'+
+  '<div style="height:8px"></div><button style="width:100%" onclick="doLogin()">ورود</button></div></div>';
 }
 function doLogin(){
-  var pw=document.getElementById("pw").value;
+  var el=document.getElementById("pw");
+  var pw=el.value.replace(/[\u200B-\u200F\u202A-\u202E\u2066-\u2069\uFEFF]/g,"").replace(/[\u06F0-\u06F9\u0660-\u0669]/g,function(c){return String(c.charCodeAt(0)&15)}).trim();
+  el.value=pw;
   post("/api/login",{password:pw}).then(function(r){
-    if(r.j.ok){boot()}else{renderLogin("رمز اشتباه است")}
+    if(r.j.ok){boot()}else{renderLogin("رمز اشتباه است — با کیبورد انگلیسی تایپ کنید")}
   }).catch(function(){renderLogin("خطا در اتصال")});
 }
 function logout(){fetch("/api/logout").then(function(){renderLogin()})}
@@ -634,6 +637,15 @@ renderLogin();
 </body>
 </html>`;
 
+function cleanPw(s) {
+  return String(s || "")
+    .replace(/[\u200B-\u200F\u202A-\u202E\u2066-\u2069\uFEFF]/g, "")
+    .replace(/[\u06F0-\u06F9\u0660-\u0669]/g, (c) =>
+      String(c.charCodeAt(0) & 0x0f)
+    )
+    .trim();
+}
+
 const server = http.createServer(async (req, res) => {
   try {
     const u = new URL(req.url, "http://x");
@@ -653,7 +665,8 @@ const server = http.createServer(async (req, res) => {
         return;
       }
       const body = JSON.parse(await readBody(req));
-      if (String(body.password || "") === ADMIN_PASSWORD) {
+      const attempt = cleanPw(body.password);
+      if (attempt === ADMIN_PASSWORD) {
         loginFails.delete(ip);
         const exp = now + 43200000;
         res.setHeader(
@@ -662,6 +675,7 @@ const server = http.createServer(async (req, res) => {
         );
         json(res, 200, { ok: true });
       } else {
+        console.error("[admin] failed login: len=" + attempt.length + " ip=" + ip);
         rec.n++;
         rec.t = now;
         loginFails.set(ip, rec);
