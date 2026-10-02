@@ -16,6 +16,10 @@
       * {
         box-sizing: border-box;
       }
+      html, body {
+        height: 100%;
+        overflow: hidden;
+      }
       body {
         margin: 0;
         font-family:
@@ -25,40 +29,39 @@
           sans-serif;
         background: var(--bg);
         color: var(--fg);
-        min-height: 100vh;
         display: grid;
         place-items: center;
-        padding: 24px;
+        padding: 16px;
       }
       main {
         width: min(440px, 100%);
       }
       h1 {
-        font-size: 1.25rem;
+        font-size: 1.05rem;
         font-weight: 600;
-        margin: 0 0 8px;
+        margin: 0 0 6px;
       }
       p {
-        margin: 0 0 16px;
+        margin: 0 0 10px;
         color: var(--muted);
-        line-height: 1.45;
-        font-size: 0.95rem;
+        line-height: 1.35;
+        font-size: 0.88rem;
       }
       label {
         display: block;
-        font-size: 0.85rem;
-        margin-bottom: 6px;
+        font-size: 0.8rem;
+        margin-bottom: 4px;
         color: var(--muted);
       }
       input {
         width: 100%;
-        padding: 10px 12px;
+        padding: 8px 11px;
         border-radius: 8px;
         border: 1px solid var(--border);
         background: #121826;
         color: var(--fg);
-        font-size: 0.95rem;
-        margin-bottom: 12px;
+        font-size: 0.92rem;
+        margin-bottom: 9px;
       }
       input:focus {
         outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
@@ -73,7 +76,7 @@
       button {
         border: 0;
         border-radius: 8px;
-        padding: 10px 14px;
+        padding: 8px 13px;
         font-size: 0.95rem;
         cursor: pointer;
       }
@@ -96,8 +99,8 @@
         min-height: 1.2em;
         margin-top: 8px;
       }
-      .brandmark{text-align:center;margin-bottom:18px}
-    .brandname{font-size:20px;font-weight:700;margin-top:10px;letter-spacing:.2px}
+      .brandmark{text-align:center;margin-bottom:10px}
+    .brandname{font-size:17px;font-weight:700;margin-top:6px;letter-spacing:.2px}
     .nletter{color:#e0805f}
   </style>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='8' y='8' width='48' height='48' rx='14' fill='%230a0d13'/%3E%3Cpath d='M20 44V20L44 44V20' fill='none' stroke='%23eef1f6' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='44' cy='18' r='3.5' fill='%23e0805f'/%3E%3C/svg%3E">
@@ -105,7 +108,7 @@
   <body>
     <main>
       <div class="brandmark">
-      <svg width="56" height="56" viewBox="0 0 64 64" aria-hidden="true"><rect x="8" y="8" width="48" height="48" rx="14" fill="#0a0d13"/><path d="M20 44V20L44 44V20" fill="none" stroke="#eef1f6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="44" cy="18" r="3.5" fill="#e0805f"/></svg>
+      <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><rect x="8" y="8" width="48" height="48" rx="14" fill="#0a0d13"/><path d="M20 44V20L44 44V20" fill="none" stroke="#eef1f6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="44" cy="18" r="3.5" fill="#e0805f"/></svg>
       <div class="brandname"><span class="nletter">N</span>ovaAgent</div>
     </div>
     <h1>Sign in to NovaAgent</h1>
