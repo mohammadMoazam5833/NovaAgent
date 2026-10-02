@@ -84,6 +84,15 @@ function resolveTenant(req) {
 }
 
 function proxyReq(req, res, targetPort = BACKEND_PORT) {
+  // QA-PAYLOAD-LOG (temporary diagnostics — remove before release)
+  const qaTag = req.method === "POST" && (req.url || "").startsWith("/api/conversations") ? req.url : null;
+  if (qaTag) {
+    const qaChunks = [];
+    req.on("data", (c) => qaChunks.push(c));
+    req.on("end", () => {
+      try { console.log(`[qa-payload] ${qaTag} body=${Buffer.concat(qaChunks).toString("utf8").slice(0, 1500)}`); } catch {}
+    });
+  }
   if (req.method === "OPTIONS") {
     res.writeHead(204, {
       "Access-Control-Allow-Origin": "*",
@@ -104,6 +113,13 @@ function proxyReq(req, res, targetPort = BACKEND_PORT) {
   const upstream = http.request(opts, (pr) => {
     const headers = { ...pr.headers };
     headers["access-control-allow-origin"] = "*";
+    if (qaTag && (pr.statusCode || 0) >= 400) {
+      const rb = [];
+      pr.on("data", (c) => rb.push(c));
+      pr.on("end", () => {
+        try { console.log(`[qa-payload] ${qaTag} status=${pr.statusCode} resp=${Buffer.concat(rb).toString("utf8").slice(0, 800)}`); } catch {}
+      });
+    }
     res.writeHead(pr.statusCode || 502, headers);
     pr.pipe(res);
   });
@@ -344,6 +360,12 @@ const server = http.createServer((req, res) => {
     }
     if (urlPath === "/download" || urlPath.startsWith("/download/")) {
       serveDownload(req, res, urlPath);
+      return;
+    }
+    if (urlPath === "/admin" || urlPath.startsWith("/admin/")) {
+      const rest = req.url.slice(req.url.indexOf("/admin") + 6);
+      req.url = rest.startsWith("/") ? rest : "/" + rest;
+      proxyReq(req, res, 18002);
       return;
     }
     if (req.method === "POST" && urlPath === "/api/auth/login") {

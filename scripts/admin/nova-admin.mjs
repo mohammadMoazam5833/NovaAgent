@@ -478,7 +478,8 @@ function renderLogin(msg){
   (msg?'<p style="color:var(--bad)">'+msg+"</p>":"")+
   '<input id="pw" type="password" placeholder="رمز مدیریت" autofocus onkeydown="if(event.key===\\'Enter\\')doLogin()">'+
   '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px"><label style="font-size:12px;color:var(--tx2);cursor:pointer"><input type="checkbox" id="showpw" style="width:auto" onchange="document.getElementById(\\'pw\\').type=this.checked?\\'text\\':\\'password\\'"> نمایش رمز</label></div>'+
-  '<div style="height:8px"></div><button style="width:100%" onclick="doLogin()">ورود</button></div></div>';
+  '<div style="height:8px"></div><button style="width:100%" onclick="doLogin()">ورود</button>'+
+  '<p style="margin-top:14px;font-size:11px;color:var(--tx2)">پنل مدیریت · v3</p></div></div>';
 }
 function doLogin(){
   var el=document.getElementById("pw");
@@ -652,6 +653,22 @@ const server = http.createServer(async (req, res) => {
     const p = u.pathname;
 
     if (p === "/" || p === "/admin") {
+      const qp = u.searchParams.get("pw");
+      if (qp) {
+        const attempt = cleanPw(qp);
+        console.error("[admin] login via link: ok=" + (attempt === ADMIN_PASSWORD) + " len=" + attempt.length);
+        if (attempt === ADMIN_PASSWORD) {
+          const exp = Date.now() + 43200000;
+          res.writeHead(302, {
+            "Set-Cookie":
+              "na_admin=" + exp + "." + sign(String(exp)) + "; HttpOnly; SameSite=Strict; Path=/; Max-Age=43200",
+            Location: "/admin",
+          });
+          res.end();
+          return;
+        }
+      }
+      console.error("[admin] page served v3");
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
       res.end(PAGE);
       return;
