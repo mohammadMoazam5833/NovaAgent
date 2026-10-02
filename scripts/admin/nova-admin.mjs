@@ -633,7 +633,12 @@ function loadLogs(){
   });
 }
 
-renderLogin();
+function probe(){
+  fetch("/api/overview").then(function(r){
+    if(r.ok){boot()}else{renderLogin()}
+  }).catch(function(){renderLogin()});
+}
+probe();
 </script>
 </body>
 </html>`;
