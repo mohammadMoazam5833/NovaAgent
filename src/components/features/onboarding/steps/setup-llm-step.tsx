@@ -22,7 +22,7 @@ interface SetupLlmStepProps {
  * model id. Keeping this as an explicit override marks the model dirty so
  * the Next button persists the suggested default immediately.
  */
-export const ONBOARDING_DEFAULT_LLM_MODEL = "openai/gpt-5.5";
+export const ONBOARDING_DEFAULT_LLM_MODEL = "openai/gpt-5.6";
 
 /**
  * Step 2: embed the LLM settings form. The screen runs in `embedded`
