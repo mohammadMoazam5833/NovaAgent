@@ -175,7 +175,7 @@ footer .req{color:var(--mut);direction:ltr;unicode-bidi:isolate}
 
 <header class="hero" id="top"><div class="wrap">
   <div>
-    <h1 id="phrases"><span>برنامه‌ریزی می‌کند.</span><span>کد می‌نویسد.</span><span>تست می‌گیرد.</span><span>تحویل می‌دهد.</span></h1>
+    <h1 id="phrases"><span>برنامه‌ریزی می‌کند، کد می‌نویسد</span><span>تست می‌گیرد، تحویل می‌دهد</span></h1>
     <p class="lead">NovaAgent یک مهندس نرم‌افزار هوشمند است؛ کافی است بگویید چه می‌خواهید — او خودش برنامه‌ریزی می‌کند، کد می‌نویسد، تست می‌گیرد، در ترمینال اجرا می‌کند و نتیجه را زنده پیشِ چشم شما می‌بیند.</p>
 
     <div class="cta">
@@ -381,11 +381,11 @@ footer .req{color:var(--mut);direction:ltr;unicode-bidi:isolate}
       await sleep(900);
       state(0);
       for(var i=1;i<=prompt.length;i++){typed.textContent=prompt.slice(0,i);await sleep(34)}
-      await sleep(350);T[0].className="task show run";await sleep(1200);state(1);await sleep(450);T[0].className="task show ok";
-      state(2);T[1].className="task show run";
+      await sleep(350);T[0].className="task show run";await sleep(1200);await sleep(450);T[0].className="task show ok";
+      state(1);T[1].className="task show run";
       for(var j=0;j<L.length;j++){L[j].className="show";await sleep(520)}
       T[1].className="task show ok";
-      state(3);T[2].className="task show run";await sleep(500);state(3,0,true);await sleep(900);T[2].className="task show ok";
+      T[2].className="task show run";await sleep(500);state(1,0,true);await sleep(900);T[2].className="task show ok";
       await sleep(4800);
     }
   }
