@@ -6,6 +6,7 @@
  * - Does not HTTP-connect to the customer laptop
  */
 
+import { readFileSync, statSync } from "node:fs";
 import { createServer } from "node:http";
 import { URL } from "node:url";
 
@@ -59,7 +60,38 @@ export function createCustomerWorkspaceGateway(options) {
       });
     }
   }
-  const useCustomers = customersByToken.size > 0;
+  const customersFile = options.customersFile || "";
+  let customersMtime = 0;
+  /**
+   * Hot-reload ~/.nova-customers.json. Tenants created by the admin panel after
+   * the gateway started would otherwise have an unknown token: their client WS
+   * upgrade is rejected (401), the tenant agent-server never reaches the client
+   * and silently falls back to the server's own workspace.
+   */
+  function refreshCustomers() {
+    if (!customersFile) return;
+    try {
+      const mtime = statSync(customersFile).mtimeMs;
+      if (mtime === customersMtime) return;
+      customersMtime = mtime;
+      const parsed = JSON.parse(readFileSync(customersFile, "utf8"));
+      if (!Array.isArray(parsed?.customers)) return;
+      customersByToken.clear();
+      for (const c of parsed.customers) {
+        if (c && typeof c.token === "string" && c.token.trim()) {
+          customersByToken.set(c.token.trim(), {
+            name: String(c.name || "unnamed"),
+            roots: Array.isArray(c.roots) ? c.roots.map((r) => String(r)) : [],
+          });
+        }
+      }
+      console.log(`[gateway] customers reloaded (${customersByToken.size})`);
+    } catch {
+      // keep the last good registry
+    }
+  }
+  refreshCustomers();
+  const useCustomers = () => customersByToken.size > 0;
 
   /** @type {Map<string, { sendText: (t: string) => void, sendClose: () => void, hello: object | null, roots: string[] }>} */
   const sessions = new Map();
@@ -106,6 +138,7 @@ export function createCustomerWorkspaceGateway(options) {
     const tenantMatch = /^\/c\/([^/]+)\/v1$/.exec(url.pathname);
     if (tenantMatch && req.method === "POST") {
       const tenantName = decodeURIComponent(tenantMatch[1]);
+      refreshCustomers();
       const gotTenant = extractToken(req, url);
       const tenantAllowed =
         (gotTenant && gotTenant === token) ||
@@ -187,10 +220,11 @@ export function createCustomerWorkspaceGateway(options) {
       return;
     }
 
+    refreshCustomers();
     const got = extractToken(req, url);
     let customer = null;
     if (got) {
-      if (useCustomers) {
+      if (useCustomers()) {
         customer = customersByToken.get(got) ?? null;
       } else if (got === token) {
         customer = { name: "default", roots: [] };
@@ -229,7 +263,13 @@ export function createCustomerWorkspaceGateway(options) {
         if (typeof id !== "string") return;
         if (parsed.type === "hello" || parsed.result?.protocol) {
           const entry = sessions.get(customer.name);
-          if (entry) entry.hello = parsed.result ?? parsed;
+          if (entry) {
+            entry.hello = parsed.result ?? parsed;
+            const hr = entry.hello?.roots;
+            if (Array.isArray(hr) && hr.length) {
+              entry.roots = hr.map((r) => String(r));
+            }
+          }
         }
         const waiter = pending.get(id);
         if (waiter) {
@@ -266,7 +306,8 @@ export function createCustomerWorkspaceGateway(options) {
   });
 
   function healthBody() {
-    const names = useCustomers
+    refreshCustomers();
+    const names = useCustomers()
       ? [...customersByToken.values()].map((c) => c.name)
       : ["default"];
     return {

@@ -82,6 +82,7 @@ function main() {
     port,
     token,
     customers,
+    customersFile,
   });
   gateway.listen(() => {
     console.log(

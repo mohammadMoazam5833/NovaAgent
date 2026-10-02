@@ -12,7 +12,12 @@ from openhands.sdk.workspace.local import LocalWorkspace
 from openhands.sdk.workspace.models import CommandResult, FileOperationResult
 
 from .client import SidecarClient, SidecarClientError, client_from_env
-from .path_map import map_agent_path_to_sidecar
+from .path_map import (
+    assert_under_roots,
+    get_client_roots,
+    join_under_working_dir,
+    map_to_client_roots,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -69,11 +74,15 @@ class SidecarWorkspace(LocalWorkspace):
         object.__setattr__(self, "_sidecar_roots", sidecar_roots)
 
     def _map(self, path: str | Path) -> str:
-        return map_agent_path_to_sidecar(
-            path,
-            working_dir=self.working_dir,
-            roots=self._sidecar_roots,
+        absolute = join_under_working_dir(self.working_dir, path)
+        roots = (
+            list(self._sidecar_roots)
+            if self._sidecar_roots
+            else get_client_roots(self._client)
         )
+        if not roots:
+            return absolute
+        return map_to_client_roots(absolute, str(self.working_dir), roots)
 
     def list_dir(self, path: str | Path | None = None) -> dict[str, Any]:
         target = self._map(path if path is not None else self.working_dir)
@@ -215,9 +224,24 @@ def proxy_local_workspace_methods(client: SidecarClient) -> None:
         ws = SidecarWorkspace(working_dir=self.working_dir, client=client)
         return ws.file_download(source_path, destination_path)
 
+    def list_dir(self, path=None):  # noqa: ANN001
+        ws = SidecarWorkspace(working_dir=self.working_dir, client=client)
+        return ws.list_dir(path)
+
+    def read_text(self, path):  # noqa: ANN001
+        ws = SidecarWorkspace(working_dir=self.working_dir, client=client)
+        return ws.read_text(path)
+
+    def write_text(self, path, content, create_parents=True):  # noqa: ANN001
+        ws = SidecarWorkspace(working_dir=self.working_dir, client=client)
+        return ws.write_text(path, content, create_parents=create_parents)
+
     LocalWorkspace.execute_command = execute_command  # type: ignore[method-assign]
     LocalWorkspace.file_upload = file_upload  # type: ignore[method-assign]
     LocalWorkspace.file_download = file_download  # type: ignore[method-assign]
+    LocalWorkspace.list_dir = list_dir  # type: ignore[method-assign]
+    LocalWorkspace.read_text = read_text  # type: ignore[method-assign]
+    LocalWorkspace.write_text = write_text  # type: ignore[method-assign]
     logger.info(
         "Installed LocalWorkspace → sidecar proxy (%s)",
         client.base_url.rstrip("/"),

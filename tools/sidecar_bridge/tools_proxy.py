@@ -87,8 +87,19 @@ def _install_file_editor(client: SidecarClient) -> bool:
             self._cwd = str(workspace_root) if workspace_root else "/"
             self._client = client
 
+        def _map(self, path):
+            from .path_map import get_client_roots, map_to_client_roots
+
+            try:
+                roots = get_client_roots(self._client)
+                if roots:
+                    return map_to_client_roots(str(path), self._cwd or str(path), roots)
+            except Exception:
+                pass
+            return str(path)
+
         def validate_path(self, command, path):  # noqa: ANN001
-            path_str = str(path)
+            path_str = self._map(path)
             if not _is_customer_absolute(path_str):
                 suggestion = "The path should be an absolute path."
                 if self._cwd:
@@ -128,7 +139,7 @@ def _install_file_editor(client: SidecarClient) -> bool:
             encoding: str = "utf-8",
         ) -> str:
             try:
-                result = self._client.read_file(str(path))
+                result = self._client.read_file(self._map(path))
             except SidecarClientError as exc:
                 raise ToolError(f"Ran into {exc} while trying to read {path}") from None
             content = result.get("content")
@@ -146,16 +157,17 @@ def _install_file_editor(client: SidecarClient) -> bool:
             encoding: str = "utf-8",
         ) -> None:
             try:
-                self._client.write_file(str(path), file_text, create_parents=True)
+                self._client.write_file(self._map(path), file_text, create_parents=True)
             except SidecarClientError as exc:
                 raise ToolError(
                     f"Ran into {exc} while trying to write to {path}"
                 ) from None
 
         def view(self, path: Path, view_range: list[int] | None = None):  # noqa: ANN001
-            kind = sidecar_path_kind(self._client, str(path))
+            mapped = self._map(path)
+            kind = sidecar_path_kind(self._client, mapped)
             if kind == "dir":
-                listing = self._client.list_dir(str(path))
+                listing = self._client.list_dir(mapped)
                 names = [
                     e.get("name", "")
                     for e in listing.get("entries") or []
@@ -173,7 +185,7 @@ def _install_file_editor(client: SidecarClient) -> bool:
                     prev_exist=True,
                 )
             content = self.read_file(
-                path,
+                mapped,
                 start_line=view_range[0] if view_range else None,
                 end_line=(
                     None
@@ -263,6 +275,14 @@ def _install_terminal(client: SidecarClient) -> bool:
         timeout_s = action.timeout if action.timeout else 30.0
         timeout_ms = max(1, int(float(timeout_s) * 1000))
         cwd = self._working_dir
+        try:
+            from .path_map import get_client_roots, map_to_client_roots
+
+            _roots = get_client_roots(self._client)
+            if _roots:
+                cwd = map_to_client_roots(str(cwd), str(self._working_dir), _roots)
+        except Exception:
+            cwd = self._working_dir
         try:
             result = self._client.exec(
                 _shell_argv(action.command or "true"),
