@@ -20,7 +20,7 @@ a{color:inherit}
 /* nav */
 nav{position:sticky;top:0;z-index:50;background:rgba(10,13,19,.78);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
 nav .wrap{display:flex;align-items:center;gap:12px;height:76px}
-.brand{display:inline-flex;align-items:center;gap:7px;font-weight:700;font-size:17px;text-decoration:none;direction:ltr;white-space:nowrap}
+.brand{font-weight:700;font-size:17px;text-decoration:none;direction:ltr;white-space:nowrap;line-height:1;align-self:center}
 .brand svg.nico{width:24px;height:24px;flex:none;display:block}
 .brand .nc{color:#e0805f}
 .ver{font-size:11.5px;color:var(--mut);border:1px solid var(--line);border-radius:999px;padding:0 10px}
@@ -166,7 +166,7 @@ footer .req{color:var(--mut);direction:ltr;unicode-bidi:isolate}
 <body>
 
 <nav><div class="wrap">
-  <a class="brand" href="#"><svg class="nico" width="24" height="24" viewBox="0 0 64 64" aria-hidden="true"><rect x="8" y="8" width="48" height="48" rx="14" fill="#0a0d13"/><path d="M20 44V20L44 44V20" fill="none" stroke="#eef1f6" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="44" cy="18" r="3.5" fill="#e0805f"/></svg><span><span class="nc">N</span>ovaAgent</span></a>
+  <a class="brand" href="#"><span><span class="nc">N</span>ovaAgent</span></a>
   <span class="ver">v1.6.5</span>
   <div class="links"><a href="#install">نصب</a><a href="#features">قابلیت‌ها</a><a href="#faq">سؤالات</a><a class="navdl" href="#top">دانلود</a></div>
 </div></nav>
