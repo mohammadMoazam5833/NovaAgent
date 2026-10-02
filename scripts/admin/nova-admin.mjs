@@ -485,7 +485,7 @@ function doLogin(){
   var pw=el.value.replace(/[\u200B-\u200F\u202A-\u202E\u2066-\u2069\uFEFF]/g,"").replace(/[\u06F0-\u06F9\u0660-\u0669]/g,function(c){return String(c.charCodeAt(0)&15)}).trim();
   el.value=pw;
   post("/api/login",{password:pw}).then(function(r){
-    if(r.j.ok){boot()}else{renderLogin("رمز اشتباه است — با کیبورد انگلیسی تایپ کنید")}
+    if(r.j.ok){boot()}else{renderLogin(r.j.error||"رمز اشتباه است — با کیبورد انگلیسی تایپ کنید")}
   }).catch(function(){renderLogin("خطا در اتصال")});
 }
 function logout(){fetch("/api/logout").then(function(){renderLogin()})}
@@ -659,11 +659,6 @@ const server = http.createServer(async (req, res) => {
     if (p === "/api/login" && req.method === "POST") {
       const ip = req.socket.remoteAddress || "";
       const now = Date.now();
-      const rec = loginFails.get(ip) || { n: 0, t: 0 };
-      if (rec.n >= 10 && now - rec.t < 300000) {
-        json(res, 429, { error: "تلاش زیاد؛ ۵ دقیقه صبر کنید" });
-        return;
-      }
       const body = JSON.parse(await readBody(req));
       const attempt = cleanPw(body.password);
       if (attempt === ADMIN_PASSWORD) {
@@ -674,13 +669,18 @@ const server = http.createServer(async (req, res) => {
           "na_admin=" + exp + "." + sign(String(exp)) + "; HttpOnly; SameSite=Strict; Path=/; Max-Age=43200"
         );
         json(res, 200, { ok: true });
-      } else {
-        console.error("[admin] failed login: len=" + attempt.length + " ip=" + ip);
-        rec.n++;
-        rec.t = now;
-        loginFails.set(ip, rec);
-        json(res, 401, { error: "bad password" });
+        return;
       }
+      const rec = loginFails.get(ip) || { n: 0, t: 0 };
+      if (rec.n >= 10 && now - rec.t < 300000) {
+        json(res, 429, { error: "تلاش زیاد؛ ۵ دقیقه دیگر دوباره امتحان کنید" });
+        return;
+      }
+      console.error("[admin] failed login: len=" + attempt.length + " ip=" + ip);
+      rec.n++;
+      rec.t = now;
+      loginFails.set(ip, rec);
+      json(res, 401, { error: "bad password" });
       return;
     }
     if (p === "/api/logout") {
