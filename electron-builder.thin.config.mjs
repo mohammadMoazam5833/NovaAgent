@@ -157,13 +157,14 @@ const config = {
 
   deb: {
     depends: [
-      "libgtk-3-0",
+      "libgtk-3-0t64 | libgtk-3-0",
       "libnotify4",
       "libnss3",
       "libxss1",
       "libxtst6",
+      "libasound2t64 | libasound2",
+      "libatspi2.0-0t64 | libatspi2.0-0",
       "xdg-utils",
-      "libatspi2.0-0",
       "libuuid1",
     ],
     afterInstall: "electron/build-resources/after-install.tpl",
