@@ -315,7 +315,7 @@ const DOWNLOAD_MIME = {
 
 function serveDownload(req, res, urlPath) {
   try {
-    if (urlPath === "/download" || urlPath === "/download/") {
+    if (urlPath === "/nova" || urlPath === "/nova/") {
       res.writeHead(200, {
         "Content-Type": "text/html; charset=utf-8",
         "Cache-Control": "no-cache",
@@ -323,7 +323,7 @@ function serveDownload(req, res, urlPath) {
       createReadStream(join(DOWNLOAD_DIR, "index.html")).pipe(res);
       return;
     }
-    const name = decodeURIComponent(urlPath.slice("/download/".length));
+    const name = decodeURIComponent(urlPath.slice("/nova/".length));
     if (!name || name.includes("/") || name.includes("\\") || name.includes("..")) {
       res.writeHead(400);
       res.end("bad request");
@@ -358,14 +358,18 @@ const server = http.createServer((req, res) => {
       proxyCompanyLlm(req, res);
       return;
     }
-    if (urlPath === "/download" || urlPath.startsWith("/download/")) {
+    if (urlPath === "/nova" || urlPath.startsWith("/nova/")) {
       serveDownload(req, res, urlPath);
       return;
+    }
+    if (urlPath === "/download" || urlPath.startsWith("/download/")) {
+      res.writeHead(302, { Location: "/nova" });
+      return res.end();
     }
     if (urlPath === "/admin" || urlPath.startsWith("/admin/")) {
       const rest = req.url.slice(req.url.indexOf("/admin") + 6);
       req.url = rest.startsWith("/") ? rest : "/" + rest;
-      proxyReq(req, res, 18002);
+      proxyReq(req, res, 8002);
       return;
     }
     if (req.method === "POST" && urlPath === "/api/auth/login") {
