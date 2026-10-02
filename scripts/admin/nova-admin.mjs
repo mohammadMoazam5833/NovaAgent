@@ -10,7 +10,7 @@ import { promisify } from "node:util";
 
 const exec = promisify(execFile);
 const HOME = "/home/moazemi-gc";
-const PORT = 18002;
+const PORT = Number(process.env.ADMIN_PORT || 8002);
 const CUSTOMERS_FILE = path.join(HOME, ".nova-customers.json");
 const AUTH_FILE = path.join(HOME, ".local/share/opencode/auth.json");
 const TENANTS_DIR = path.join(HOME, "nova-tenants");
@@ -739,4 +739,4 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, "127.0.0.1", () => console.log("[admin] listening on 127.0.0.1:" + PORT));
+server.listen(PORT, "0.0.0.0", () => console.log("[admin] listening on 0.0.0.0:" + PORT));
