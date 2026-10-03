@@ -353,7 +353,7 @@ function serveDownload(req, res, urlPath) {
 const server = http.createServer((req, res) => {
   try {
     const urlPath = decodeURIComponent((req.url || "/").split("?")[0]);
-    console.log(`[req] ${req.method} ${urlPath}`);
+    console.log(`[req] ${(req.socket && req.socket.remoteAddress) || "-"} ${req.method} ${urlPath}`);
     if (urlPath === "/llmapi" || urlPath.startsWith("/llmapi/")) {
       proxyCompanyLlm(req, res);
       return;
@@ -435,7 +435,7 @@ server.on("upgrade", (req, socket, head) => {
     method: req.method,
     headers: { ...req.headers, host: `${BACKEND_HOST}:${targetPort}` },
   };
-  console.log(`[ws-upgrade] ${urlPath} -> :${targetPort}`);
+  console.log(`[ws-upgrade] ${req.url} from ${req.socket.remoteAddress || "-"}`);
   const upstream = http.request(opts);
   upstream.on("upgrade", (pres, psocket, phead) => {
     let resp = "HTTP/1.1 101 Switching Protocols\r\n";
