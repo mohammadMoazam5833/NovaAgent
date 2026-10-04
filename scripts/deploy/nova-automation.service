@@ -1,0 +1,14 @@
+[Unit]
+Description=NovaAgent automation sidecar service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=moazemi-gc
+ExecStart=/home/moazemi-gc/.local/bin/uvx --from openhands-automation==1.4.1 uvicorn openhands.automation.app:app --host 127.0.0.1 --port 18001
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

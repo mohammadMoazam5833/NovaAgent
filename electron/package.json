@@ -1,0 +1,8 @@
+{
+  "name": "novaagent",
+  "version": "1.0.0",
+  "private": true,
+  "description": "NovaAgent — local AI coding agent desktop app",
+  "author": "NovaAgent",
+  "main": "main.mjs"
+}
