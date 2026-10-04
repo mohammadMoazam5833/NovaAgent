@@ -1,0 +1,45 @@
+--- /home/moazemi-gc/.local/share/uv/tools/openhands-agent-server/lib/python3.12/site-packages/openhands/agent_server/conversation_router.py.bak-custhome	2026-09-30 23:49:43.331260404 +0330
++++ /home/moazemi-gc/.local/share/uv/tools/openhands-agent-server/lib/python3.12/site-packages/openhands/agent_server/conversation_router.py	2026-10-02 21:59:00.414947951 +0330
+@@ -201,7 +201,41 @@
+     import os as _os
+     _cust_home = (_os.environ.get("NOVAAGENT_CUSTOMER_HOME") or "C:\\Users\\USER").replace("\\\\", "\\").rstrip("\\/")
+     _wd = str(getattr(getattr(request, "workspace", None), "working_dir", "") or "")
+-    if not _wd.startswith(_cust_home):
++    _BS = chr(92)
++    _roots_all = []
++    try:
++        from sidecar_bridge.client import client_from_env as _cfe
++        _cli = _cfe()
++        if _cli is not None:
++            _hello = _cli.hello()
++            _hr = _hello.get("roots") if isinstance(_hello, dict) else None
++            if isinstance(_hr, list):
++                _roots_all = [str(r) for r in _hr if str(r).strip()]
++    except Exception:
++        _roots_all = []
++    if not _roots_all:
++        try:
++            import json as _json
++            _reg = _json.load(open(_os.path.expanduser("~/.nova-customers.json")))
++            _tenant = (_os.environ.get("NOVAAGENT_TENANT") or "").strip()
++            for _c in _reg.get("customers", []):
++                if _tenant and str(_c.get("name") or "") != _tenant:
++                    continue
++                for _r in (_c.get("roots") or []):
++                    _r2 = str(_r).rstrip("/" + _BS)
++                    if _r2:
++                        _roots_all.append(_r2)
++        except Exception:
++            _roots_all = []
++    def _norm(_p):
++        return str(_p).replace(_BS, "/").rstrip("/").lower()
++    def _under_roots(_p, _roots):
++        _pn = _norm(_p)
++        return any(_pn == _norm(_r) or _pn.startswith(_norm(_r) + "/") for _r in _roots)
++    if _roots_all:
++        if not _under_roots(_wd, _roots_all):
++            request = request.model_copy(update={"workspace": LocalWorkspace(working_dir=_roots_all[0])})
++    elif not _wd.startswith(_cust_home):
+         request = request.model_copy(update={"workspace": LocalWorkspace(working_dir=_cust_home)})
+     try:
+         info, is_new = await conversation_service.start_conversation(request)

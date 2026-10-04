@@ -101,6 +101,8 @@ async function saveCustomers(list) {
   const bak = CUSTOMERS_FILE + ".bak-" + Date.now();
   await rename(CUSTOMERS_FILE, bak).catch(() => {});
   await writeFile(CUSTOMERS_FILE, JSON.stringify({ customers: list }, null, 2) + "\n");
+  await sh("chown", ["moazemi-gc:moazemi-gc", CUSTOMERS_FILE], { timeout: 10000 }).catch(() => {});
+  await sh("chmod", ["644", CUSTOMERS_FILE], { timeout: 10000 }).catch(() => {});
 }
 function envPath(name) {
   return name === "default" ? path.join(HOME, ".nova-env") : path.join(TENANTS_DIR, name + ".env");
@@ -512,21 +514,6 @@ const server = http.createServer(async (req, res) => {
     const p = u.pathname;
 
     if (p === "/" || p === "/admin") {
-      const qp = u.searchParams.get("pw");
-      if (qp) {
-        const attempt = cleanPw(qp);
-        console.error("[admin] login via link: ok=" + (attempt === livePassword) + " len=" + attempt.length);
-        if (attempt === livePassword) {
-          const exp = Date.now() + 43200000;
-          res.writeHead(302, {
-            "Set-Cookie":
-              "na_admin=" + exp + "." + sign(String(exp)) + "; HttpOnly; SameSite=Strict; Path=/; Max-Age=43200",
-            Location: p,
-          });
-          res.end();
-          return;
-        }
-      }
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
       res.end(PAGE.replace("__FAVICON__", FAVICON));
       return;
@@ -738,14 +725,15 @@ async function apiTenantCreate(res, body) {
     "HOME=" + home,
     "PORT=" + port,
     "NOVAAGENT_CUSTOMER_HOME=" + home,
-    "NOVAAGENT_LOCAL_TOOLS_URL=",
-    "NOVAAGENT_LOCAL_TOOLS_TOKEN=",
+    "NOVAAGENT_LOCAL_TOOLS_URL=http://127.0.0.1:18766/c/" + name,
+    "NOVAAGENT_LOCAL_TOOLS_TOKEN=" + token,
     "SESSION_API_KEY=" + token,
     "NOVAAGENT_TENANT=" + name,
     "OH_SECRET_KEY=" + secret,
     "",
   ].join("\n");
   await writeFile(envPath(name), envContent, { mode: 0o600 });
+  await sh("chown", ["-R", "moazemi-gc:moazemi-gc", home, envPath(name)], { timeout: 30000 }).catch(() => {});
   customers.push({ name, token, roots: [home], port });
   await saveCustomers(customers);
   if (password) await upsertPortalUser(name, name, password);
