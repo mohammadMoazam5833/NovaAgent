@@ -69,9 +69,19 @@ export function startCustomerWorkspaceClient(options) {
           );
           sendText(JSON.stringify(response));
         },
-        onClose: () => {
+        onClose: (info) => {
           stopPinging();
           session = null;
+          // 4001/session_replaced means the same account was opened elsewhere.
+          // Retrying immediately turns that deliberate eviction into reconnect
+          // churn, with each old client fighting the new session.
+          if (info?.code === 4001) {
+            closed = true;
+            log(
+              "[customer-workspace-client] session replaced on the gateway; stopped reconnecting",
+            );
+            return;
+          }
           if (!closed && reconnect) scheduleReconnect();
         },
       });

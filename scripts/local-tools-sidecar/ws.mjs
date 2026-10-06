@@ -54,11 +54,14 @@ export function acceptWebSocket(req, socket, head, onMessage, opts = {}) {
     socket.write(encodeFrame(OP_TEXT, Buffer.from(String(text), "utf8")));
   };
 
-  const sendClose = () => {
+  const sendClose = (code = 1000, reason = "") => {
     if (closed || socket.destroyed) return;
     closed = true;
+    const text = reason ? Buffer.from(String(reason).slice(0, 123), "utf8") : Buffer.alloc(0);
+    const payload = Buffer.concat([Buffer.alloc(2), text]);
+    payload.writeUInt16BE(code, 0);
     try {
-      socket.write(encodeFrame(OP_CLOSE, Buffer.alloc(0)));
+      socket.write(encodeFrame(OP_CLOSE, payload));
     } catch {
       // ignore
     }
@@ -84,7 +87,7 @@ export function acceptWebSocket(req, socket, head, onMessage, opts = {}) {
       buffer = parsed.rest;
 
       if (parsed.opcode === OP_CLOSE) {
-        sendClose();
+        sendClose(1000);
         return;
       }
       if (parsed.opcode === OP_PING) {
@@ -167,7 +170,7 @@ export function encodeFrame(opcode, payload, opts = {}) {
  *   token?: string,
  *   headers?: Record<string, string>,
  *   onMessage?: (text: string, sendText: (s: string) => void) => void | Promise<void>,
- *   onClose?: () => void,
+ *   onClose?: (info?: { code?: number, reason?: string }) => void,
  * }} [options]
  * @returns {Promise<{ sendText: (text: string) => void, close: () => void }>}
  */
@@ -249,7 +252,7 @@ function attachMaskedClient(socket, head, options) {
     );
   };
 
-  const sendClose = () => {
+  const sendClose = (info = {}) => {
     if (closed || socket.destroyed) return;
     closed = true;
     try {
@@ -258,7 +261,7 @@ function attachMaskedClient(socket, head, options) {
       // ignore
     }
     socket.end();
-    options.onClose?.();
+    options.onClose?.(info);
   };
 
   const sendPing = () => {
@@ -279,7 +282,17 @@ function attachMaskedClient(socket, head, options) {
       buffer = parsed.rest;
 
       if (parsed.opcode === OP_CLOSE) {
-        sendClose();
+        // RFC 6455 puts the numeric close code and UTF-8 reason in the first
+        // close frame. The gateway uses 4001 for "session replaced", so this
+        // detail has to reach the caller instead of looking like a disconnect.
+        const payload = parsed.payload;
+        const closeInfo = payload.length >= 2
+          ? {
+              code: payload.readUInt16BE(0),
+              reason: payload.subarray(2).toString("utf8"),
+            }
+          : {};
+        sendClose(closeInfo);
         return;
       }
       if (parsed.opcode === OP_PING) {

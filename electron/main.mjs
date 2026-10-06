@@ -34,6 +34,7 @@ import {
   ipcMain,
   nativeImage,
   nativeTheme,
+  safeStorage,
   shell,
 } from "electron";
 import { chmodSync, existsSync, readFileSync, writeFileSync } from "node:fs";
@@ -443,7 +444,17 @@ function saveWorkspaceTokenToUserConfig(userConfigPath, token) {
   } catch {
     cfg = {};
   }
-  cfg.workspaceToken = token;
+  // Never leave a tenant token at rest in a world-readable JSON file when the
+  // OS provides a keyring-backed encryption service. Older plaintext copies are
+  // removed here as soon as a new login is persisted.
+  delete cfg.workspaceToken;
+  delete cfg.workspaceTokenEncrypted;
+  if (safeStorage.isEncryptionAvailable()) {
+    cfg.workspaceTokenEncrypted = safeStorage.encryptString(token).toString("base64");
+  } else {
+    console.warn("[desktop] safeStorage unavailable; storing workspace token in user-only app data");
+    cfg.workspaceToken = token;
+  }
   writeFileSync(userConfigPath, `${JSON.stringify(cfg, null, 2)}\n`, "utf8");
 }
 
@@ -454,10 +465,21 @@ function readWorkspaceTokenFromConfig() {
       try {
         if (!existsSync(p)) continue;
         const cfg = JSON.parse(readFileSync(p, "utf8"));
-        const t = String(cfg.workspaceToken || "").trim();
-        if (t) return t;
-      } catch {
-        // ignore malformed config files
+        const encrypted = String(cfg.workspaceTokenEncrypted || "").trim();
+        if (encrypted) {
+          if (!safeStorage.isEncryptionAvailable()) {
+            console.warn("[desktop] workspace token is encrypted, but safeStorage is unavailable");
+            continue;
+          }
+          const token = safeStorage.decryptString(Buffer.from(encrypted, "base64")).trim();
+          if (token) return token;
+          continue;
+        }
+        // Migration path for clients installed before safeStorage support.
+        const legacy = String(cfg.workspaceToken || "").trim();
+        if (legacy) return legacy;
+      } catch (err) {
+        console.warn("[desktop] failed to read workspace token config:", err?.message || err);
       }
     }
   } catch {
