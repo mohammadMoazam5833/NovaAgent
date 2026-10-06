@@ -1,5 +1,5 @@
 #!/bin/bash
-# NovaAgent deb after-install.
+# Dorj Agent deb after-install.
 
 if type update-alternatives >/dev/null 2>&1; then
     if [ -L '/usr/bin/${executable}' -a -e '/usr/bin/${executable}' -a "`readlink '/usr/bin/${executable}'`" != '/etc/alternatives/${executable}' ]; then
@@ -14,7 +14,7 @@ fi
 chmod 0755 '/opt/${sanitizedProductName}/${executable}' 2>/dev/null || true
 chmod 0755 '/opt/${sanitizedProductName}/${executable}.bin' 2>/dev/null || true
 
-# Refresh icon theme so NovaAgent logo shows in the Applications menu.
+# Refresh icon theme so Dorj Agent logo shows in the Applications menu.
 if hash gtk-update-icon-cache 2>/dev/null; then
     gtk-update-icon-cache -f -t /usr/share/icons/hicolor 2>/dev/null || true
 fi

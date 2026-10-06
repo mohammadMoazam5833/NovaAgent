@@ -9,7 +9,7 @@ import { shouldRenderEvent } from "#/components/conversation-events/chat/event-c
 import { LoadingSpinner } from "#/components/shared/loading-spinner";
 import { handleEventForUI } from "#/utils/handle-event-for-ui";
 import { OpenHandsEvent } from "#/types/agent-server/core";
-import NovaAgentLogo from "#/assets/branding/novaagent-logo.svg?react";
+import DorjAgentLogo from "#/assets/branding/dorj-agent-logo.svg?react";
 import { useInfiniteScroll } from "#/hooks/use-infinite-scroll";
 
 export default function SharedConversation() {
@@ -84,7 +84,7 @@ export default function SharedConversation() {
             className="flex-shrink-0"
             aria-label={t(I18nKey.BRANDING$OPENHANDS_LOGO)}
           >
-            <NovaAgentLogo width={36} height={36} className="text-white" />
+            <DorjAgentLogo width={36} height={36} className="text-white" />
           </Link>
           <div className="flex-1 min-w-0">
             <h1 className="text-xl font-medium mb-2">

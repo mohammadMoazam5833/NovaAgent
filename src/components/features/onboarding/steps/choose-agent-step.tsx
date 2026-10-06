@@ -39,7 +39,7 @@ function getAgentOptionIcon(id: string): AgentBrandIconKind {
 export function AgentOptionIcon({ id, muted }: { id: string; muted: boolean }) {
   const icon = getAgentOptionIcon(id);
 
-  // NovaAgent mark is square; dim via opacity so the cyan accent stays visible.
+  // Dorj Agent mark is square; dim via opacity so the cyan accent stays visible.
   if (icon === "openhands") {
     return (
       <AgentBrandIcon
@@ -75,7 +75,7 @@ function getAgentOptions(): AgentOption[] {
   return [
     {
       id: "openhands",
-      label: "NovaAgent",
+      label: "Dorj Agent",
       descriptionKey: I18nKey.ONBOARDING$AGENT_OPENHANDS_DESCRIPTION,
     },
     ...ACP_PROVIDERS.map<AgentOption>((provider) => ({

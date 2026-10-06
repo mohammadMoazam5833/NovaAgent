@@ -39,7 +39,7 @@ describe("useAppTitle", () => {
   it("returns the OSS app title outside conversations", async () => {
     const { result } = renderAppTitleHook();
 
-    await waitFor(() => expect(result.current).toBe("NovaAgent"));
+    await waitFor(() => expect(result.current).toBe("Dorj Agent"));
   });
 
   it("returns the conversation title with the OSS app name", async () => {
@@ -52,7 +52,7 @@ describe("useAppTitle", () => {
     const { result } = renderAppTitleHook();
 
     await waitFor(() =>
-      expect(result.current).toBe("My Conversation | NovaAgent"),
+      expect(result.current).toBe("My Conversation | Dorj Agent"),
     );
   });
 
@@ -63,7 +63,7 @@ describe("useAppTitle", () => {
 
     const { result } = renderAppTitleHook();
 
-    await waitFor(() => expect(result.current).toBe("NovaAgent"));
+    await waitFor(() => expect(result.current).toBe("Dorj Agent"));
   });
 
   it.each([
@@ -87,7 +87,7 @@ describe("useAppTitle", () => {
       const { result } = renderAppTitleHook();
 
       await waitFor(() =>
-        expect(result.current).toBe(`${emoji} My Conversation | NovaAgent`),
+        expect(result.current).toBe(`${emoji} My Conversation | Dorj Agent`),
       );
     },
   );
@@ -105,7 +105,7 @@ describe("useAppTitle", () => {
     const { result } = renderAppTitleHook();
 
     await waitFor(() =>
-      expect(result.current).toBe("🟢 My Conversation | NovaAgent"),
+      expect(result.current).toBe("🟢 My Conversation | Dorj Agent"),
     );
   });
 
@@ -119,7 +119,7 @@ describe("useAppTitle", () => {
     const { result } = renderAppTitleHook();
 
     await waitFor(() =>
-      expect(result.current).toBe("My Conversation | NovaAgent"),
+      expect(result.current).toBe("My Conversation | Dorj Agent"),
     );
   });
 });

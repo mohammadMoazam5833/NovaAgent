@@ -1,7 +1,7 @@
 {
-  "name": "@openhands/agent-canvas",
-  "version": "1.6.5",
-  "description": "NovaAgent UI - run AI coding agents with a visual interface",
+  "name": "@dorj/agent-canvas",
+  "version": "1.6.6",
+  "description": "Dorj Agent UI - run AI coding agents with a visual interface",
   "license": "MIT",
   "private": false,
   "type": "module",

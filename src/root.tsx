@@ -237,7 +237,7 @@ export const links: LinksFunction = () => [
 ];
 
 export const meta: MetaFunction = () => [
-  { title: "NovaAgent" },
+  { title: "Dorj Agent" },
   { name: "description", content: "Let's Start Building!" },
 ];
 

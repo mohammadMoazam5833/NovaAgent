@@ -1,4 +1,5 @@
 export type ColorThemeKey =
+  | "dorj-light"
   | "openhands-deepsea"
   | "openhands-neutral"
   | "openhands-neo";
@@ -22,20 +23,94 @@ export interface ColorThemeDefinition {
 
 // HSL channel strings for the neutral grey palette (H=0, S=0%, L=hex/255*100)
 // prettier-ignore
+/**
+ * Dorj platform palette: deep navy surfaces, lapis interaction, and restrained
+ * gold highlights. This is the default palette so Agent and Platform feel like
+ * one product family.
+ */
+const DORJ_LIGHT_HSL = {
+  50: "218.46 61.90% 12.35%",
+  100: "221.67 45.00% 15.69%",
+  200: "224.17 62.07% 22.75%",
+  300: "224.44 64.29% 32.94%",
+  400: "218.05 19.25% 41.76%",
+  500: "218.05 19.25% 41.76%",
+  600: "210.73 22.40% 64.12%",
+  700: "217.89 35.85% 89.61%",
+  800: "213.33 36.00% 95.10%",
+  850: "220.00 42.86% 97.25%",
+  900: "210.00 40.00% 98.04%",
+  950: "220.00 30.00% 96.08%",
+  975: "0 0% 100%",
+};
+
+const DORJ_LIGHT_SCALE = {
+  "--cool-grey-50": "#0C1A33",
+  "--cool-grey-100": "#16213A",
+  "--cool-grey-200": "#16295E",
+  "--cool-grey-300": "#1E3A8A",
+  "--cool-grey-400": "#56657F",
+  "--cool-grey-500": "#56657F",
+  "--cool-grey-600": "#8FA3B8",
+  "--cool-grey-700": "#DBE2EE",
+  "--cool-grey-800": "#EEF2F7",
+  "--cool-grey-850": "#F5F7FB",
+  "--cool-grey-900": "#F8FAFC",
+  "--cool-grey-925": "#F2F4F8",
+  "--cool-grey-950": "#F2F4F8",
+  "--cool-grey-975": "#FFFFFF",
+};
+
+const DORJ_LIGHT_HEROUI = {
+  "--heroui-background": DORJ_LIGHT_HSL[950],
+  "--heroui-background-foreground": DORJ_LIGHT_HSL[50],
+  "--heroui-foreground-50": DORJ_LIGHT_HSL[975],
+  "--heroui-foreground-100": DORJ_LIGHT_HSL[950],
+  "--heroui-foreground-200": DORJ_LIGHT_HSL[900],
+  "--heroui-foreground-300": DORJ_LIGHT_HSL[800],
+  "--heroui-foreground-400": DORJ_LIGHT_HSL[700],
+  "--heroui-foreground-500": DORJ_LIGHT_HSL[600],
+  "--heroui-foreground-600": DORJ_LIGHT_HSL[500],
+  "--heroui-foreground-700": DORJ_LIGHT_HSL[400],
+  "--heroui-foreground-800": DORJ_LIGHT_HSL[300],
+  "--heroui-foreground-900": DORJ_LIGHT_HSL[200],
+  "--heroui-foreground": DORJ_LIGHT_HSL[50],
+  "--heroui-content1": DORJ_LIGHT_HSL[975],
+  "--heroui-content1-foreground": DORJ_LIGHT_HSL[50],
+  "--heroui-content2": DORJ_LIGHT_HSL[950],
+  "--heroui-content2-foreground": DORJ_LIGHT_HSL[100],
+  "--heroui-content3": DORJ_LIGHT_HSL[900],
+  "--heroui-content3-foreground": DORJ_LIGHT_HSL[200],
+  "--heroui-content4": DORJ_LIGHT_HSL[800],
+  "--heroui-content4-foreground": DORJ_LIGHT_HSL[300],
+  "--heroui-default-50": DORJ_LIGHT_HSL[975],
+  "--heroui-default-100": DORJ_LIGHT_HSL[950],
+  "--heroui-default-200": DORJ_LIGHT_HSL[900],
+  "--heroui-default-300": DORJ_LIGHT_HSL[850],
+  "--heroui-default-400": DORJ_LIGHT_HSL[800],
+  "--heroui-default-500": DORJ_LIGHT_HSL[700],
+  "--heroui-default-600": DORJ_LIGHT_HSL[600],
+  "--heroui-default-700": DORJ_LIGHT_HSL[500],
+  "--heroui-default-800": DORJ_LIGHT_HSL[400],
+  "--heroui-default-900": DORJ_LIGHT_HSL[300],
+  "--heroui-default-foreground": DORJ_LIGHT_HSL[50],
+  "--heroui-default": DORJ_LIGHT_HSL[800],
+};
+
 const NEUTRAL_HSL = {
-  50:  "0 0% 96.86%", // #F7F7F7
+  50: "0 0% 96.86%", // #F7F7F7
   100: "0 0% 92.55%", // #ECECEC
   200: "0 0% 86.27%", // #DCDCDC
   300: "0 0% 74.51%", // #BEBEBE
   400: "0 0% 59.22%", // #979797
-  500: "0 0% 45.1%",  // #737373
+  500: "0 0% 45.1%", // #737373
   600: "0 0% 33.73%", // #565656
-  700: "0 0% 25.1%",  // #404040
+  700: "0 0% 25.1%", // #404040
   800: "0 0% 19.22%", // #313131
   850: "0 0% 15.69%", // #282828
   900: "0 0% 12.55%", // #202020
-  950: "0 0% 9.41%",  // #181818
-  975: "0 0% 6.27%",  // #101010
+  950: "0 0% 9.41%", // #181818
+  975: "0 0% 6.27%", // #101010
 };
 
 const NEUTRAL_SCALE = {
@@ -107,6 +182,17 @@ const NEO_WHITE_BUTTON_TOKENS: Record<
 };
 
 export const COLOR_THEMES: Record<ColorThemeKey, ColorThemeDefinition> = {
+  "dorj-light": {
+    label: "Dorj",
+    scale: DORJ_LIGHT_SCALE,
+    heroui: DORJ_LIGHT_HEROUI,
+    tokens: {
+      "--oh-color-primary": "#1E3A8A",
+      "--oh-accent": "#1E3A8A",
+      "--oh-warning": "#E8A317",
+    },
+  },
+
   "openhands-deepsea": {
     label: "DeepSea",
     // Matches the values already set by index.css; included so switching back
@@ -183,7 +269,7 @@ export const COLOR_THEMES: Record<ColorThemeKey, ColorThemeDefinition> = {
   },
 };
 
-export const DEFAULT_COLOR_THEME: ColorThemeKey = "openhands-neutral";
+export const DEFAULT_COLOR_THEME: ColorThemeKey = "dorj-light";
 
 export const AVAILABLE_COLOR_THEMES = Object.entries(COLOR_THEMES).map(
   ([key, def]) => ({ key: key as ColorThemeKey, label: def.label }),
@@ -196,6 +282,8 @@ export function readPersistedColorTheme(): ColorThemeKey {
   if (typeof window === "undefined") return DEFAULT_COLOR_THEME;
   try {
     const stored = window.localStorage.getItem(STORAGE_KEY);
+    // Neutral was the previous default; migrate it to the unified Dorj palette.
+    if (stored === "openhands-neutral") return DEFAULT_COLOR_THEME;
     if (stored && stored in COLOR_THEMES) return stored as ColorThemeKey;
   } catch {
     // ignore quota / privacy-mode failures

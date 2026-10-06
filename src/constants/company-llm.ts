@@ -22,4 +22,4 @@ export const COMPANY_LLM_SESSION_STORAGE_KEY = "novaagent-company-llm-session";
  * Fixed local agent-server LLM profile name owned by company-managed mode.
  * Must match agent-server `^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$` (no spaces).
  */
-export const COMPANY_LLM_MANAGED_PROFILE_NAME = "NovaAgent-Company";
+export const COMPANY_LLM_MANAGED_PROFILE_NAME = "DorjAgent-Company";

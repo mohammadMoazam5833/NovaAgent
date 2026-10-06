@@ -71,7 +71,7 @@ export class AgentServerUnsupportedVersionError extends AgentServerUnavailableEr
   readonly requiredVersion = MINIMUM_COMPATIBLE_AGENT_SERVER_VERSION;
 
   constructor(actualVersion: string) {
-    const message = `NovaAgent requires agent-server ${MINIMUM_COMPATIBLE_AGENT_SERVER_VERSION} or newer; this backend is running ${actualVersion}. Please upgrade the agent-server backend.`;
+    const message = `Dorj Agent requires agent-server ${MINIMUM_COMPATIBLE_AGENT_SERVER_VERSION} or newer; this backend is running ${actualVersion}. Please upgrade the agent-server backend.`;
     super(message);
     this.name = "AgentServerUnsupportedVersionError";
     this.message = message;
@@ -88,7 +88,7 @@ export class AgentServerUnknownVersionError extends AgentServerUnavailableError 
     const reported = actualVersion ? ` It reported "${actualVersion}".` : "";
     const message =
       `Could not determine this backend's agent-server version.${reported} ` +
-      `NovaAgent requires agent-server ${MINIMUM_COMPATIBLE_AGENT_SERVER_VERSION} ` +
+      `Dorj Agent requires agent-server ${MINIMUM_COMPATIBLE_AGENT_SERVER_VERSION} ` +
       "or newer, but this backend did not return a valid version from " +
       "/server_info. Restart or rebuild the agent-server backend, then try again.";
     super(message);

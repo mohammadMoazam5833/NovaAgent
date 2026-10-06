@@ -2,7 +2,7 @@
   "name": "novaagent",
   "version": "1.0.0",
   "private": true,
-  "description": "NovaAgent — local AI coding agent desktop app",
-  "author": "NovaAgent",
+  "description": "Dorj Agent — local AI coding agent desktop app",
+  "author": "Dorj Agent",
   "main": "main.mjs"
 }

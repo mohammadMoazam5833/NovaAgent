@@ -3,28 +3,28 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NovaAgent</title>
+  <title>Dorj Agent</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --oh-background: #0b0e14;
-      --oh-foreground: #eef2f7;
-      --oh-muted: #a3b0c4;
-      --oh-text-dim: #7e8a9e;
-      --oh-text-subtle: #626d82;
-      --oh-border-subtle: #383f50;
-      --oh-surface-deep: #05070a;
+      --oh-background: #0B1B3A;
+      --oh-foreground: #E8EEFB;
+      --oh-muted: rgba(226, 232, 245, 0.62);
+      --oh-text-dim: rgba(226, 232, 245, 0.48);
+      --oh-text-subtle: rgba(226, 232, 245, 0.42);
+      --oh-border-subtle: rgba(180, 198, 236, 0.16);
+      --oh-surface-deep: #050F22;
       --oh-color-danger: #e76a5e;
-      --nova-coral: #d97757;
-      --nova-violet: #8b7cf6;
+      --dorj-gold: #F4C24B;
+      --dorj-lapis: #1E3A8A;
     }
 
     html, body {
       width: 100%; height: 100%;
       background:
-        radial-gradient(110% 80% at 50% -15%, rgba(217, 119, 87, 0.11), transparent 55%),
-        radial-gradient(85% 65% at 88% 112%, rgba(139, 124, 246, 0.10), transparent 55%),
+        radial-gradient(110% 80% at 50% -15%, rgba(244, 194, 75, 0.10), transparent 55%),
+        radial-gradient(85% 65% at 88% 112%, rgba(30, 58, 138, 0.45), transparent 55%),
         var(--oh-background);
       font-family:
         "Segoe UI", "SF Pro Display", -apple-system, BlinkMacSystemFont,
@@ -54,7 +54,7 @@
     }
     .halo {
       position: absolute; inset: -20px; border-radius: 50%;
-      background: conic-gradient(from 140deg, var(--nova-coral), var(--nova-violet), var(--nova-coral));
+      background: conic-gradient(from 140deg, var(--dorj-gold), var(--dorj-lapis), var(--dorj-gold));
       filter: blur(28px); opacity: 0.20;
       animation: breathe 3.4s ease-in-out infinite;
     }
@@ -64,7 +64,7 @@
     }
     .mark { width: 60px; height: 60px; color: var(--oh-foreground); position: relative; }
     .mark-frame { fill: none; stroke: currentColor; stroke-width: 2.25; opacity: 0.94; }
-    .mark-accent { fill: var(--nova-coral); }
+    .mark-accent { fill: var(--dorj-gold); }
 
     h1 {
       font-size: 25px; font-weight: 650; letter-spacing: -0.45px;
@@ -88,7 +88,7 @@
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       background: linear-gradient(90deg,
         var(--oh-text-dim) 0%, var(--oh-text-dim) 38%,
-        var(--nova-coral) 50%, var(--nova-violet) 58%,
+        var(--dorj-gold) 50%, var(--dorj-lapis) 58%,
         var(--oh-text-dim) 70%, var(--oh-text-dim) 100%);
       background-size: 200% 100%;
       -webkit-background-clip: text; background-clip: text;
@@ -157,21 +157,30 @@
   <div class="container">
     <div class="logo-wrap">
       <div class="halo"></div>
-      <!-- NovaAgent mark -->
-      <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
-        <rect class="mark-frame" x="8" y="8" width="48" height="48" rx="14" />
-        <path d="M20 44V20L44 44V20" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-        <circle class="mark-accent" cx="44" cy="18" r="3.5" />
+      <!-- Dorj Agent mark -->
+      <svg class="mark" viewBox="0 0 48 48" aria-hidden="true">
+        <defs>
+          <linearGradient id="dorj-splash-bg" x1="4" y1="4" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#1E3A8A"/>
+            <stop offset="1" stop-color="#0B1B3A"/>
+          </linearGradient>
+          <linearGradient id="dorj-splash-letter" x1="16" y1="10" x2="34" y2="38" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#F4C24B"/>
+            <stop offset="1" stop-color="#E8A317"/>
+          </linearGradient>
+        </defs>
+        <rect x="3" y="3" width="42" height="42" rx="12" fill="url(#dorj-splash-bg)" stroke="rgba(244,194,75,.35)" stroke-width="1.2"/>
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M17 12h8c11.1 0 18 5.15 18 12s-6.9 12-18 12h-8V12Zm7 6v12h2c5.75 0 9.25-2.26 9.25-6S31.75 18 26 18h-2Z" fill="url(#dorj-splash-letter)"/>
       </svg>
     </div>
-    <h1>NovaAgent</h1>
-    <p class="tagline">Your AI development workspace</p>
+    <h1>Dorj Agent</h1>
+    <p class="tagline">AI development workspace</p>
     <div class="spinner-wrap">
       <svg class="spinner" viewBox="0 0 66 66" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="ring" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#d97757" />
-            <stop offset="100%" stop-color="#8b7cf6" />
+            <stop offset="0%" stop-color="#F4C24B" />
+            <stop offset="100%" stop-color="#1E3A8A" />
           </linearGradient>
         </defs>
         <circle cx="33" cy="33" r="28" stroke="url(#ring)" stroke-width="5.5"
@@ -180,7 +189,7 @@
     </div>
     <p id="status" class="status">Starting services<span class="dots"></span></p>
     <p class="hint">
-      Connecting to your NovaAgent workspace.<br />
+      Connecting to your Dorj Agent workspace.<br />
       First launch may take a few minutes.
     </p>
     <div class="actions">

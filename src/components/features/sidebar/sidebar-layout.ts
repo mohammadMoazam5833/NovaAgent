@@ -23,7 +23,7 @@ export function sidebarHeaderRowClassName(collapsed: boolean): string {
 }
 
 export const SIDEBAR_ROW_INTERACTIVE_CLASS = {
-  active: "bg-tertiary text-foreground font-normal",
+  active: "bg-white/10 text-[var(--dorj-gold-soft)] font-normal",
   idle: "text-[var(--oh-muted)] hover:text-foreground hover:bg-[var(--oh-surface-raised)]",
 } as const;
 
@@ -55,7 +55,7 @@ export function sidebarCollapsedIconBgClassName(active: boolean): string {
     "pointer-events-none absolute inset-0 z-0 rounded-md",
     navInteractiveTransitionClassName,
     active
-      ? "bg-tertiary"
+      ? "bg-white/10"
       : "bg-transparent group-hover:bg-[var(--oh-surface-raised)]",
   );
 }
@@ -67,7 +67,7 @@ export function sidebarCollapsedIconGlyphClassName(active: boolean): string {
     // Do not set a narrow `w-[18px]` here — with horizontal padding it shrinks the glyph.
     "relative z-[1] flex h-full w-full items-center justify-start pl-2.5 [&_svg]:shrink-0",
     active
-      ? "text-foreground font-normal"
+      ? "text-[var(--dorj-gold-soft)] font-normal"
       : "text-[var(--oh-muted)] group-hover:text-foreground",
   );
 }

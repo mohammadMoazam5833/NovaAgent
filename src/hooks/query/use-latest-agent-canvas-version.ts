@@ -3,7 +3,7 @@ import { fetchLatestAgentCanvasVersion } from "#/api/agent-canvas-updates";
 import { APP_UPDATE_QUERY_KEYS } from "./query-keys";
 
 /**
- * Latest published NovaAgent version (npm `latest` dist-tag).
+ * Latest published Dorj Agent version (npm `latest` dist-tag).
  *
  * Information-only: failures must stay quiet (`meta.disableToast`) — the
  * settings update card renders them inline. The card's "Check for updates"

@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import NovaAgentLogo from "#/assets/branding/novaagent-logo.svg?react";
+import DorjAgentLogo from "#/assets/branding/dorj-agent-logo.svg?react";
 import { NavigationLink } from "#/components/shared/navigation-link";
 import { I18nKey } from "#/i18n/declaration";
 import { PRODUCT_NAME } from "#/constants/brand";
@@ -17,7 +17,7 @@ export type OpenHandsLogoButtonProps = {
 };
 
 /**
- * Home / brand mark in the sidebar — NovaAgent geometric N mark.
+ * Home / brand mark in the sidebar — Dorj Agent geometric N mark.
  */
 export function OpenHandsLogoButton({
   className,
@@ -36,7 +36,7 @@ export function OpenHandsLogoButton({
       title={PRODUCT_NAME}
       className={cn(className)}
     >
-      <NovaAgentLogo
+      <DorjAgentLogo
         width={logoWidth}
         height={logoHeight}
         className={cn("shrink-0 text-foreground", logoClassName)}

@@ -1,6 +1,6 @@
 /**
- * Thin "NovaAgent Client" pack — Electron shell only.
- * Connects to a remote NovaAgent / agent-canvas server; does not ship
+ * Thin "Dorj Agent Client" pack — Electron shell only.
+ * Connects to a remote Dorj Agent / agent-canvas server; does not ship
  * Python, uv, node runtime, or the static SPA (those live on the server).
  *
  * Build:
@@ -26,13 +26,13 @@ const rootPackageJson = JSON.parse(
 
 const config = {
   appId: "dev.openhands.novaagent.client",
-  productName: "NovaAgent Client",
-  copyright: `Copyright © ${new Date().getFullYear()} NovaAgent`,
+  productName: "Dorj Agent Client",
+  copyright: `Copyright © ${new Date().getFullYear()} Dorj Agent`,
   extraMetadata: {
     name: "novaagent-client",
     version: rootPackageJson.version,
     description:
-      "NovaAgent Client — connects to a remote NovaAgent server (no local agent-server).",
+      "Dorj Agent Client — connects to a remote Dorj Agent server (no local agent-server).",
   },
 
   directories: {
@@ -91,13 +91,13 @@ const config = {
   },
 
   dmg: {
-    title: "NovaAgent Client",
+    title: "Dorj Agent Client",
     contents: [
       { x: 130, y: 220 },
       { x: 410, y: 220, type: "link", path: "/Applications" },
     ],
     window: { width: 540, height: 380 },
-    artifactName: "NovaAgent-Client-${version}-${arch}.${ext}",
+    artifactName: "Dorj Agent-Client-${version}-${arch}.${ext}",
   },
 
   win: {
@@ -115,33 +115,33 @@ const config = {
     deleteAppDataOnUninstall: true,
     createDesktopShortcut: true,
     createStartMenuShortcut: true,
-    shortcutName: "NovaAgent Client",
+    shortcutName: "Dorj Agent Client",
     installerIcon: "icon.ico",
     uninstallerIcon: "icon.ico",
     installerHeaderIcon: "icon.ico",
-    artifactName: "NovaAgent-Client-Setup-${version}.${ext}",
+    artifactName: "Dorj Agent-Client-Setup-${version}.${ext}",
   },
 
   portable: {
-    artifactName: "NovaAgent-Client-Portable-${version}.${ext}",
+    artifactName: "Dorj Agent-Client-Portable-${version}.${ext}",
   },
 
   linux: {
-    maintainer: "NovaAgent <novaagent@openhands.dev>",
+    maintainer: "Dorj Agent <novaagent@openhands.dev>",
     target: [
       { target: "deb", arch: ["x64"] },
       { target: "AppImage", arch: ["x64"] },
     ],
     category: "Development",
-    synopsis: "NovaAgent remote client",
+    synopsis: "Dorj Agent remote client",
     description:
-      "NovaAgent Client connects to a remote NovaAgent server. Agent tools and workspaces run on the server, not on this machine.",
+      "Dorj Agent Client connects to a remote Dorj Agent server. Agent tools and workspaces run on the server, not on this machine.",
     desktop: {
       entry: {
-        Name: "NovaAgent Client",
-        Comment: "Connect to a remote NovaAgent server",
+        Name: "Dorj Agent Client",
+        Comment: "Connect to a remote Dorj Agent server",
         Categories: "Development;IDE;",
-        StartupWMClass: "NovaAgent Client",
+        StartupWMClass: "Dorj Agent Client",
         Terminal: "false",
         Icon: "novaagent",
       },
@@ -152,7 +152,7 @@ const config = {
       "--disable-setuid-sandbox",
       "--disable-gpu",
     ],
-    artifactName: "NovaAgent-Client-${version}-${arch}.${ext}",
+    artifactName: "Dorj Agent-Client-${version}-${arch}.${ext}",
   },
 
   deb: {

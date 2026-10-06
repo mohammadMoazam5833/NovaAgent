@@ -1,5 +1,5 @@
 /**
- * electron-builder configuration for the NovaAgent desktop app.
+ * electron-builder configuration for the Dorj Agent desktop app.
  *
  * `directories.app: 'electron'` tells electron-builder to use electron/package.json
  * as the app manifest (with `"main": "main.mjs"`). This sidesteps the root
@@ -178,7 +178,7 @@ async function disableLinuxChromiumSandbox(context) {
 
   await rename(binaryPath, wrappedPath);
   const wrapper = `#!/bin/bash
-# NovaAgent Linux launcher — Chromium sandbox cannot use SUID inside AppImage.
+# Dorj Agent Linux launcher — Chromium sandbox cannot use SUID inside AppImage.
 DIR="$(cd "$(dirname "$0")" && pwd)"
 export ELECTRON_DISABLE_SANDBOX=1
 export ELECTRON_NO_SANDBOX=1
@@ -205,7 +205,7 @@ async function afterPackHook(context) {
 /**
  * Ensure the .deb ships every hicolor size + a pixmaps fallback.
  * GNOME Applications menus often ignore a lone 1024×1024 icon and show a
- * generic gear instead — 16..512 must be present as novaagent.png.
+ * generic gear instead — 16..512 must be present as dorj-agent.png.
  */
 async function injectDebMenuIcons(buildResult) {
   const iconsDir = join(repoRoot, "electron/build-resources/icons");
@@ -222,7 +222,7 @@ async function injectDebMenuIcons(buildResult) {
   for (const artifactPath of buildResult.artifactPaths ?? []) {
     if (!artifactPath.endsWith(".deb")) continue;
 
-    const work = mkdtempSync(join(tmpdir(), "novaagent-deb-icons-"));
+    const work = mkdtempSync(join(tmpdir(), "dorj-agent-deb-icons-"));
     try {
       const extract = spawnSync("dpkg-deb", ["-R", artifactPath, work], {
         encoding: "utf8",
@@ -242,7 +242,7 @@ async function injectDebMenuIcons(buildResult) {
           "apps",
         );
         await mkdir(destDir, { recursive: true });
-        await cp(join(iconsDir, file), join(destDir, "novaagent.png"));
+        await cp(join(iconsDir, file), join(destDir, "dorj-agent.png"));
       }
 
       // Older menus / some DEs still look under pixmaps.
@@ -251,7 +251,7 @@ async function injectDebMenuIcons(buildResult) {
       const pixmapSrc = existsSync(join(iconsDir, "48x48.png"))
         ? join(iconsDir, "48x48.png")
         : join(iconsDir, "128x128.png");
-      await cp(pixmapSrc, join(pixmapDir, "novaagent.png"));
+      await cp(pixmapSrc, join(pixmapDir, "dorj-agent.png"));
 
       const rebuilt = `${artifactPath}.icons-fixed`;
       const build = spawnSync("dpkg-deb", ["-b", work, rebuilt], {
@@ -359,8 +359,8 @@ function getDirSizeBytes(dir) {
 /** @type {import('electron-builder').Configuration} */
 const config = {
   appId: "dev.novaagent.app",
-  productName: "NovaAgent",
-  copyright: "Copyright © 2026 NovaAgent",
+  productName: "Dorj Agent",
+  copyright: "Copyright © 2026 Dorj Agent",
 
   // Stamp the packaged app with the released version (see rootPackageJson
   // note above).
@@ -369,7 +369,7 @@ const config = {
   // Treat electron/ as the app root. electron/package.json provides the
   // Electron entry point without touching the npm-published root package.json.
   // `buildResources` points at electron/build-resources so electron-builder
-  // can auto-discover icon.png (1024×1024 NovaAgent app icon)
+  // can auto-discover icon.png (1024×1024 Dorj Agent app icon)
   // and generate the platform-specific icon.icns / icon.ico from it.
   directories: {
     app: "electron",
@@ -388,7 +388,7 @@ const config = {
   afterPack: afterPackHook,
 
   // Inject multi-size hicolor + pixmaps icons into the finished .deb so the
-  // Applications menu shows the NovaAgent logo (not a generic gear).
+  // Applications menu shows the Dorj Agent logo (not a generic gear).
   afterAllArtifactBuild: injectDebMenuIcons,
 
   // Files included in the packaged app.
@@ -470,16 +470,16 @@ const config = {
   },
 
   dmg: {
-    title: "NovaAgent",
+    title: "Dorj Agent",
     contents: [
       { x: 130, y: 220 },
       { x: 410, y: 220, type: "link", path: "/Applications" },
     ],
     window: { width: 540, height: 380 },
-    // Default is "NovaAgent-<version>-<arch>.dmg"; GitHub release assets
+    // Default is "Dorj Agent-<version>-<arch>.dmg"; GitHub release assets
     // mangle spaces, so keep the asset name literal (matches the nsis
     // convention). ${version}/${arch}/${ext} are electron-builder macros.
-    artifactName: "NovaAgent-${version}-${arch}.${ext}",
+    artifactName: "Dorj Agent-${version}-${arch}.${ext}",
   },
 
   // ── Windows ────────────────────────────────────────────────────────────────
@@ -501,23 +501,23 @@ const config = {
     allowToChangeInstallationDirectory: false,
     createDesktopShortcut: true,
     createStartMenuShortcut: true,
-    shortcutName: "NovaAgent",
+    shortcutName: "Dorj Agent",
     installerIcon: "icon.ico",
     uninstallerIcon: "icon.ico",
     installerHeaderIcon: "icon.ico",
-    // The default artifact name is "NovaAgent Setup <version>.exe";
+    // The default artifact name is "Dorj Agent Setup <version>.exe";
     // GitHub release assets mangle spaces, so ship a space-free name.
     // ${version}/${ext} are electron-builder macros, not JS interpolation.
-    artifactName: "NovaAgent-Setup-${version}.${ext}",
+    artifactName: "Dorj Agent-Setup-${version}.${ext}",
   },
 
   portable: {
-    artifactName: "NovaAgent-Portable-${version}.${ext}",
+    artifactName: "Dorj Agent-Portable-${version}.${ext}",
   },
 
   // ── Linux ──────────────────────────────────────────────────────────────────
   linux: {
-    maintainer: "NovaAgent <novaagent@openhands.dev>",
+    maintainer: "Dorj Agent <novaagent@openhands.dev>",
     target: [
       // Prefer .deb for one-click install (App Center / Software).
       // AppImage remains available for portable runs.
@@ -525,21 +525,21 @@ const config = {
       { target: "AppImage", arch: ["x64"] },
     ],
     category: "Development",
-    synopsis: "NovaAgent local coding agent",
+    synopsis: "Dorj Agent local coding agent",
     description:
-      "NovaAgent desktop app — local AI coding agent with chat, files, terminal, and browser tools.",
+      "Dorj Agent desktop app — local AI coding agent with chat, files, terminal, and browser tools.",
     desktop: {
       entry: {
-        Name: "NovaAgent",
+        Name: "Dorj Agent",
         Comment: "Local coding agent control center",
         Categories: "Development;IDE;",
-        StartupWMClass: "NovaAgent",
+        StartupWMClass: "Dorj Agent",
         Terminal: "false",
         Icon: "novaagent",
       },
     },
     // Multi-size PNGs in build-resources/icons (16..1024) so GNOME/KDE
-    // Applications menus show the NovaAgent logo, not a generic placeholder.
+    // Applications menus show the Dorj Agent logo, not a generic placeholder.
     // Path is relative to directories.buildResources.
     icon: "icons",
     executableArgs: [
@@ -547,7 +547,7 @@ const config = {
       "--disable-setuid-sandbox",
       "--disable-gpu",
     ],
-    artifactName: "NovaAgent-${version}-${arch}.${ext}",
+    artifactName: "Dorj Agent-${version}-${arch}.${ext}",
   },
 
   deb: {

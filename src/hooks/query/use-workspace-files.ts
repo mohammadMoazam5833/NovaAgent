@@ -111,7 +111,7 @@ function useLocalWorkspaceFiles(enabled: boolean): WorkspaceFilesResult {
  * changes — the same data source the diff view uses (and the only
  * runtime-workspace transport the cloud API proxies, alongside git diff and
  * single-file read). `git status` reports created/modified/untracked files,
- * which covers the common NovaAgent case (a fresh or agent-authored
+ * which covers the common Dorj Agent case (a fresh or agent-authored
  * workspace). It intentionally does NOT enumerate unchanged tracked files —
  * the cloud API has no full-workspace listing endpoint — so a conversation
  * attached to a large existing repo shows changed files rather than the whole

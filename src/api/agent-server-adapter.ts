@@ -202,10 +202,10 @@ export function buildRuntimeServicesSystemSuffix(): string | undefined {
   lines.push("<RUNTIME_SERVICES>");
   if (info.mode) {
     lines.push(
-      `You are running inside a NovaAgent stack started in '${info.mode}' mode.`,
+      `You are running inside a Dorj Agent stack started in '${info.mode}' mode.`,
     );
   } else {
-    lines.push("You are running inside a NovaAgent stack.");
+    lines.push("You are running inside a Dorj Agent stack.");
   }
   lines.push(
     "The following services are reachable from your sandbox. URLs are written",
