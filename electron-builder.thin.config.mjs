@@ -97,7 +97,7 @@ const config = {
       { x: 410, y: 220, type: "link", path: "/Applications" },
     ],
     window: { width: 540, height: 380 },
-    artifactName: "Dorj Agent-Client-${version}-${arch}.${ext}",
+    artifactName: "Dorj-Agent-Client-${version}-${arch}.${ext}",
   },
 
   win: {
@@ -119,7 +119,7 @@ const config = {
     installerIcon: "icon.ico",
     uninstallerIcon: "icon.ico",
     installerHeaderIcon: "icon.ico",
-    artifactName: "Dorj Agent-Client-Setup-${version}.${ext}",
+    artifactName: "Dorj-Agent-Client-Setup-${version}-x64.${ext}",
   },
 
   portable: {
@@ -127,7 +127,7 @@ const config = {
   },
 
   linux: {
-    maintainer: "Dorj Agent <novaagent@openhands.dev>",
+    maintainer: "Dorj Agent <client@isigpu.local>",
     target: [
       { target: "deb", arch: ["x64"] },
       { target: "AppImage", arch: ["x64"] },
@@ -152,7 +152,7 @@ const config = {
       "--disable-setuid-sandbox",
       "--disable-gpu",
     ],
-    artifactName: "Dorj Agent-Client-${version}-${arch}.${ext}",
+    artifactName: "Dorj-Agent-Client-${version}-${arch}.${ext}",
   },
 
   deb: {
