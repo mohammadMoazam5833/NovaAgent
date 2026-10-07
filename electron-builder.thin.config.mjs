@@ -25,11 +25,11 @@ const rootPackageJson = JSON.parse(
 );
 
 const config = {
-  appId: "dev.openhands.novaagent.client",
+  appId: "dev.dorjagent.client",
   productName: "Dorj Agent Client",
   copyright: `Copyright © ${new Date().getFullYear()} Dorj Agent`,
   extraMetadata: {
-    name: "novaagent-client",
+    name: "dorj-agent-client",
     version: rootPackageJson.version,
     description:
       "Dorj Agent Client — connects to a remote Dorj Agent server (no local agent-server).",
@@ -143,7 +143,7 @@ const config = {
         Categories: "Development;IDE;",
         StartupWMClass: "Dorj Agent Client",
         Terminal: "false",
-        Icon: "novaagent",
+        Icon: "dorj-agent",
       },
     },
     icon: "icons",

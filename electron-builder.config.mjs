@@ -358,7 +358,7 @@ function getDirSizeBytes(dir) {
 
 /** @type {import('electron-builder').Configuration} */
 const config = {
-  appId: "dev.novaagent.app",
+  appId: "dev.dorjagent.app",
   productName: "Dorj Agent",
   copyright: "Copyright © 2026 Dorj Agent",
 
@@ -535,7 +535,7 @@ const config = {
         Categories: "Development;IDE;",
         StartupWMClass: "Dorj Agent",
         Terminal: "false",
-        Icon: "novaagent",
+        Icon: "dorj-agent",
       },
     },
     // Multi-size PNGs in build-resources/icons (16..1024) so GNOME/KDE

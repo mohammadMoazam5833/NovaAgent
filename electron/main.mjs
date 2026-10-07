@@ -230,7 +230,7 @@ function isThinClientPack() {
     const pkg = JSON.parse(
       readFileSync(join(__dirname, "package.json"), "utf8"),
     );
-    return pkg.name === "novaagent-client";
+    return pkg.name === "dorj-agent-client";
   } catch {
     return false;
   }
