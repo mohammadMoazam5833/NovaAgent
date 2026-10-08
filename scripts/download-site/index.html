@@ -117,7 +117,7 @@ h2{font-size:clamp(26px,3.4vw,34px);font-weight:800}
 .panel.on{display:block;animation:fadein .4s var(--ease)}
 @keyframes fadein{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
 .step{position:relative;display:flex;gap:16px;padding-bottom:26px}
-.step>div{flex:1;min-width:0}.cmd{max-width:100%}
+.step>div{flex:1;min-width:0}.cmd{max-width:100%}.install>*{min-width:0}
 .step:not(:last-child)::before{content:"";position:absolute;inset-inline-start:15px;top:34px;bottom:2px;width:1px;background:linear-gradient(var(--line),transparent)}
 .num{flex:none;width:31px;height:31px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:13px;background:var(--s2);border:1px solid var(--line);color:var(--coral)}
 .step b{display:block;font-size:15.5px}
@@ -295,7 +295,7 @@ export NOVA_CA_BUNDLE=$PWD/isigpu-root-ca.crt</code></div><p>در Windows به �
           <div class="cmd"><button class="copy" type="button">کپی</button><code>dorj-agent login -u USERNAME</code></div></div></div>
         <div class="step"><span class="num">۴</span><div><b>اولین کار روی پروژه</b><p>به پوشه‌ی پروژه بروید و کار را بخواهید تا دستیار همان‌جا کد بنویسد و تست بگیرد</p>
           <div class="cmd"><button class="copy" type="button">کپی</button><code>cd my-project
-dorj-agent run "تست‌ها را اجرا کن و خطاها را رفع کن"</code></div></div></div>
+dorj-agent run "run the tests and fix the failures"</code></div><p>درخواست را می‌توانید فارسی هم بنویسید</p></div></div>
         <div class="step"><span class="num">۵</span><div><b>دستورهای حساس</b><p>دستورهای خطرناک مثل <code class="ltr">rm -rf</code> یا <code class="ltr">git push --force</code> قبل از اجرا از شما تأیید می‌گیرند و در CI بدون <code class="ltr">--yes</code> رد می‌شوند و کد خروج ۵ برمی‌گردد</p></div></div>
       </div>
       <div class="panel" id="panel-cli-ref" role="tabpanel">
