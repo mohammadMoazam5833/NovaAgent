@@ -78,9 +78,16 @@ export interface FileDiffViewerProps {
    * commit mode (both sides come from git objects).
    */
   commit?: string;
+  /** Extra header controls (Dorj Agent: keep / undo this change). */
+  actions?: React.ReactNode;
 }
 
-export function FileDiffViewer({ path, type, commit }: FileDiffViewerProps) {
+export function FileDiffViewer({
+  path,
+  type,
+  commit,
+  actions,
+}: FileDiffViewerProps) {
   const { t } = useTranslation("openhands");
   const [isCollapsed, setIsCollapsed] = React.useState(true);
   const [editorHeight, setEditorHeight] = React.useState(400);
@@ -245,6 +252,7 @@ export function FileDiffViewer({ path, type, commit }: FileDiffViewerProps) {
               ))}
             </span>
           )}
+          {actions}
           <button data-testid="collapse" type="button">
             <ChevronUp
               className={cn(

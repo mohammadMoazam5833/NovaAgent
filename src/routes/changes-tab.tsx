@@ -1,6 +1,10 @@
 import { useTranslation } from "react-i18next";
 import React from "react";
 import { FileDiffViewer } from "#/components/features/diff-viewer/file-diff-viewer";
+import {
+  ChangeActions,
+  CheckpointsBar,
+} from "#/components/features/diff-viewer/workspace-review";
 import { EmptyChangesMessage } from "#/components/features/diff-viewer/empty-changes-message";
 import { DiffDrawerIcon } from "#/components/features/diff-viewer/diff-drawer-icon";
 import { retrieveAxiosErrorMessage } from "#/utils/retrieve-axios-error-message";
@@ -93,6 +97,7 @@ function GitChanges() {
 
   return (
     <main className="h-full w-full flex flex-col items-stretch">
+      {runtimeIsActive && !isNotGitRepoError && <CheckpointsBar />}
       {!isSuccess || !gitChanges.length ? (
         <div className="flex flex-col h-full w-full">
           <div className="flex-1 flex items-center justify-center">
@@ -110,6 +115,7 @@ function GitChanges() {
               key={change.path}
               path={change.path}
               type={change.status}
+              actions={<ChangeActions path={change.path} />}
             />
           ))}
         </div>
