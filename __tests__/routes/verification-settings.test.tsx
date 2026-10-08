@@ -95,10 +95,10 @@ describe("VerificationSettingsScreen", () => {
       ),
     ).not.toBeNull();
 
-    // Major-prominence fields (confirmation_mode) are hidden in basic view
+    // Major-prominence confirmation_mode remains visible in the default view.
     expect(
-      screen.queryByTestId("sdk-settings-confirmation_mode"),
-    ).not.toBeInTheDocument();
+      screen.getByTestId("sdk-settings-confirmation_mode"),
+    ).toBeInTheDocument();
   });
 
   it("hides the critic API key field when the critic is disabled", async () => {

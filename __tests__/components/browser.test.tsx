@@ -50,7 +50,7 @@ describe("Browser", () => {
 
     expect(screen.getByText("BROWSER$NO_PAGE_LOADED")).toBeInTheDocument();
     expect(screen.getByTestId("browser-chrome-bar")).toBeInTheDocument();
-    expect(screen.getByTestId("browser-chrome-url")).toHaveTextContent(
+    expect(screen.getByTestId("browser-chrome-url-input")).toHaveValue(
       "https://example.com",
     );
   });
@@ -64,9 +64,7 @@ describe("Browser", () => {
     render(<BrowserPanel />);
 
     expect(screen.getByTestId("browser-chrome-bar")).toHaveClass("min-h-[34px]");
-    expect(screen.getByTestId("browser-chrome-url")).toHaveTextContent(
-      "BROWSER$URL_PLACEHOLDER",
-    );
+    expect(screen.getByTestId("browser-chrome-url-input")).toHaveValue("");
     expect(
       screen.queryByRole("button", { name: "BUTTON$BACK" }),
     ).not.toBeInTheDocument();
@@ -84,7 +82,7 @@ describe("Browser", () => {
 
     render(<BrowserPanel />);
 
-    expect(screen.getByTestId("browser-chrome-url")).toHaveTextContent(
+    expect(screen.getByTestId("browser-chrome-url-input")).toHaveValue(
       "https://example.com",
     );
     expect(screen.getByAltText("BROWSER$SCREENSHOT_ALT")).toBeInTheDocument();

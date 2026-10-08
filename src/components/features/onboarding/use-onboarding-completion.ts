@@ -9,16 +9,6 @@ export const ONBOARDING_COMPLETED_STORAGE_KEY = "openhands-onboarded";
 
 function readCompletedFromStorage(): boolean {
   if (typeof window === "undefined") return true;
-  // Company-managed deployments inject the session key before app scripts
-  // run (static server / Electron boot script). The LLM and agent profile
-  // are pre-configured server-side, so the welcome wizard must not show.
-  if (
-    (window as unknown as Record<string, unknown>)[
-      "__AGENT_CANVAS_SESSION_API_KEY__"
-    ]
-  ) {
-    return true;
-  }
   try {
     return (
       window.localStorage.getItem(ONBOARDING_COMPLETED_STORAGE_KEY) !== null

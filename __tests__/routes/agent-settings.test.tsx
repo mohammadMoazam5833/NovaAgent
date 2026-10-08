@@ -497,7 +497,7 @@ describe("AgentSettingsScreen", () => {
     };
     expect(call.agent_settings_diff).toEqual({
       agent_kind: "openhands",
-      enable_sub_agents: false,
+      enable_sub_agents: true,
       tool_concurrency_limit: 1,
     });
   });

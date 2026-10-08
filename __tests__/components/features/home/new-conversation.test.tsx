@@ -76,7 +76,9 @@ describe("NewConversation", () => {
     const launchButton = screen.getByTestId("launch-new-conversation-button");
     await userEvent.click(launchButton);
 
-    expect(createConversationSpy).toHaveBeenCalledOnce();
+    await waitFor(() => {
+      expect(createConversationSpy).toHaveBeenCalledOnce();
+    });
     await waitFor(() => {
       expect(navigate).toHaveBeenCalledWith("/conversations/conv-123");
     });

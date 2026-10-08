@@ -143,11 +143,12 @@ describe("buildStartConversationRequest", () => {
       load_user_skills: true,
       load_project_skills: true,
     });
-    // Persistent memory is opt-in: the key must be absent (not false) so the
-    // wire payload for un-opted users stays byte-identical to before.
-    expect(payload.agent_settings.agent_context).not.toHaveProperty(
-      "load_memory",
-    );
+    // Persistent memory is on by default for new autonomy settings and is
+    // stamped by the agent-server on profile launches; inline launches carry
+    // the global preference here.
+    expect(payload.agent_settings.agent_context).toMatchObject({
+      load_memory: true,
+    });
     // Bundled public skills are injected into agent_context.skills so the
     // SDK can perform trigger matching without cloning the extensions repo.
     expect(Array.isArray(payload.agent_settings.agent_context.skills)).toBe(
@@ -374,7 +375,7 @@ describe("buildStartConversationRequest", () => {
     expect(payload.confirmation_policy).toEqual({
       kind: "ConfirmRisky",
       threshold: "HIGH",
-      confirm_unknown: true,
+      confirm_unknown: false,
     });
     expect(payload.security_analyzer).toEqual({
       kind: "LLMSecurityAnalyzer",

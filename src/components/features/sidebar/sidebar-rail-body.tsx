@@ -9,6 +9,12 @@ import {
 } from "lucide-react";
 import { OpenHandsLogoButton } from "#/components/shared/buttons/openhands-logo-button";
 import { AppearanceToggle } from "#/components/features/settings/app-settings/appearance-toggle";
+import { BackendSelector } from "#/components/features/backends/backend-selector";
+import { BackendStatusDot } from "#/components/features/backends/backend-status-dot";
+import { useActiveBackendContext } from "#/contexts/active-backend-context";
+import { useBackendsHealth } from "#/hooks/query/use-backends-health";
+import { AddBackendModal } from "#/components/features/backends/add-backend-modal";
+import { ManageBackendsModal } from "#/components/features/backends/manage-backends-modal";
 import { NavigationLink } from "#/components/shared/navigation-link";
 import { SidebarCollapsedIconSlot } from "./sidebar-collapsed-icon-slot";
 import { SidebarNavLink } from "./sidebar-nav-link";
@@ -32,6 +38,82 @@ import {
 const ICON_SIZE = 18;
 const SIDEBAR_LOGO_WIDTH = 34;
 const SIDEBAR_LOGO_HEIGHT = 34;
+function CollapsedBackendSelector() {
+  const { t } = useTranslation("openhands");
+  const [isPopoverOpen, setIsPopoverOpen] = React.useState(false);
+  const closeTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+  const [addBackendModalOpen, setAddBackendModalOpen] = React.useState(false);
+  const [manageBackendsModalOpen, setManageBackendsModalOpen] =
+    React.useState(false);
+  const { backends, active } = useActiveBackendContext();
+  const healthByBackendId = useBackendsHealth(backends);
+  const isConnected = healthByBackendId[active.backend.id]?.isConnected ?? null;
+
+  const openPopover = React.useCallback(() => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+    setIsPopoverOpen(true);
+  }, []);
+
+  const closePopover = React.useCallback(() => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+    }
+    closeTimerRef.current = setTimeout(() => setIsPopoverOpen(false), 200);
+  }, []);
+
+  React.useEffect(
+    () => () => {
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    },
+    [],
+  );
+
+  return (
+    <div
+      className="relative flex justify-center w-full"
+      onMouseEnter={openPopover}
+      onMouseLeave={closePopover}
+      onClick={(event) => event.stopPropagation()}
+    >
+      <button
+        type="button"
+        data-testid="collapsed-backend-selector-link"
+        aria-label={t(I18nKey.BACKEND$MANAGE)}
+        className={cn(SIDEBAR_ICON_BUTTON_CLASS, "cursor-pointer")}
+        onMouseDown={(event) => event.stopPropagation()}
+        onMouseUp={(event) => event.stopPropagation()}
+      >
+        <BackendStatusDot isConnected={isConnected} />
+      </button>
+      {isPopoverOpen ? (
+        <div className="absolute bottom-full left-0 z-50 w-64 pb-2">
+          <BackendSelector
+            defaultOpen
+            hideTrigger
+            openUpward
+            sidebarCollapsed
+            onSelectOption={closePopover}
+            onOpenAddBackend={() => setAddBackendModalOpen(true)}
+            onOpenManageBackends={() => setManageBackendsModalOpen(true)}
+          />
+        </div>
+      ) : null}
+      {addBackendModalOpen ? (
+        <AddBackendModal onClose={() => setAddBackendModalOpen(false)} />
+      ) : null}
+      {manageBackendsModalOpen ? (
+        <ManageBackendsModal
+          onClose={() => setManageBackendsModalOpen(false)}
+        />
+      ) : null}
+    </div>
+  );
+}
 
 export interface SidebarRailBodyProps {
   collapsed: boolean;
@@ -212,6 +294,7 @@ export function SidebarRailBody({
             "mt-auto pb-2 cursor-pointer",
           )}
         >
+          <CollapsedBackendSelector />
           <StyledTooltip
             content={t(I18nKey.SIDEBAR$SETTINGS)}
             placement="right"

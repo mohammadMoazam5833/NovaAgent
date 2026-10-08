@@ -31,9 +31,9 @@ describe("appearance", () => {
     expect(readPersistedAppearance()).toBe("light");
     expect(document.body.getAttribute("data-theme")).toBe("light");
     const css = document.getElementById("oh-appearance-override")?.textContent;
-    expect(css).toContain("--cool-grey-975: #ffffff");
-    expect(css).toContain("--oh-foreground: #0f172a");
-    expect(css).toContain("--oh-modal-title-foreground: #0f172a");
+    expect(css).toContain("--cool-grey-975: #FFFFFF");
+    expect(css).toContain("--oh-foreground: #0C1A33");
+    expect(css).toContain("--oh-modal-title-foreground: #0C1A33");
     expect(css).toContain(".text-white");
     expect(css).toContain(".text-red-200");
   });

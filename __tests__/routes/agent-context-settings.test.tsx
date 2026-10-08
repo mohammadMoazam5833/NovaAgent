@@ -40,7 +40,7 @@ beforeEach(() => {
 });
 
 describe("AgentContextSettingsScreen", () => {
-  it("renders the persistent-memory toggle from the agent schema, off by default", async () => {
+  it("renders the persistent-memory toggle from the agent schema, on by default", async () => {
     vi.spyOn(SettingsService, "getSettings").mockResolvedValue(buildSettings());
 
     renderAgentContextSettingsScreen();
@@ -49,7 +49,7 @@ describe("AgentContextSettingsScreen", () => {
 
     const toggle = screen.getByTestId("sdk-settings-agent_context.load_memory");
     expect(toggle).toBeInTheDocument();
-    expect(toggle).not.toBeChecked();
+    expect(toggle).toBeChecked();
   });
 
   it("reflects a stored agent_context.load_memory value", async () => {
@@ -88,7 +88,7 @@ describe("AgentContextSettingsScreen", () => {
 
     expect(saveSettingsSpy).toHaveBeenCalledWith(
       expect.objectContaining({
-        agent_settings_diff: { agent_context: { load_memory: true } },
+        agent_settings_diff: { agent_context: { load_memory: false } },
       }),
     );
   });

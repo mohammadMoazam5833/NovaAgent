@@ -122,12 +122,15 @@ describe("Telemetry Service", () => {
         properties: expect.objectContaining({
           client_source: "agent_canvas",
           client_version: expect.any(String),
-          package_name: "@openhands/agent-canvas",
+          package_name: "@dorj/agent-canvas",
           package_version: expect.any(String),
           backend_kind: null,
           agent_server_version: "unknown",
           automation_sdk_version: "unknown",
           backend_version: "unknown",
+          cloud_org_id: null,
+          cloud_user_email: null,
+          cloud_user_id: null,
           custom: "value",
         }),
       });

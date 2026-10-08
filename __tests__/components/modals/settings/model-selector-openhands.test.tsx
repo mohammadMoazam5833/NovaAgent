@@ -53,7 +53,7 @@ describe("ModelSelector — OpenHands provider display", () => {
     renderWithQuery(<ModelSelector currentModel="openhands/claude-opus-4-7" />);
 
     await waitFor(() => {
-      expect(screen.getByLabelText("LLM$PROVIDER")).toHaveValue("NovaAgent");
+      expect(screen.getByLabelText("LLM$PROVIDER")).toHaveValue("Dorj Agent");
     });
 
     expect(providersCount).toBe(1);

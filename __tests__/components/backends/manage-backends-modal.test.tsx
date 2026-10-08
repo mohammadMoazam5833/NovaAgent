@@ -198,7 +198,7 @@ describe("ManageBackendsModal", () => {
     );
     expect(
       screen.getByTestId("manage-backends-status-detail-Local"),
-    ).toHaveTextContent("NovaAgent requires agent-server 1.28.0 or newer");
+    ).toHaveTextContent("Dorj Agent requires agent-server 1.28.0 or newer");
   });
 
   it("closes when the header close button is clicked", async () => {
