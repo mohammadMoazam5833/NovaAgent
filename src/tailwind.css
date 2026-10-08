@@ -64,8 +64,8 @@
 
 :root {
   color-scheme: dark;
-  --oh-color-primary: #1E3A8A;
-  --oh-color-logo: #F4C24B;
+  --oh-color-primary: #E8A317;
+  --oh-color-logo: #FFD36B;
   --oh-color-base: var(--cool-grey-950);
   --oh-color-base-secondary: var(--cool-grey-925);
   --oh-color-danger: #e76a5e;
@@ -97,12 +97,12 @@
   --oh-scrollbar-hover: color-mix(in srgb, var(--cool-grey-400) 50%, transparent);
   --oh-default: var(--cool-grey-800);
   --oh-default-foreground: var(--cool-grey-100);
-  --oh-accent: #1E3A8A;
-  --oh-accent-foreground: var(--cool-grey-950);
+  --oh-accent: #5B8CFF;
+  --oh-accent-foreground: var(--cool-grey-975);
   --oh-success: #a5e75e;
   --oh-success-foreground: var(--cool-grey-950);
   --oh-warning: #E8A317;
-  --oh-warning-foreground: var(--cool-grey-950);
+  --oh-warning-foreground: var(--cool-grey-975);
   --oh-danger: #e76a5e;
   --oh-danger-foreground: var(--cool-grey-50);
   --oh-segment: var(--cool-grey-925);
@@ -113,12 +113,12 @@
   --oh-border-input: var(--cool-grey-700);   /* unified with --oh-border; same stroke weight everywhere */
   --oh-border-subtle: var(--cool-grey-800);  /* within-panel separators, list dividers */
   --oh-separator: rgba(113, 120, 136, 0.5);
-  --oh-focus: #1E3A8A;
+  --oh-focus: #FFD36B;
   --oh-status-success: #1FBD53;
   --oh-status-error: #FF684E;
-  --oh-link: var(--cool-grey-100);
-  --oh-radius: 8px;
-  --oh-field-radius: 8px;
+  --oh-link: #5B8CFF;
+  --oh-radius: 10px;
+  --oh-field-radius: 10px;
   --oh-surface-shadow: none;
   --oh-overlay-shadow: none;
   --oh-field-shadow: none;
@@ -234,7 +234,7 @@ button.extension-module-card-interactive {
 }
 
 .heading {
-  @apply text-[28px] leading-8 -tracking-[0.02em] font-bold text-content-2;
+  @apply text-[28px] leading-8 font-bold text-content-2;
 }
 
 /* Custom Chat Input */
@@ -644,4 +644,12 @@ button.extension-module-card-interactive {
   box-shadow:
     0px 4px 6px -4px rgba(0, 0, 0, 0.1),
     0px 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+
+/* Product rule: decorative tracking is incompatible with Persian typography. */
+[data-agent-server-ui] *,
+[data-agent-server-ui] *::before,
+[data-agent-server-ui] *::after {
+  letter-spacing: 0 !important;
 }

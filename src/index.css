@@ -44,20 +44,20 @@
   --bg-neutral-muted: var(--oh-bg-neutral-muted);
   background-color: var(--oh-color-base) !important;
 
-  /* ── Cool Grey Scale (13 shades + 2 pure anchors: white / black) ──────── */
-  --cool-grey-50:  #0C1A33;
-  --cool-grey-100: #16213A;
-  --cool-grey-200: #16295E;
-  --cool-grey-300: #1E3A8A;
-  --cool-grey-400: #56657F;
-  --cool-grey-500: #56657F;
-  --cool-grey-600: #8FA3B8;
-  --cool-grey-700: #DBE2EE;
-  --cool-grey-800: #EEF2F7;
-  --cool-grey-900: #F8FAFC;
-  --cool-grey-925: #F2F4F8;
-  --cool-grey-950: #F2F4F8;
-  --cool-grey-975: #FFFFFF;
+  /* Dorj dark scale: the pre-hydration default matches the portal. */
+  --cool-grey-50: #F5F7FB;
+  --cool-grey-100: #E6ECF8;
+  --cool-grey-200: #D0DAF0;
+  --cool-grey-300: #B3C2E3;
+  --cool-grey-400: #8EA0CB;
+  --cool-grey-500: #6B7FAE;
+  --cool-grey-600: #4F6393;
+  --cool-grey-700: #3A4E7E;
+  --cool-grey-800: #2A3D6B;
+  --cool-grey-900: #22345F;
+  --cool-grey-925: #182850;
+  --cool-grey-950: #0F2152;
+  --cool-grey-975: #081430;
   /* ─────────────────────────────────────────────────────────────────────── */
 }
 
@@ -86,7 +86,6 @@ code {
   border-radius: 4px;
   color: var(--cool-grey-100);
   border: 1px solid var(--cool-grey-900);
-  letter-spacing: -0.2px;
 }
 
 .markdown-body pre code {
@@ -199,14 +198,35 @@ code {
   animation: nova-sparkle-pulse 1.8s ease-in-out infinite;
 }
 
-/* Dorj unified chrome: navy rail over the light work surface, like platform.isigpu.local. */
+/* Dorj unified chrome: portal navy rail over navy work surfaces. */
 :root {
-  --dorj-navy: #0b1b3a;
-  --dorj-lapis: #1e3a8a;
+  --dorj-navy: #081430;
+  --dorj-navy-2: #0f2152;
+  --dorj-lapis: #2747b8;
+  --dorj-sky: #5b8cff;
   --dorj-gold: #e8a317;
-  --dorj-gold-soft: #f4c24b;
+  --dorj-gold-soft: #ffd36b;
   --dorj-on-dark: #e8eefb;
-  --dorj-dark-border: rgba(180, 198, 236, 0.16);
+  --dorj-dark-border: rgba(160, 185, 255, 0.16);
+}
+
+/* Persian and mixed-direction UI must never inherit decorative tracking. */
+[dir="rtl"] *,
+[dir="rtl"] *::before,
+[dir="rtl"] *::after {
+  letter-spacing: 0 !important;
+}
+
+[dir="rtl"] .markdown-body th,
+[dir="rtl"] .markdown-body td {
+  text-align: start;
+}
+
+[dir="rtl"] code,
+[dir="rtl"] pre,
+[dir="rtl"] .ltr {
+  direction: ltr;
+  unicode-bidi: isolate;
 }
 
 aside[data-collapsed],

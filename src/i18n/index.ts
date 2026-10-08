@@ -13,6 +13,7 @@ export { translationResources, type TranslationResources } from "./resources";
 export const OPENHANDS_I18N_NAMESPACE = "openhands";
 
 export const AvailableLanguages = [
+  { label: "فارسی", value: "fa" },
   { label: "English", value: "en" },
   { label: "日本語", value: "ja" },
   { label: "简体中文", value: "zh-CN" },
@@ -40,6 +41,7 @@ const initializeI18n = (instance: I18nInstance) => {
       .use(initReactI18next)
       .init({
         fallbackLng: "en",
+        lng: "fa",
         debug: import.meta.env.NODE_ENV === "development",
         supportedLngs: AvailableLanguages.map((lang) => lang.value),
         nonExplicitSupportedLngs: false,

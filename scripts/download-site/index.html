@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="description" content="دانلود Dorj Agent برای Windows و Linux — دستیار هوشمند توسعه که کد می‌نویسد، اجرا می‌کند و نتیجه را نشان می‌دهد." />
+<meta name="description" content="دانلود دستیار دُرج برای Windows و Linux. کد می‌نویسد و تست می‌گیرد و نتیجه را نشان می‌دهد." />
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20x='8'%20y='8'%20width='48'%20height='48'%20rx='14'%20fill='%230a0d13'/%3E%3Cpath%20d='M22%2018h11c9%200%2015%206%2015%2014s-6%2014-15%2014H22Z'%20fill='none'%20stroke='%23eef1f6'%20stroke-width='4'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3Ccircle%20cx='44'%20cy='18'%20r='3.5'%20fill='%23e0805f'/%3E%3C/svg%3E" />
 <meta name="theme-color" content="#0a0d13" />
 <title>Dorj Agent</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#0a0d13;--s1:#10141d;--s2:#151a26;--line:#232a38;--fg:#eef1f6;--mut:#9aa6ba;--dim:#6b778c;--coral:#e0805f;--mint:#7be0b4;--vio:#8b7cf6;--ease:cubic-bezier(.2,.7,.2,1)}
+:root{--bg:#081430;--ink2:#0f2152;--s1:#0f2152;--s2:#182850;--line:rgba(160,185,255,.16);--fg:#f5f7fb;--mut:#b3c2e3;--dim:#8ea0cb;--coral:#e8a317;--gold2:#ffd36b;--mint:#34d399;--vio:#5b8cff;--lapis:#2747b8;--ease:cubic-bezier(.2,.7,.2,1)}
 html{scroll-behavior:smooth;scroll-padding-top:72px}
-body{background:radial-gradient(80% 50% at 85% -5%,rgba(224,128,95,.10),transparent 60%),radial-gradient(60% 40% at 0% 30%,rgba(139,124,246,.07),transparent 60%),var(--bg);color:var(--fg);font-family:"Vazirmatn","Segoe UI",Tahoma,-apple-system,sans-serif;line-height:1.75;-webkit-font-smoothing:antialiased}
+body{background:radial-gradient(900px 520px at 85% -10%,rgba(39,71,184,.62),transparent 62%),radial-gradient(700px 420px at 8% 30%,rgba(232,163,23,.12),transparent 65%),var(--bg);color:var(--fg);font-family:"Vazirmatn","Segoe UI",Tahoma,-apple-system,sans-serif;line-height:1.75;-webkit-font-smoothing:antialiased}
 code,.ltr{direction:ltr;text-align:left;unicode-bidi:isolate;font-family:"Cascadia Code",Consolas,Menlo,monospace}
 a{color:inherit}
 :focus-visible{outline:2px solid var(--coral);outline-offset:3px;border-radius:8px}
@@ -33,7 +33,7 @@ nav .wrap{display:flex;align-items:center;gap:12px;height:76px}
 /* hero */
 .hero{padding:72px 0 40px}
 .hero .wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.12fr);gap:56px;align-items:center}
-h1{font-size:clamp(26px,3.4vw,38px);line-height:1.35;font-weight:800;letter-spacing:-.4px}
+h1{font-size:clamp(26px,3.4vw,38px);line-height:1.35;font-weight:800}
 h1 span{display:block;color:#3a4356;transition:color .6s var(--ease),transform .6s var(--ease)}
 h1 span.on{color:var(--fg)}
 h1 span.done{color:#7d889c}
@@ -103,7 +103,7 @@ h1 span.done{color:#7d889c}
 
 /* sections */
 section{padding:84px 0 24px}
-h2{font-size:clamp(26px,3.4vw,34px);font-weight:800;letter-spacing:-.3px}
+h2{font-size:clamp(26px,3.4vw,34px);font-weight:800}
 .sub{color:var(--mut);margin:6px 0 36px}
 
 /* install */
@@ -160,6 +160,26 @@ footer .req{color:var(--mut);direction:ltr;unicode-bidi:isolate}
 
 @media(max-width:900px){.hero .wrap{grid-template-columns:1fr;gap:40px}.install{grid-template-columns:1fr;gap:20px}.tabs{flex-direction:row;overflow-x:auto}.tab{white-space:nowrap}.tab.on{box-shadow:inset 0 -3px 0 var(--coral)}.f.a,.f.b,.f.c,.f.d,.f.e,.f.g,.f.h,.f.i,.f.j{grid-column:span 6}.f.j{flex-direction:column;align-items:flex-start}.links a:not(.navdl){display:none}}
 @media(max-width:520px){.body{grid-template-columns:1fr;height:auto}.chat{border:0;border-bottom:1px solid var(--line)}.pane{height:200px}.hero{padding-top:44px}}
+
+/* Portal design layer: same navy family and product controls as dorj.isigpu.local */
+nav{background:rgba(8,20,48,.78);border-bottom:1px solid rgba(232,163,23,.18)}
+.portal-link{color:var(--mut);text-decoration:none;font-size:14px;transition:color .2s}
+.portal-link:hover{color:var(--gold2)}
+.lang{font:inherit;font-size:13px;font-weight:700;color:var(--fg);background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:10px;height:38px;min-width:52px;cursor:pointer;transition:border-color .2s,background .2s}
+.lang:hover{border-color:rgba(232,163,23,.55);background:rgba(232,163,23,.10)}
+header.hero{position:relative;isolation:isolate;overflow:hidden}
+header.hero::before{content:"";position:absolute;inset:-20%;z-index:-1;filter:blur(72px);opacity:.68;background:radial-gradient(46vw 32vw at 22% 18%,rgba(39,71,184,.85),transparent 65%),radial-gradient(32vw 26vw at 76% 74%,rgba(232,163,23,.34),transparent 68%),radial-gradient(28vw 24vw at 62% 28%,rgba(91,140,255,.38),transparent 70%);animation:hero-aurora 24s ease-in-out infinite alternate}
+@keyframes hero-aurora{from{transform:translate3d(-2%, -1%, 0) scale(1)}to{transform:translate3d(2%, 2%, 0) scale(1.08)}}
+.dl-main,.navdl,.alts a,.tab,.copy,.num,.faq summary{border-radius:10px}
+.dl-main{background:linear-gradient(135deg,var(--gold2),var(--coral) 55%,#d48b07);color:#081430}
+.alts a.rec{color:var(--fg);background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px rgba(232,163,23,.45)}
+.win{background:rgba(15,33,82,.70);border-color:rgba(160,185,255,.18);backdrop-filter:blur(10px);box-shadow:0 30px 60px -30px rgba(8,20,48,.55)}
+.f{background:rgba(255,255,255,.06);border-color:var(--line);backdrop-filter:blur(8px)}
+.f:hover{border-color:rgba(232,163,23,.45)}
+.tab.on{background:rgba(255,255,255,.08)}
+.faq details{background:rgba(255,255,255,.05);border-color:var(--line)}
+:focus-visible{outline-color:var(--gold2)}
+
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -168,7 +188,7 @@ footer .req{color:var(--mut);direction:ltr;unicode-bidi:isolate}
 <nav><div class="wrap">
   <a class="brand" href="#"><span><span class="nc">D</span>orj Agent</span></a>
   <span class="ver">v1.6.6</span>
-  <div class="links"><a href="#install">نصب</a><a href="#features">قابلیت‌ها</a><a href="#faq">سؤالات</a><a class="navdl" href="#top">دانلود</a></div>
+  <div class="links"><a href="https://dorj.isigpu.local" target="_blank" rel="noopener">پرتال دُرج</a><a href="#install">نصب</a><a href="#features">قابلیت‌ها</a><a href="#faq">سؤالات</a><a class="navdl" href="#top">دانلود</a><button id="lang-switch" class="lang" type="button" aria-label="English interface">EN</button></div>
 </div></nav>
 
 <header class="hero" id="top"><div class="wrap">
@@ -185,10 +205,10 @@ footer .req{color:var(--mut);direction:ltr;unicode-bidi:isolate}
     </div>
 
     <div class="alts" role="group" aria-label="همهٔ نسخه‌ها">
-      <a id="alt-win" href="/nova/Dorj-Agent-Client-Setup-1.6.6-x64.exe">Windows — Installer (پیشنهادی)</a>
+      <a id="alt-win" href="/nova/Dorj-Agent-Client-Setup-1.6.6-x64.exe">Windows Installer</a>
       
-      <a id="alt-deb" href="/nova/Dorj-Agent-Client-1.6.6-amd64.deb">Linux — DEB</a>
-      <a id="alt-appimage" href="/nova/Dorj-Agent-Client-1.6.6-x86_64.AppImage">Linux — AppImage</a>
+      <a id="alt-deb" href="/nova/Dorj-Agent-Client-1.6.6-amd64.deb">Linux DEB</a>
+      <a id="alt-appimage" href="/nova/Dorj-Agent-Client-1.6.6-x86_64.AppImage">Linux AppImage</a>
     </div>
     <div class="meta"><span>سیستم‌عامل شما: <b id="os-name">—</b></span><span>نسخه: <b class="ltr">1.6.6</b></span><span>حجم بسته‌ها: <b class="ltr">95–143 MB</b></span><span>نیازمند دسترسی به سرور <b class="ltr">nova.isigpu.local</b></span></div>
   </div>
@@ -230,8 +250,8 @@ footer .req{color:var(--mut);direction:ltr;unicode-bidi:isolate}
   <div class="install">
     <div class="tabs" role="tablist" aria-label="روش نصب">
       <button class="tab on" role="tab" aria-selected="true" data-tab="win">Windows<small>نصاب رسمی</small></button>
-      <button class="tab" role="tab" aria-selected="false" data-tab="deb">Linux — DEB<small>Ubuntu و Debian</small></button>
-      <button class="tab" role="tab" aria-selected="false" data-tab="appimage">Linux — AppImage<small>روی هر توزیع</small></button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="deb">Linux DEB<small>Ubuntu و Debian</small></button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="appimage">Linux AppImage<small>روی هر توزیع</small></button>
     </div>
     <div>
       <div class="panel on" id="panel-win" role="tabpanel">
@@ -257,17 +277,17 @@ footer .req{color:var(--mut);direction:ltr;unicode-bidi:isolate}
 
 <section id="features"><div class="wrap">
   <h2>یک مهندس نرم‌افزار تمام‌عیار</h2>
-  <p class="sub">بر پایهٔ موتوری که در بنچمارک معتبر SWE-bench جزو بهترین‌های دنیاست — نه فقط حرف، اجرا.</p>
+  <p class="sub">بر پایهٔ موتوری که در بنچمارک معتبر SWE-bench جزو بهترین‌های دنیاست — نه فقط حرف، بلکه اجرا.</p>
   <div class="bento">
-    <div class="f a"><h3>یک مهندس نرم‌افزار واقعی</h3><p>برنامه‌ریزی می‌کند، کد می‌نویسد، تست اجرا می‌کند، خطا را می‌خواند و خودش اصلاح می‌کند — این چرخه را تا سبز شدن تست‌ها تکرار می‌کند.</p>
+    <div class="f a"><h3>یک مهندس نرم‌افزار واقعی</h3><p>برنامه‌ریزی می‌کند، کد می‌نویسد، تست اجرا می‌کند و خطا را می‌خواند. خودش اصلاح می‌کند و این چرخه را تا سبز شدن تست‌ها تکرار می‌کند.</p>
       <div class="mini ltr"><div><span class="d">// utils.ts</span></div><div><span class="del">- const total = a + b</span></div><div><span class="add">+ const total = sum(items)</span></div></div></div>
-    <div class="f b"><h3>پیش‌نمایش زنده</h3><p>خروجی وب پروژه را همان لحظه در تب مرورگر ببینید — مثل یک استودیوی طراحی.</p></div>
+    <div class="f b"><h3>پیش‌نمایش زنده</h3><p>خروجی وب پروژه را همان لحظه در تب مرورگر ببینید؛ مثل یک استودیوی طراحی.</p></div>
     <div class="f c"><h3>تسلط بر ترمینال</h3><p>build، تست و لینت را اجرا می‌کند، خروجی واقعی را می‌بیند و بر اساس آن واکنش نشان می‌دهد.</p></div>
-    <div class="f d"><h3>درک کل مخزن</h3><p>تغییرات چندفایلی، ریفکتور ایمن و جستجو در کدبیس‌های بزرگ — با درک وابستگی‌ها.</p></div>
-    <div class="f e"><h3>گردش‌کار گیت</h3><p>کامیت، شاخه، push و Pull Request آمادهٔ بازبینی — بدون ترک گفتگو.</p></div>
+    <div class="f d"><h3>درک کل مخزن</h3><p>تغییرات چندفایلی، ریفکتور ایمن و جستجو در کدبیس‌های بزرگ را با درک وابستگی‌ها انجام می‌دهد.</p></div>
+    <div class="f e"><h3>گردش‌کار گیت</h3><p>کامیت، شاخه، push و Pull Request آمادهٔ بازبینی را بدون ترک گفتگو می‌سازد.</p></div>
     <div class="f g"><h3>کانتکست همیشه هوشمند</h3><p>در کارهای طولانی، گفتگو را هوشمندانه جمع‌بندی می‌کند تا تمرکز، حافظه و سرعت حفظ شود.</p></div>
     <div class="f h"><h3>مرورگر و پژوهش</h3><p>مستندات و منابع وب را خودش می‌خواند و نتیجه را مستقیم به کد پیوند می‌زند.</p></div>
-    <div class="f i"><h3>ایزوله و امن</h3><p>workspace، تاریخچه و تنظیمات اختصاصی برای هر کاربر — داده‌ها هیچ‌وقت مشترک نمی‌شوند.</p></div>
+    <div class="f i"><h3>ایزوله و امن</h3><p>workspace، تاریخچه و تنظیمات اختصاصی برای هر کاربر است. داده‌ها هیچ‌وقت مشترک نمی‌شوند.</p></div>
     <div class="f j"><div class="cal" aria-hidden="true"><i class="on"></i><i></i><i class="on"></i><i></i><i></i></div><div><h3>اتوماسیون سازمانی</h3><p>گزارش روزانه، بیلد شبانه و پشتیبان‌گیری را زمان‌بندی کنید تا سر وقت خودشان انجام شوند؛ همه روی مدل‌های منتخب سازمان، بدون کلید یا اشتراک جداگانه.</p></div></div>
   </div>
 </div></section>
@@ -278,7 +298,7 @@ footer .req{color:var(--mut);direction:ltr;unicode-bidi:isolate}
   <div class="faq">
     <details open>
       <summary>آیا Dorj Agent به اینترنت نیاز دارد؟</summary>
-      <div class="a">خیر — همه‌چیز روی شبکهٔ داخلی اجرا می‌شود. کلاینت فقط باید به سرور <code class="ltr">nova.isigpu.local</code> دسترسی داشته باشد؛ کد و داده‌های شما از شبکهٔ بیرون جدا می‌مانند.</div>
+      <div class="a">خیر. همه‌چیز روی شبکهٔ داخلی اجرا می‌شود. کلاینت فقط باید به سرور <code class="ltr">nova.isigpu.local</code> دسترسی داشته باشد؛ کد و داده‌های شما از شبکهٔ بیرون جدا می‌مانند.</div>
     </details>
     <details>
       <summary>داده‌ها و تاریخچهٔ من کجا ذخیره می‌شود؟</summary>
@@ -300,7 +320,7 @@ footer .req{color:var(--mut);direction:ltr;unicode-bidi:isolate}
 </div></section>
 
 <footer><div class="wrap">
-  <span>© 2026 Dorj Agent — v1.6.6</span>
+  <span>© 2026 Dorj Agent v1.6.6</span>
   <span>برای استفاده، به سرور <span class="req">nova.isigpu.local</span> دسترسی شبکه لازم است.</span>
 </div></footer>
 
@@ -308,17 +328,107 @@ footer .req{color:var(--mut);direction:ltr;unicode-bidi:isolate}
 (function(){
   var $=function(i){return document.getElementById(i)};
   var reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var lang="fa",currentOS="Linux",currentKey="deb";
+  var UI={
+    fa:{
+      title:"Dorj Agent",
+      nav:["پرتال دُرج","نصب","قابلیت‌ها","سؤالات","دانلود"],
+      phrases:["برنامه‌ریزی می‌کند، کد می‌نویسد","تست می‌گیرد، تحویل می‌دهد"],
+      lead:"دستیار دُرج مثل یک همکار باتجربه کنار شماست. فقط بگویید چه می‌خواهید؛ خودش کد را می‌نویسد و تست می‌زند و نتیجه را نشان می‌دهد.",
+      download:"دانلود نسخهٔ رسمی برای Windows",
+      macNote:"نسخهٔ macOS هنوز منتشر نشده است. یکی از نسخه‌های زیر را برای سیستم دیگری دانلود کنید.",
+      alts:["Windows Installer","Linux DEB","Linux AppImage"],
+      meta:['سیستم‌عامل شما: <b id="os-name">Windows</b>','نسخه: <b class="ltr">1.6.6</b>','حجم بسته‌ها: <b class="ltr">95-143 MB</b>','نیازمند دسترسی به سرور <b class="ltr">nova.isigpu.local</b>'],
+      window:"نمونهٔ کار دستیار دُرج",
+      tasks:["تحلیل مخزن و نوشتن کد","اجرای تست‌ها","ساخت Pull Request"],
+      tabs:[["Windows","نصاب رسمی"],["Linux DEB","Ubuntu و Debian"],["Linux AppImage","روی هر توزیع"]],
+      install:["نصب در چند دقیقه","روش نصب را بر اساس سیستم خود انتخاب کنید."],
+      win:[["دانلود نصاب","دکمهٔ بالا را بزنید و فایل نصاب را دانلود کنید."],["نصب و اجرا","نصاب را اجرا کنید؛ میان‌بر دستیار دُرج ساخته می‌شود."],["ورود","با حساب شرکتی خود وارد شوید."]],
+      deb:[["نصب بسته","این دستور را در ترمینال بزنید."],["اجرا","برنامه را از منوی سیستم باز کنید."],["ورود","با حساب شرکتی خود وارد شوید."]],
+      appimage:[["اجرا","فایل را قابل‌اجرا کنید و باز کنید."],["ورود","با حساب شرکتی خود وارد شوید."]],
+      features:{
+        head:["یک مهندس نرم‌افزار تمام‌عیار","بر پایهٔ موتوری که در SWE-bench جزو بهترین‌هاست. نه فقط حرف، بلکه اجرا."],
+        cards:[["یک مهندس نرم‌افزار واقعی","برنامه‌ریزی می‌کند و کد می‌نویسد. تست را اجرا می‌کند و خطا را می‌خواند. خودش اصلاح می‌کند و چرخه را ادامه می‌دهد."],["پیش‌نمایش زنده","خروجی وب پروژه را همان لحظه در تب مرورگر ببینید؛ مثل یک استودیوی طراحی."],["تسلط بر ترمینال","build و تست و لینت را اجرا می‌کند و بر اساس خروجی واقعی واکنش نشان می‌دهد."],["درک کل مخزن","تغییرات چندفایلی و ریفکتور ایمن را با درک وابستگی‌ها انجام می‌دهد."],["گردش‌کار گیت","کامیت و شاخه و push و Pull Request آمادهٔ بازبینی را بدون ترک گفتگو می‌سازد."],["کانتکست هوشمند","در کارهای طولانی گفتگو را جمع‌بندی می‌کند تا تمرکز و حافظه حفظ شود."],["مرورگر و پژوهش","مستندات و منابع وب را می‌خواند و نتیجه را به کد پیوند می‌زند."],["ایزوله و امن","workspace و تاریخچه و تنظیمات اختصاصی برای هر کاربر است."],["اتوماسیون سازمانی","گزارش روزانه و بیلد شبانه و پشتیبان‌گیری را زمان‌بندی کنید تا سر وقت خودشان انجام شوند."]]
+      },
+      faq:{
+        head:["سؤال‌های پرتکرار","هرچه لازم است بدانید قبل از شروع."],
+        items:[["آیا دستیار دُرج به اینترنت نیاز دارد؟","خیر. همه‌چیز روی شبکهٔ داخلی اجرا می‌شود. کلاینت فقط باید به سرور <code class=\"ltr\">nova.isigpu.local</code> دسترسی داشته باشد."],["داده‌ها کجا ذخیره می‌شوند؟","روی سرور و داخل workspace اختصاصی شما. داده‌ها بین کاربران به اشتراک گذاشته نمی‌شوند."],["اگر سرور عوض شد چه کنم؟","فایل <code class=\"ltr\">remote-client.json</code> در پوشهٔ تنظیمات کلاینت را ویرایش کنید و آدرس سرور جدید را بگذارید."],["کلید API لازم دارم؟","نه. کلاینت به مدل‌های منتخب سازمان متصل می‌شود."],["چطور به نسخهٔ جدید بروم؟","رابط کاربری از سرور به‌روز می‌شود. برای کلاینت، نسخهٔ جدید را از همین صفحه دانلود و جایگزین کنید."]]
+      },
+      footer:["© 2026 Dorj Agent v1.6.6","برای استفاده به سرور <span class=\"req\">nova.isigpu.local</span> دسترسی شبکه لازم است."],
+      copy:"کپی",copied:"کپی شد",langButton:"EN",
+      osMain:"دانلود برای Windows",linuxMain:"دانلود برای Linux",
+      prompt:"برای کافه صفحهٔ منو بساز؛ تست‌ها را بزن و PR آماده کن"
+    },
+    en:{
+      title:"Dorj Agent",
+      nav:["Dorj portal","Install","Features","FAQ","Download"],
+      phrases:["Plans and writes the code","Runs tests and delivers"],
+      lead:"Dorj Agent works like an experienced teammate. Say what you need and it writes the code and runs the tests and shows the result.",
+      download:"Download the official Windows build",
+      macNote:"The macOS build is not available yet. Choose one of the builds below for another system.",
+      alts:["Windows Installer","Linux DEB","Linux AppImage"],
+      meta:['Your operating system: <b id="os-name">Windows</b>','Version: <b class="ltr">1.6.6</b>','Download sizes: <b class="ltr">95-143 MB</b>','Requires network access to <b class="ltr">nova.isigpu.local</b>'],
+      window:"Dorj Agent work sample",
+      tasks:["Analyze the repository and write code","Run the tests","Create a pull request"],
+      tabs:[["Windows","Official installer"],["Linux DEB","Ubuntu and Debian"],["Linux AppImage","Any distribution"]],
+      install:["Install in minutes","Choose the install method for your system."],
+      win:[["Download the installer","Click the button above and download the installer file."],["Install and run","Run the installer. The Dorj Agent shortcut is created automatically."],["Sign in","Sign in with your company account."]],
+      deb:[["Install the package","Run this command in your terminal."],["Run it","Open Dorj Agent from your application menu."],["Sign in","Sign in with your company account."]],
+      appimage:[["Run it","Make the file executable and open it."],["Sign in","Sign in with your company account."]],
+      features:{
+        head:["A complete software engineer","Powered by one of the strongest models in SWE-bench. Not just talk: it executes."],
+        cards:[["A real software engineer","It plans and writes code. It runs tests and reads failures. It fixes the issue and keeps the loop going."],["Live preview","See the project web output immediately in a browser tab. It feels like a design studio."],["Terminal control","It runs builds and tests and lint checks, then reacts to the real output."],["Whole-repository context","It handles multi-file changes and safe refactors with dependency awareness."],["Git workflow","It creates commits and branches and push-ready pull requests without leaving the conversation."],["Smart context","Long work is summarized intelligently so focus and memory remain intact."],["Browser and research","It reads documentation and web sources, then connects the findings to your code."],["Isolated and secure","Each user has a dedicated workspace and history and settings."],["Enterprise automation","Schedule daily reports and nightly builds and backups so they run on time."]]
+      },
+      faq:{
+        head:["Frequently asked questions","Everything you need before you start."],
+        items:[["Does Dorj Agent need the internet?","No. Everything runs on the internal network. The client only needs access to <code class=\"ltr\">nova.isigpu.local</code>."],["Where is my data stored?","On the server, inside your dedicated workspace. It is never shared between users."],["What if the server changes?","Edit <code class=\"ltr\">remote-client.json</code> in the client settings folder and set the new server address."],["Do I need an API key?","No. The client connects to the models selected by your organization."],["How do I update?","The UI updates live from the server. For the client itself, download the new build from this page."]]
+      },
+      footer:["© 2026 Dorj Agent v1.6.6","Use requires network access to <span class=\"req\">nova.isigpu.local</span>."],
+      copy:"Copy",copied:"Copied",langButton:"FA",
+      osMain:"Download for Windows",linuxMain:"Download for Linux",
+      prompt:"Build a cafe menu page. Run the tests and prepare a pull request"
+    }
+  };
+  function set(selector,value,html){var n=document.querySelector(selector); if(!n) return; if(html){n.innerHTML=value}else{n.textContent=value}}
+  function applyLang(){
+    var t=UI[lang]; document.documentElement.lang=lang; document.documentElement.dir=lang==="fa"?"rtl":"ltr"; document.title=t.title;
+    document.querySelectorAll(".links a").forEach(function(n,i){if(t.nav[i])n.textContent=t.nav[i]});
+    document.querySelectorAll("#phrases span").forEach(function(n,i){n.textContent=t.phrases[i]});
+    set(".lead",t.lead); set("#dl-main-label",currentOS==="Windows"?t.osMain:t.linuxMain); set("#mac-note",t.macNote);
+    document.querySelectorAll("#alt-win,#alt-deb,#alt-appimage").forEach(function(n,i){n.textContent=t.alts[i]});
+    document.querySelectorAll(".meta span").forEach(function(n,i){if(t.meta[i])n.innerHTML=t.meta[i]});
+    ["#t1","#t2","#t3"].forEach(function(id,i){set(id,t.tasks[i])});
+    document.querySelectorAll(".tab").forEach(function(n,i){if(t.tabs[i]){n.firstChild.textContent=t.tabs[i][0]; n.querySelector("small").textContent=t.tabs[i][1]}});
+    set("#install h2",t.install[0]); set("#install .sub",t.install[1]);
+    ["#panel-win","#panel-deb","#panel-appimage"].forEach(function(panel,i){
+      var map=i===0?t.win:i===1?t.deb:t.appimage;
+      document.querySelectorAll(panel+" .step").forEach(function(n,j){var b=n.querySelector("b"),p=n.querySelector("p"); if(map[j]){if(b)b.textContent=map[j][0]; if(p)p.textContent=map[j][1]}});
+    });
+    set("#features h2",t.features.head[0]); set("#features .sub",t.features.head[1]);
+    document.querySelectorAll("#features .f").forEach(function(n,i){var h=n.querySelector("h3"),p=n.querySelector("p"),c=t.features.cards[i]; if(c){if(h)h.textContent=c[0]; if(p)p.textContent=c[1]}});
+    set("#faq h2",t.faq.head[0]); set("#faq .sub",t.faq.head[1]);
+    document.querySelectorAll(".faq details").forEach(function(n,i){var sum=n.querySelector("summary"),body=n.querySelector(".a"),item=t.faq.items[i]; if(item){if(sum)sum.textContent=item[0]; if(body)body.innerHTML=item[1]}});
+    document.querySelectorAll("footer .wrap span").forEach(function(n,i){if(t.footer[i])n.innerHTML=t.footer[i]});
+    document.querySelectorAll(".copy").forEach(function(n){n.textContent=t.copy});
+    $("#lang-switch").textContent=t.langButton;
+    if(window.promptText!==undefined)window.promptText=t.prompt;
+    document.querySelectorAll("#lang-switch,#portal-link").forEach(function(n){n.blur()});
+  }
+  function setLang(next){lang=next==="en"?"en":"fa"; localStorage.setItem("dorj-download-lang",lang); applyLang()}
+  $("#lang-switch").addEventListener("click",function(){setLang(lang==="fa"?"en":"fa")});
+  window.promptText=UI.fa.prompt;
 
   /* OS detection */
-  var ua=navigator.userAgent,os="Linux",key="deb";
+  var ua=navigator.userAgent;var os=currentOS,key=currentKey;
   if(/Windows|Win32|WOW64/i.test(ua)){os="Windows";key="win"}
   else if(/Mac OS|Macintosh/i.test(ua)){os="macOS";key="appimage"}
+  currentOS=os;currentKey=key;
   $("os-name").textContent=os;
   var ids={win:"alt-win",deb:"alt-deb",appimage:"alt-appimage"},main=$("dl-main");
   if(os==="macOS"){main.style.display="none";$("mac-note").style.display="block"}
   else{
     main.href=$(ids[key]).getAttribute("href");
-    $("dl-main-label").textContent=os==="Windows"?"دانلود برای Windows":"دانلود برای Linux";
+    $("dl-main-label").textContent=os==="Windows"?UI[lang].osMain:UI[lang].linuxMain;
     $(ids[key]).classList.add("rec");
   }
   main.addEventListener("click",function(){
@@ -350,13 +460,13 @@ footer .req{color:var(--mut);direction:ltr;unicode-bidi:isolate}
       (navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).catch(function(){
         var r=document.createRange();r.selectNodeContents(b.nextElementSibling);var s=getSelection();s.removeAllRanges();s.addRange(r);
       });
-      b.textContent="کپی شد";b.classList.add("ok");
-      setTimeout(function(){b.textContent="کپی";b.classList.remove("ok")},1800);
+      b.textContent=UI[lang].copied;b.classList.add("ok");
+      setTimeout(function(){b.textContent=UI[lang].copy;b.classList.remove("ok")},1800);
     });
   });
 
   /* hero demo: write → run → see */
-  var prompt="برای کافه صفحهٔ منو بساز؛ تست‌ها را بزن و PR آماده کن",
+  var prompt="";
       ph=[].slice.call($("phrases").children),
       T=[$("t1"),$("t2"),$("t3")],L=[].slice.call($("term").children),
       ws=$("ws"),typed=$("typed");
@@ -388,6 +498,8 @@ footer .req{color:var(--mut);direction:ltr;unicode-bidi:isolate}
       await sleep(4800);
     }
   }
+  setLang(new URLSearchParams(location.search).get("lang")||localStorage.getItem("dorj-download-lang")||"fa");
+  prompt=window.promptText;
   reduce?final():loop();
 })();
 </script>

@@ -32,8 +32,8 @@ export interface ColorThemeDefinition {
 const DORJ_LIGHT_HSL = {
   50: "218.46 61.90% 12.35%",
   100: "221.67 45.00% 15.69%",
-  200: "224.17 62.07% 22.75%",
-  300: "224.44 64.29% 32.94%",
+  200: "226.76 65.02% 43.73%",
+  300: "222.07 100.00% 67.84%",
   400: "218.05 19.25% 41.76%",
   500: "218.05 19.25% 41.76%",
   600: "210.73 22.40% 64.12%",
@@ -48,8 +48,8 @@ const DORJ_LIGHT_HSL = {
 const DORJ_LIGHT_SCALE = {
   "--cool-grey-50": "#0C1A33",
   "--cool-grey-100": "#16213A",
-  "--cool-grey-200": "#16295E",
-  "--cool-grey-300": "#1E3A8A",
+  "--cool-grey-200": "#2747B8",
+  "--cool-grey-300": "#5B8CFF",
   "--cool-grey-400": "#56657F",
   "--cool-grey-500": "#56657F",
   "--cool-grey-600": "#8FA3B8",
@@ -184,7 +184,7 @@ const DORJ_DARK_HSL = {
   800: "222.46 43.62% 29.22%", // #2A3D6B
   850: "222.30 47.29% 25.29%", // #22345F
   900: "222.86 53.85% 20.39%", // #182850
-  950: "221.63 62.03% 15.49%", // #0F1E40
+  950: "223.88 69.07% 19.02%", // #0F2152
   975: "222.00 71.43% 10.98%", // #081430
 };
 
@@ -200,7 +200,7 @@ const DORJ_DARK_SCALE = {
   "--cool-grey-800": "#2A3D6B",
   "--cool-grey-900": "#22345F",
   "--cool-grey-925": "#182850",
-  "--cool-grey-950": "#0F1E40",
+  "--cool-grey-950": "#0F2152",
   "--cool-grey-975": "#081430",
 };
 
@@ -272,9 +272,11 @@ export const COLOR_THEMES: Record<ColorThemeKey, ColorThemeDefinition> = {
     scale: DORJ_LIGHT_SCALE,
     heroui: DORJ_LIGHT_HEROUI,
     tokens: {
-      "--oh-color-primary": "#1E3A8A",
-      "--oh-accent": "#1E3A8A",
+      "--oh-color-primary": "#E8A317",
+      "--oh-accent": "#5B8CFF",
       "--oh-warning": "#E8A317",
+      "--oh-accent-foreground": "#081430",
+      "--oh-warning-foreground": "#081430",
     },
   },
 

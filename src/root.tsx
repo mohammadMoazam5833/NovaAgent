@@ -14,6 +14,7 @@ import "./tailwind.css";
 import "./index.css";
 import React from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Toaster } from "react-hot-toast";
 import {
   clearCachedAgentServerInfo,
@@ -56,6 +57,14 @@ import { hasCompanyLlmSession } from "#/api/company-llm";
 
 /** Applies the persisted color palette + light/dark appearance on mount. */
 function ColorThemeApplier() {
+  const { i18n } = useTranslation("openhands");
+
+  React.useEffect(() => {
+    const language = i18n.language || "fa";
+    document.documentElement.lang = language;
+    document.documentElement.dir = i18n.dir(language) === "rtl" ? "rtl" : "ltr";
+  }, [i18n.language]);
+
   React.useEffect(() => {
     applyColorTheme(readPersistedColorTheme());
   }, []);
@@ -103,7 +112,7 @@ const BackendFormModal = React.lazy(() =>
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="fa" dir="rtl">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -238,7 +247,7 @@ export const links: LinksFunction = () => [
 
 export const meta: MetaFunction = () => [
   { title: "Dorj Agent" },
-  { name: "description", content: "Let's Start Building!" },
+  { name: "description", content: "دستیار هوشمند توسعه‌ی نرم‌افزار" },
 ];
 
 export default function App() {

@@ -16,7 +16,7 @@ export const DEFAULT_SETTINGS: Settings = {
   llm_model: "openhands/minimax-m2.7",
   llm_base_url: "",
   agent: "CodeActAgent",
-  language: "en",
+  language: "fa",
   llm_api_key: null,
   llm_api_key_set: false,
   search_api_key_set: false,
