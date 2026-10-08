@@ -1,4 +1,5 @@
 export type ColorThemeKey =
+  | "dorj-dark"
   | "dorj-light"
   | "openhands-deepsea"
   | "openhands-neutral"
@@ -165,6 +166,80 @@ const NEUTRAL_HEROUI = {
   "--heroui-default": NEUTRAL_HSL[800],
 };
 
+/**
+ * Dorj dark palette (default since 2026-10-08): the portal's navy surfaces
+ * (#081430 / #0f1e40 / #182850), light navy-tinted text, gold primary actions
+ * and sky accents - the same family as dorj.isigpu.local and the platform.
+ */
+// prettier-ignore
+const DORJ_DARK_HSL = {
+  50: "220.00 42.86% 97.25%", // #F5F7FB
+  100: "220.00 56.25% 93.73%", // #E6ECF8
+  200: "221.25 51.61% 87.84%", // #D0DAF0
+  300: "221.25 46.15% 79.61%", // #B3C2E3
+  400: "222.30 36.97% 67.65%", // #8EA0CB
+  500: "222.09 29.26% 55.10%", // #6B7FAE
+  600: "222.35 30.09% 44.31%", // #4F6393
+  700: "222.35 36.96% 36.08%", // #3A4E7E
+  800: "222.46 43.62% 29.22%", // #2A3D6B
+  850: "222.30 47.29% 25.29%", // #22345F
+  900: "222.86 53.85% 20.39%", // #182850
+  950: "221.63 62.03% 15.49%", // #0F1E40
+  975: "222.00 71.43% 10.98%", // #081430
+};
+
+const DORJ_DARK_SCALE = {
+  "--cool-grey-50": "#F5F7FB",
+  "--cool-grey-100": "#E6ECF8",
+  "--cool-grey-200": "#D0DAF0",
+  "--cool-grey-300": "#B3C2E3",
+  "--cool-grey-400": "#8EA0CB",
+  "--cool-grey-500": "#6B7FAE",
+  "--cool-grey-600": "#4F6393",
+  "--cool-grey-700": "#3A4E7E",
+  "--cool-grey-800": "#2A3D6B",
+  "--cool-grey-900": "#22345F",
+  "--cool-grey-925": "#182850",
+  "--cool-grey-950": "#0F1E40",
+  "--cool-grey-975": "#081430",
+};
+
+const DORJ_DARK_HEROUI = {
+  "--heroui-background": DORJ_DARK_HSL[950],
+  "--heroui-background-foreground": DORJ_DARK_HSL[50],
+  "--heroui-foreground-50": DORJ_DARK_HSL[975],
+  "--heroui-foreground-100": DORJ_DARK_HSL[950],
+  "--heroui-foreground-200": DORJ_DARK_HSL[900],
+  "--heroui-foreground-300": DORJ_DARK_HSL[850],
+  "--heroui-foreground-400": DORJ_DARK_HSL[800],
+  "--heroui-foreground-500": DORJ_DARK_HSL[700],
+  "--heroui-foreground-600": DORJ_DARK_HSL[600],
+  "--heroui-foreground-700": DORJ_DARK_HSL[500],
+  "--heroui-foreground-800": DORJ_DARK_HSL[400],
+  "--heroui-foreground-900": DORJ_DARK_HSL[300],
+  "--heroui-foreground": DORJ_DARK_HSL[300],
+  "--heroui-content1": DORJ_DARK_HSL[900],
+  "--heroui-content1-foreground": DORJ_DARK_HSL[100],
+  "--heroui-content2": DORJ_DARK_HSL[850],
+  "--heroui-content2-foreground": DORJ_DARK_HSL[200],
+  "--heroui-content3": DORJ_DARK_HSL[800],
+  "--heroui-content3-foreground": DORJ_DARK_HSL[300],
+  "--heroui-content4": DORJ_DARK_HSL[700],
+  "--heroui-content4-foreground": DORJ_DARK_HSL[400],
+  "--heroui-default-50": DORJ_DARK_HSL[975],
+  "--heroui-default-100": DORJ_DARK_HSL[950],
+  "--heroui-default-200": DORJ_DARK_HSL[900],
+  "--heroui-default-300": DORJ_DARK_HSL[850],
+  "--heroui-default-400": DORJ_DARK_HSL[800],
+  "--heroui-default-500": DORJ_DARK_HSL[700],
+  "--heroui-default-600": DORJ_DARK_HSL[600],
+  "--heroui-default-700": DORJ_DARK_HSL[500],
+  "--heroui-default-800": DORJ_DARK_HSL[400],
+  "--heroui-default-900": DORJ_DARK_HSL[300],
+  "--heroui-default-foreground": DORJ_DARK_HSL[50],
+  "--heroui-default": DORJ_DARK_HSL[800],
+};
+
 import { AGENT_SERVER_UI_THEMEABLE_BRAND_VARIABLES } from "#/styles/agent-server-ui-style-scope";
 import { applyAppearance, readPersistedAppearance } from "#/themes/appearance";
 
@@ -182,6 +257,16 @@ const NEO_WHITE_BUTTON_TOKENS: Record<
 };
 
 export const COLOR_THEMES: Record<ColorThemeKey, ColorThemeDefinition> = {
+  "dorj-dark": {
+    label: "Dorj Dark",
+    scale: DORJ_DARK_SCALE,
+    heroui: DORJ_DARK_HEROUI,
+    tokens: {
+      "--oh-color-primary": "#E8A317",
+      "--oh-accent": "#5B8CFF",
+      "--oh-warning": "#F4C24B",
+    },
+  },
   "dorj-light": {
     label: "Dorj",
     scale: DORJ_LIGHT_SCALE,
@@ -269,7 +354,7 @@ export const COLOR_THEMES: Record<ColorThemeKey, ColorThemeDefinition> = {
   },
 };
 
-export const DEFAULT_COLOR_THEME: ColorThemeKey = "dorj-light";
+export const DEFAULT_COLOR_THEME: ColorThemeKey = "dorj-dark";
 
 export const AVAILABLE_COLOR_THEMES = Object.entries(COLOR_THEMES).map(
   ([key, def]) => ({ key: key as ColorThemeKey, label: def.label }),

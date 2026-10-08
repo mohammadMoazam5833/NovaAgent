@@ -6,7 +6,7 @@
 
 export type AppearanceMode = "dark" | "light";
 
-export const DEFAULT_APPEARANCE: AppearanceMode = "light";
+export const DEFAULT_APPEARANCE: AppearanceMode = "dark";
 
 const STORAGE_KEY = "openhands-appearance";
 const APPEARANCE_STYLE_TAG_ID = "oh-appearance-override";
