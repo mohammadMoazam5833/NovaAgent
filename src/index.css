@@ -45,19 +45,19 @@
   background-color: var(--oh-color-base) !important;
 
   /* Dorj dark scale: the pre-hydration default matches the portal. */
-  --cool-grey-50: #F5F7FB;
-  --cool-grey-100: #E6ECF8;
-  --cool-grey-200: #D0DAF0;
-  --cool-grey-300: #B3C2E3;
-  --cool-grey-400: #8EA0CB;
-  --cool-grey-500: #6B7FAE;
-  --cool-grey-600: #4F6393;
-  --cool-grey-700: #3A4E7E;
-  --cool-grey-800: #2A3D6B;
-  --cool-grey-900: #22345F;
-  --cool-grey-925: #182850;
-  --cool-grey-950: #0F2152;
-  --cool-grey-975: #081430;
+  --cool-grey-50: #F2F3F5;
+  --cool-grey-100: #E4E6EA;
+  --cool-grey-200: #C9CDD4;
+  --cool-grey-300: #A9AEB8;
+  --cool-grey-400: #8A909B;
+  --cool-grey-500: #6B717C;
+  --cool-grey-600: #4F545E;
+  --cool-grey-700: #3A3E46;
+  --cool-grey-800: #2C2F35;
+  --cool-grey-900: #24272C;
+  --cool-grey-925: #1D1F23;
+  --cool-grey-950: #16171A;
+  --cool-grey-975: #0F1012;
   /* ─────────────────────────────────────────────────────────────────────── */
 }
 
@@ -198,16 +198,17 @@ code {
   animation: nova-sparkle-pulse 1.8s ease-in-out infinite;
 }
 
-/* Dorj unified chrome: portal navy rail over navy work surfaces. */
+/* Dorj Graphite chrome (Cursor/Claude-like): a slightly darker rail over neutral charcoal work
+   surfaces; gold only marks the primary action. Variable names kept from the navy era. */
 :root {
-  --dorj-navy: #081430;
-  --dorj-navy-2: #0f2152;
+  --dorj-navy: #0F1012;
+  --dorj-navy-2: #16171A;
   --dorj-lapis: #2747b8;
   --dorj-sky: #5b8cff;
   --dorj-gold: #e8a317;
   --dorj-gold-soft: #ffd36b;
-  --dorj-on-dark: #e8eefb;
-  --dorj-dark-border: rgba(160, 185, 255, 0.16);
+  --dorj-on-dark: #e4e6ea;
+  --dorj-dark-border: rgba(255, 255, 255, 0.08);
 }
 
 /* Persian and mixed-direction UI must never inherit decorative tracking. */
@@ -233,8 +234,8 @@ aside[data-collapsed],
 aside[data-testid="sidebar-mobile-drawer"] {
   --oh-color-base: var(--dorj-navy);
   --oh-foreground: var(--dorj-on-dark);
-  --oh-muted: rgba(226, 232, 245, 0.55);
-  --oh-text-secondary: rgba(226, 232, 245, 0.75);
+  --oh-muted: rgba(228, 230, 234, 0.5);
+  --oh-text-secondary: rgba(228, 230, 234, 0.72);
   --oh-tertiary: rgba(255, 255, 255, 0.1);
   --oh-surface-raised: rgba(255, 255, 255, 0.08);
   --oh-border: var(--dorj-dark-border);
@@ -251,6 +252,6 @@ aside[data-testid="sidebar-mobile-drawer"] .text-white {
 
 aside[data-collapsed] [data-active="true"],
 aside[data-testid="sidebar-mobile-drawer"] [data-active="true"] {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: var(--dorj-gold-soft);
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #f2f3f5;
 }

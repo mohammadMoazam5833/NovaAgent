@@ -167,41 +167,42 @@ const NEUTRAL_HEROUI = {
 };
 
 /**
- * Dorj dark palette (default since 2026-10-08): the portal's navy surfaces
+ * Dorj Graphite (default since 2026-10-08, owner: "like Cursor / Claude / OpenCode"): neutral
+ * charcoal surfaces; formerly navy surfaces
  * (#081430 / #0f1e40 / #182850), light navy-tinted text, gold primary actions
  * and sky accents - the same family as dorj.isigpu.local and the platform.
  */
 // prettier-ignore
 const DORJ_DARK_HSL = {
-  50: "220.00 42.86% 97.25%", // #F5F7FB
-  100: "220.00 56.25% 93.73%", // #E6ECF8
-  200: "221.25 51.61% 87.84%", // #D0DAF0
-  300: "221.25 46.15% 79.61%", // #B3C2E3
-  400: "222.30 36.97% 67.65%", // #8EA0CB
-  500: "222.09 29.26% 55.10%", // #6B7FAE
-  600: "222.35 30.09% 44.31%", // #4F6393
-  700: "222.35 36.96% 36.08%", // #3A4E7E
-  800: "222.46 43.62% 29.22%", // #2A3D6B
-  850: "222.30 47.29% 25.29%", // #22345F
-  900: "222.86 53.85% 20.39%", // #182850
-  950: "223.88 69.07% 19.02%", // #0F2152
-  975: "222.00 71.43% 10.98%", // #081430
+  50: "220.00 13.04% 95.49%", // #F2F3F5
+  100: "220.00 12.50% 90.59%", // #E4E6EA
+  200: "218.18 11.34% 80.98%", // #C9CDD4
+  300: "220.00 9.55% 69.22%", // #A9AEB8
+  400: "218.82 7.83% 57.45%", // #8A909B
+  500: "218.82 7.36% 45.29%", // #6B717C
+  600: "220.00 8.67% 33.92%", // #4F545E
+  700: "220.00 9.38% 25.10%", // #3A3E46
+  800: "220.00 9.28% 19.02%", // #2C2F35
+  850: "217.50 10.00% 15.69%", // #24272C
+  900: "220.00 9.38% 12.55%", // #1D1F23
+  950: "225.00 8.33% 9.41%", // #16171A
+  975: "220.00 9.09% 6.47%", // #0F1012
 };
 
 const DORJ_DARK_SCALE = {
-  "--cool-grey-50": "#F5F7FB",
-  "--cool-grey-100": "#E6ECF8",
-  "--cool-grey-200": "#D0DAF0",
-  "--cool-grey-300": "#B3C2E3",
-  "--cool-grey-400": "#8EA0CB",
-  "--cool-grey-500": "#6B7FAE",
-  "--cool-grey-600": "#4F6393",
-  "--cool-grey-700": "#3A4E7E",
-  "--cool-grey-800": "#2A3D6B",
-  "--cool-grey-900": "#22345F",
-  "--cool-grey-925": "#182850",
-  "--cool-grey-950": "#0F2152",
-  "--cool-grey-975": "#081430",
+  "--cool-grey-50": "#F2F3F5",
+  "--cool-grey-100": "#E4E6EA",
+  "--cool-grey-200": "#C9CDD4",
+  "--cool-grey-300": "#A9AEB8",
+  "--cool-grey-400": "#8A909B",
+  "--cool-grey-500": "#6B717C",
+  "--cool-grey-600": "#4F545E",
+  "--cool-grey-700": "#3A3E46",
+  "--cool-grey-800": "#2C2F35",
+  "--cool-grey-900": "#24272C",
+  "--cool-grey-925": "#1D1F23",
+  "--cool-grey-950": "#16171A",
+  "--cool-grey-975": "#0F1012",
 };
 
 const DORJ_DARK_HEROUI = {
@@ -258,12 +259,12 @@ const NEO_WHITE_BUTTON_TOKENS: Record<
 
 export const COLOR_THEMES: Record<ColorThemeKey, ColorThemeDefinition> = {
   "dorj-dark": {
-    label: "Dorj Dark",
+    label: "Dorj Graphite",
     scale: DORJ_DARK_SCALE,
     heroui: DORJ_DARK_HEROUI,
     tokens: {
       "--oh-color-primary": "#E8A317",
-      "--oh-accent": "#5B8CFF",
+      "--oh-accent": "#7AA7FF",
       "--oh-warning": "#F4C24B",
     },
   },
