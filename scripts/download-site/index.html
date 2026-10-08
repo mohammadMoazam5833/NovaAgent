@@ -297,6 +297,10 @@ export NOVA_CA_BUNDLE=$PWD/isigpu-root-ca.crt</code></div><p>در Windows به �
           <div class="cmd"><button class="copy" type="button">کپی</button><code>cd my-project
 dorj-agent run "run the tests and fix the failures"</code></div><p>درخواست را می‌توانید فارسی هم بنویسید</p></div></div>
         <div class="step"><span class="num">۵</span><div><b>دستورهای حساس</b><p>دستورهای خطرناک مثل <code class="ltr">rm -rf</code> یا <code class="ltr">git push --force</code> قبل از اجرا از شما تأیید می‌گیرند و در CI بدون <code class="ltr">--yes</code> رد می‌شوند و کد خروج ۵ برمی‌گردد</p></div></div>
+        <div class="step"><span class="num">۶</span><div><b>کار روی سرور، WSL یا نوت‌بوک پلتفرم دُرج</b><p>روی همان ماشین وارد شوید و پل فضای کاری را برای پوشه‌ی پروژه اجرا کنید؛ برنامه‌ی دسکتاپ همان‌جا کار می‌کند. پل، تونل فضای کاری همان حساب را جایگزین می‌کند؛ پنجره را باز نگه دارید.</p>
+          <div class="cmd"><button class="copy" type="button">کپی</button><code>ssh host
+__CLI_PIP__
+dorj-agent bridge --root ~/project</code></div></div></div>
       </div>
       <div class="panel" id="panel-cli-ref" role="tabpanel">
         <div class="cmd"><button class="copy" type="button">کپی</button><code>dorj-agent login -u USERNAME     # ورود
@@ -305,6 +309,7 @@ dorj-agent models                # مدل‌های در دسترس
 dorj-agent run "..."             # یک کار روی پوشه‌ی فعلی
 dorj-agent run --yes "..."       # تأیید خودکار دستورهای حساس
 dorj-agent chat                  # گفتگوی تعاملی
+dorj-agent bridge --root ~/project # اتصال سرور/WSL/نوت‌بوک
 dorj-agent conversations         # گفتگوهای قبلی
 dorj-agent usage                 # میزان مصرف
 dorj-agent --json models         # خروجی JSON برای اسکریپت
