@@ -335,7 +335,7 @@ header.hero::before{content:"";position:absolute;inset:-20%;z-index:-1;filter:bl
       title:"Dorj Agent",
       nav:["پرتال دُرج","نصب","قابلیت‌ها","سؤالات","دانلود"],
       phrases:["برنامه‌ریزی می‌کند و کد می‌نویسد","تست می‌گیرد و تحویل می‌دهد"],
-      lead:"دستیار دُرج مثل یک همکار باتجربه کنار شماست. فقط بگویید چه می‌خواهید؛ خودش کد را می‌نویسد و تست می‌زند و نتیجه را نشان می‌دهد.",
+      lead:"دستیار دُرج مثل یک همکار باتجربه کنار شماست<br>کافی است بگویید چه می‌خواهید و نتیجه را همان لحظه ببینید",
       download:"دانلود نسخهٔ رسمی برای Windows",
       macNote:"نسخهٔ macOS هنوز منتشر نشده است. یکی از نسخه‌های زیر را برای سیستم دیگری دانلود کنید.",
       alts:["Windows Installer","Linux DEB","Linux AppImage"],
@@ -395,7 +395,7 @@ header.hero::before{content:"";position:absolute;inset:-20%;z-index:-1;filter:bl
     var t=UI[lang]; document.documentElement.lang=lang; document.documentElement.dir=lang==="fa"?"rtl":"ltr"; document.title=t.title;
     document.querySelectorAll(".links a").forEach(function(n,i){if(t.nav[i])n.textContent=t.nav[i]});
     document.querySelectorAll("#phrases span").forEach(function(n,i){n.textContent=t.phrases[i]});
-    set(".lead",t.lead); set("#dl-main-label",currentOS==="Windows"?t.osMain:t.linuxMain); set("#mac-note",t.macNote);
+    set(".lead",t.lead,true); set("#dl-main-label",currentOS==="Windows"?t.osMain:t.linuxMain); set("#mac-note",t.macNote);
     document.querySelectorAll("#alt-win,#alt-deb,#alt-appimage").forEach(function(n,i){n.textContent=t.alts[i]});
     document.querySelectorAll(".meta span").forEach(function(n,i){if(t.meta[i])n.innerHTML=t.meta[i]});
     ["#t1","#t2","#t3"].forEach(function(id,i){set(id,t.tasks[i])});
