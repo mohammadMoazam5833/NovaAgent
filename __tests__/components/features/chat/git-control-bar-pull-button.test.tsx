@@ -54,11 +54,12 @@ describe("GitControlBarPullButton", () => {
 
     const button = screen.getByRole("button");
     expect(button).not.toBeDisabled();
-    expect(button.className).toContain("text-white");
+    // theme tokens (dark and light Dorj themes), not a hard-coded white
+    expect(button.className).toContain("text-foreground");
     expect(button.className).toContain("hover:bg-tertiary");
     expect(screen.getByTestId("pull-icon")).toHaveAttribute(
       "data-color",
-      "white",
+      "var(--oh-foreground)",
     );
   });
 });

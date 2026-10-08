@@ -122,7 +122,7 @@ function formatTime(at: number | null, fa: boolean) {
 
 export function CheckpointsBar() {
   const { t, i18n } = useTranslation("openhands");
-  const fa = (i18n.language || "fa").startsWith("fa");
+  const fa = (i18n?.language || "fa").startsWith("fa");
   const queryClient = useQueryClient();
   const { conn, root, conversationId } = useWorkspaceConn();
   const [open, setOpen] = React.useState(false);

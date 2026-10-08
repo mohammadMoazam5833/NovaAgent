@@ -112,7 +112,7 @@ describe("useBackendsHealth", () => {
         expect(result.current[localBackend.id]).toMatchObject({
           isConnected: false,
           lastError:
-            "NovaAgent requires agent-server 1.28.0 or newer; this backend is running 1.27.1. Please upgrade the agent-server backend.",
+            "Dorj Agent requires agent-server 1.28.0 or newer; this backend is running 1.27.1. Please upgrade the agent-server backend.",
         }),
       // Failing probes now retry a couple of times before settling.
       { timeout: 3000 },

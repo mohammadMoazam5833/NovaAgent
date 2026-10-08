@@ -20,8 +20,8 @@ describe("appearance", () => {
     document.body.classList.remove("dark", "light");
   });
 
-  it("defaults to light appearance", () => {
-    expect(readPersistedAppearance()).toBe("light");
+  it("defaults to dark appearance (Dorj Dark, like the portal)", () => {
+    expect(readPersistedAppearance()).toBe("dark");
   });
 
   it("persists and applies light mode with an override stylesheet", () => {

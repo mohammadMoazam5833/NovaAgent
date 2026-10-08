@@ -15,6 +15,11 @@ vi.mock("react-i18next", () => ({
 }));
 
 vi.mock("#/hooks/query/use-unified-get-git-changes");
+// Keep/undo + checkpoints talk to the workspace; this suite covers the tab states only.
+vi.mock("#/components/features/diff-viewer/workspace-review", () => ({
+  CheckpointsBar: () => null,
+  ChangeActions: () => null,
+}));
 vi.mock("#/hooks/use-agent-state");
 vi.mock("#/hooks/use-conversation-id", () => ({
   useConversationId: () => ({ conversationId: "test-id" }),
