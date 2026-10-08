@@ -189,7 +189,7 @@ header.hero::before{content:"";position:absolute;inset:-20%;z-index:-1;filter:bl
 <nav><div class="wrap">
   <a class="brand" href="#"><span><span class="nc">D</span>orj Agent</span></a>
   <span class="ver">v1.6.6</span>
-  <div class="links"><a href="https://dorj.isigpu.local" target="_blank" rel="noopener">پرتال دُرج</a><a href="#install">نصب</a><a href="#features">قابلیت‌ها</a><a href="#faq">سؤالات</a><a class="navdl" href="#top">دانلود</a><button id="lang-switch" class="lang" type="button" aria-label="English interface">EN</button></div>
+  <div class="links"><a href="https://dorj.isigpu.local" target="_blank" rel="noopener">پرتال دُرج</a><a href="#install">نصب</a><a href="#cli">خط فرمان</a><a href="#features">قابلیت‌ها</a><a href="#faq">سؤالات</a><a class="navdl" href="#top">دانلود</a><button id="lang-switch" class="lang" type="button" aria-label="English interface">EN</button></div>
 </div></nav>
 
 <header class="hero" id="top"><div class="wrap">
@@ -271,6 +271,45 @@ header.hero::before{content:"";position:absolute;inset:-20%;z-index:-1;filter:bl
           <div class="cmd"><button class="copy" type="button">کپی</button><code>chmod +x Dorj-Agent-Client-1.6.6-x86_64.AppImage
 ./Dorj-Agent-Client-1.6.6-x86_64.AppImage --no-sandbox</code></div></div></div>
         <div class="step"><span class="num">۲</span><div><b>ورود</b><p>با حساب شرکتی خود وارد شوید.</p></div></div>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<section id="cli"><div class="wrap">
+  <h2>خط فرمان دستیار دُرج</h2>
+  <p class="sub">همان دستیار در ترمینال و CI روی پوشه‌ای که در آن هستید کار می‌کند</p>
+  <div class="install">
+    <div class="tabs" role="tablist" aria-label="خط فرمان">
+      <button class="tab on" role="tab" aria-selected="true" data-tab="cli-start">شروع سریع<small>نصب و اولین کار</small></button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="cli-ref">دستورها<small>فهرست کامل</small></button>
+    </div>
+    <div>
+      <div class="panel on" id="panel-cli-start" role="tabpanel">
+        <div class="step"><span class="num">۱</span><div><b>نصب با Python 3.9 یا جدیدتر</b><p>بسته از مخزن داخلی سازمان نصب می‌شود و به اینترنت نیاز ندارد</p>
+          <div class="cmd"><button class="copy" type="button">کپی</button><code>__CLI_PIP__</code></div></div></div>
+        <div class="step"><span class="num">۲</span><div><b>گواهی امنیتی سازمان</b><p>یک بار دانلود کنید و مسیرش را معرفی کنید</p>
+          <div class="cmd"><button class="copy" type="button">کپی</button><code>curl -O __SERVER__/download/isigpu-root-ca.crt
+export NOVA_CA_BUNDLE=$PWD/isigpu-root-ca.crt</code></div><p>در Windows به جای export از <code class="ltr">setx NOVA_CA_BUNDLE "%CD%\isigpu-root-ca.crt"</code> استفاده کنید</p></div></div>
+        <div class="step"><span class="num">۳</span><div><b>ورود با حساب سازمانی</b>
+          <div class="cmd"><button class="copy" type="button">کپی</button><code>dorj-agent login -u USERNAME</code></div></div></div>
+        <div class="step"><span class="num">۴</span><div><b>اولین کار روی پروژه</b><p>به پوشه‌ی پروژه بروید و کار را بخواهید تا دستیار همان‌جا کد بنویسد و تست بگیرد</p>
+          <div class="cmd"><button class="copy" type="button">کپی</button><code>cd my-project
+dorj-agent run "تست‌ها را اجرا کن و خطاها را رفع کن"</code></div></div></div>
+        <div class="step"><span class="num">۵</span><div><b>دستورهای حساس</b><p>دستورهای خطرناک مثل <code class="ltr">rm -rf</code> یا <code class="ltr">git push --force</code> قبل از اجرا از شما تأیید می‌گیرند و در CI بدون <code class="ltr">--yes</code> رد می‌شوند و کد خروج ۵ برمی‌گردد</p></div></div>
+      </div>
+      <div class="panel" id="panel-cli-ref" role="tabpanel">
+        <div class="cmd"><button class="copy" type="button">کپی</button><code>dorj-agent login -u USERNAME     # ورود
+dorj-agent whoami                # حساب و فضای کار
+dorj-agent models                # مدل‌های در دسترس
+dorj-agent run "..."             # یک کار روی پوشه‌ی فعلی
+dorj-agent run --yes "..."       # تأیید خودکار دستورهای حساس
+dorj-agent chat                  # گفتگوی تعاملی
+dorj-agent conversations         # گفتگوهای قبلی
+dorj-agent usage                 # میزان مصرف
+dorj-agent --json models         # خروجی JSON برای اسکریپت
+dorj-agent logout                # خروج</code></div>
+        <p class="sub" style="margin-top:14px">دستور <code class="ltr">nova</code> هم برای سازگاری با نسخه‌های قبل کار می‌کند</p>
       </div>
     </div>
   </div>
@@ -440,16 +479,19 @@ header.hero::before{content:"";position:absolute;inset:-20%;z-index:-1;filter:bl
 
   /* tabs */
   var tabs=[].slice.call(document.querySelectorAll(".tab"));
+  // each .install block (installers, CLI) switches its own tabs and panels only
   function pick(t){
-    tabs.forEach(function(x){var on=x===t;x.classList.toggle("on",on);x.setAttribute("aria-selected",on)});
-    document.querySelectorAll(".panel").forEach(function(p){p.classList.remove("on")});
+    var box=t.closest(".install");
+    box.querySelectorAll(".tab").forEach(function(x){var on=x===t;x.classList.toggle("on",on);x.setAttribute("aria-selected",on)});
+    box.querySelectorAll(".panel").forEach(function(p){p.classList.remove("on")});
     $("panel-"+t.dataset.tab).classList.add("on");
   }
-  tabs.forEach(function(t,i){
+  tabs.forEach(function(t){
     t.addEventListener("click",function(){pick(t)});
     t.addEventListener("keydown",function(e){
+      var group=[].slice.call(t.closest(".install").querySelectorAll(".tab")), i=group.indexOf(t);
       var n=e.key==="ArrowDown"||e.key==="ArrowLeft"?1:e.key==="ArrowUp"||e.key==="ArrowRight"?-1:0;
-      if(n){e.preventDefault();var x=tabs[(i+n+tabs.length)%tabs.length];x.focus();pick(x)}
+      if(n){e.preventDefault();var x=group[(i+n+group.length)%group.length];x.focus();pick(x)}
     });
   });
   if(key==="deb"||key==="appimage")pick(tabs[key==="deb"?1:0]);
