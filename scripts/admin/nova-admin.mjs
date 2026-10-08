@@ -305,7 +305,12 @@ function spark(cv,vals,color){
 }
 
 function uiFa(){
-  return String(navigator.language || "fa").toLowerCase().indexOf("fa") === 0;
+  // The admin panel is Persian by default; ?lang=en is available for operators who need English.
+  try {
+    return String(new URLSearchParams(location.search).get("lang") || "fa").toLowerCase() !== "en";
+  } catch(e) {
+    return true;
+  }
 }
 function L(en,fa){
   return uiFa() ? fa : en;
@@ -553,7 +558,7 @@ function loadTenants(){
       {key:"clientConnected",label:L("Client","کلاینت"),text:function(t){return t.clientConnected?"connected":"disconnected"},sort:function(t){return t.clientConnected?1:0},cell:function(t){
         return dot(t.clientConnected)+(t.clientConnected?L("Connected","متصل"):L("Disconnected","قطع"));
       }},
-      {key:"agentOk",label:"Agent",text:function(t){return t.agentOk?"healthy":"unresponsive"},sort:function(t){return t.agentOk?1:0},cell:function(t){
+      {key:"agentOk",label:L("Agent","ایجنت"),text:function(t){return t.agentOk?"healthy":"unresponsive"},sort:function(t){return t.agentOk?1:0},cell:function(t){
         return dot(t.agentOk)+(t.agentOk?L("Healthy","سالم"):L("Unresponsive","بدون پاسخ"));
       }},
       {key:"port",label:L("Port","پورت"),value:function(t){return t.port},cell:function(t){return '<span class="mut" style="direction:ltr">'+esc(t.port)+"</span>"}},
