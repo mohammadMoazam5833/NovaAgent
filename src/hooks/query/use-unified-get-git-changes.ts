@@ -1,14 +1,15 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import AgentServerGitService from "#/api/git-service/agent-server-git-service.api";
-import { useConversationId } from "#/hooks/use-conversation-id";
+import { useOptionalConversationId } from "#/hooks/use-conversation-id";
 import { useActiveConversation } from "#/hooks/query/use-active-conversation";
 import { useRuntimeIsReady } from "#/hooks/use-runtime-is-ready";
 import { getGitPath } from "#/utils/get-git-path";
 import type { GitChange } from "#/api/open-hands.types";
 
 export const useUnifiedGetGitChanges = () => {
-  const { conversationId } = useConversationId();
+  // Optional: the composer's @-mention list also mounts this outside a conversation (home page).
+  const { conversationId } = useOptionalConversationId();
   const { data: conversation } = useActiveConversation();
   const [orderedChanges, setOrderedChanges] = React.useState<GitChange[]>([]);
   const previousDataRef = React.useRef<GitChange[] | null>(null);

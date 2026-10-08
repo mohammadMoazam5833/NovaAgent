@@ -20,11 +20,11 @@ import {
 } from "#/utils/custom-toast-handlers";
 import { cn } from "#/utils/utils";
 import { I18nKey } from "#/i18n/declaration";
-import { useConversationId } from "#/hooks/use-conversation-id";
+import { useOptionalConversationId } from "#/hooks/use-conversation-id";
 
 function useWorkspaceConn() {
   const { data: conversation } = useActiveConversation();
-  const { conversationId } = useConversationId();
+  const { conversationId } = useOptionalConversationId();
   const root = getGitPath(
     conversation?.selected_repository,
     conversation?.workspace?.working_dir?.trim(),
